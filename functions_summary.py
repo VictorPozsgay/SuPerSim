@@ -309,7 +309,7 @@ def list_tokens_year(time_file, year_bkg_end, year_trans_end):
 
     return list_years, time_bkg, time_trans, time_pre_trans
 
-def assign_value_global_dict(path_forcing_list, path_ground, path_snow, year_bkg_end, year_trans_end, extension=''):
+def assign_value_global_dict(path_forcing_list, path_ground, path_snow, year_bkg_end, year_trans_end, site):
     """ Function returns a dictionary containing all the important timeseries and saves it to a pickle
     
     Parameters
@@ -324,7 +324,7 @@ def assign_value_global_dict(path_forcing_list, path_ground, path_snow, year_bkg
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
         Same for transient period
-    extension : str, optional
+    site : str
         Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles   
 
 
@@ -336,7 +336,7 @@ def assign_value_global_dict(path_forcing_list, path_ground, path_snow, year_bkg
 
     """
 
-    file_name = f"global_dict{('' if extension=='' else '_')}{extension}.pkl"
+    file_name = f"global_dict{('' if site=='' else '_')}{site}.pkl"
     my_path = pickle_path + file_name
 
     # try to open the pickle file, if it exists
@@ -402,7 +402,7 @@ def assign_value_df_raw(path_repository):
 
     return df_raw
 
-def assign_value_df(path_repository, path_ground, extension=''):
+def assign_value_df(path_repository, path_ground, site):
     """ Function returns the panda dataframe with all ensemble simulation parameters and saves it to a pickle
     
     Parameters
@@ -411,7 +411,7 @@ def assign_value_df(path_repository, path_ground, extension=''):
         Path to the .csv file with all the simulation parameters
     path_ground : str
         Path to the .nc file where the aggregated ground simulations are stored
-    extension : str, optional
+    site : str
         Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles   
 
 
@@ -428,7 +428,7 @@ def assign_value_df(path_repository, path_ground, extension=''):
     # This saves a lot of time since it is not re-evaluated each time but just the first
     # time and then saved into a pickle.
 
-    file_name = f"df{('' if extension=='' else '_')}{extension}.pkl"
+    file_name = f"df{('' if site=='' else '_')}{site}.pkl"
     my_path = pickle_path + file_name
 
     f_ground, _, _ = open_ground_nc(path_ground)
@@ -468,7 +468,7 @@ def assign_value_df(path_repository, path_ground, extension=''):
 
     return df
 
-def assign_value_reanalysis_stat(forcing_list, path_forcing_list, year_bkg_end, year_trans_end, extension=''):
+def assign_value_reanalysis_stat(forcing_list, path_forcing_list, year_bkg_end, year_trans_end, site):
     """ Creates a dictionary of mean quantities over the background and transient periods
     
     Parameters
@@ -481,7 +481,7 @@ def assign_value_reanalysis_stat(forcing_list, path_forcing_list, year_bkg_end, 
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
         Same for transient period
-    extension : str, optional
+    site : str
         Location of the event, e.g. 'Aksaut_Ridge' (not a list, 1 single location)    
 
     Returns
@@ -491,8 +491,8 @@ def assign_value_reanalysis_stat(forcing_list, path_forcing_list, year_bkg_end, 
 
     """
 
-    file_name = f"reanalysis_stats{('' if extension=='' else '_')}{extension}.pkl"
-    file_name_df = f"df{('' if extension=='' else '_')}{extension}.pkl"
+    file_name = f"reanalysis_stats{('' if site=='' else '_')}{site}.pkl"
+    file_name_df = f"df{('' if site=='' else '_')}{site}.pkl"
     my_path = pickle_path + file_name
     my_path_df = pickle_path + file_name_df
 
@@ -564,14 +564,14 @@ def assign_value_reanalysis_stat(forcing_list, path_forcing_list, year_bkg_end, 
 
     return var_name
 
-def glacier_filter(path_snow, extension='', glacier=False, min_glacier_depth=100, max_glacier_depth=20000):
+def glacier_filter(path_snow, site, glacier=False, min_glacier_depth=100, max_glacier_depth=20000):
     """ Function returns a list of valid simulations regarding the glacier criteria
     
     Parameters
     ----------
     path_snow : str
         Path to the .nc file where the aggregated snow simulations are stored
-    extension : str, optional
+    site : str
         Location of the event, e.g. 'Aksaut_Ridge'
     glacier : bool, optional
         By default only keeps non-glacier simulations but can be changed to True to select only glaciated simulations
@@ -591,7 +591,7 @@ def glacier_filter(path_snow, extension='', glacier=False, min_glacier_depth=100
 
     _, snow_height = open_snow_nc(path_snow)
 
-    file_name = f"list_valid_sim{('' if extension=='' else '_')}{extension}.pkl"
+    file_name = f"list_valid_sim{('' if site=='' else '_')}{site}.pkl"
     my_path = pickle_path + file_name
 
     # try to open the pickle file, if it exists
@@ -631,7 +631,7 @@ def glacier_filter(path_snow, extension='', glacier=False, min_glacier_depth=100
 
     return list_valid_sim
 
-def melt_out_date(consecutive, path_ground, path_snow, year_bkg_end, year_trans_end, extension=''):
+def melt_out_date(consecutive, path_ground, path_snow, year_bkg_end, year_trans_end, site):
     """ Function returns a list of melt out dates given the criterion of a number of consecutive snow-free days
     
     Parameters
@@ -646,7 +646,7 @@ def melt_out_date(consecutive, path_ground, path_snow, year_bkg_end, year_trans_
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
         Same for transient period
-    extension : str, optional
+    site : str
         Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
     
 
@@ -662,8 +662,8 @@ def melt_out_date(consecutive, path_ground, path_snow, year_bkg_end, year_trans_
     # This saves a lot of time since it is not re-evaluated each time but just the first
     # time and then saved into a pickle. 
 
-    file_name = f"melt_out{('' if extension=='' else '_')}{extension}.pkl"
-    file_name_list_valid_sim = f"list_valid_sim{('' if extension=='' else '_')}{extension}.pkl"
+    file_name = f"melt_out{('' if site=='' else '_')}{site}.pkl"
+    file_name_list_valid_sim = f"list_valid_sim{('' if site=='' else '_')}{site}.pkl"
     my_path = pickle_path + file_name
 
     snow_height = open_snow_nc(path_snow)[1]
@@ -734,7 +734,7 @@ def melt_out_date(consecutive, path_ground, path_snow, year_bkg_end, year_trans_
 
     return dict_melt_out, stats_melt_out_dic
 
-def assign_value_df_stats(path_ground, path_snow, year_bkg_end, year_trans_end, extension=''):
+def assign_value_df_stats(path_ground, path_snow, year_bkg_end, year_trans_end, site):
     """ Function returns a large panda dataframe with information about the air, ground, snow, topography, etc. for all simulations
     
     Parameters
@@ -747,7 +747,7 @@ def assign_value_df_stats(path_ground, path_snow, year_bkg_end, year_trans_end, 
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
         Same for transient period
-    extension : str, optional
+    site : str
         Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
     
 
@@ -757,11 +757,11 @@ def assign_value_df_stats(path_ground, path_snow, year_bkg_end, year_trans_end, 
         Large panda dataframe with information about the air, ground, snow, topography, etc. for all simulations
     """
 
-    file_name = f"df_stats{('' if extension=='' else '_')}{extension}.pkl"
-    file_name_df = f"df{('' if extension=='' else '_')}{extension}.pkl"
-    file_name_reanalysis_stats = f"reanalysis_stats{('' if extension=='' else '_')}{extension}.pkl"
-    file_name_list_valid_sim = f"list_valid_sim{('' if extension=='' else '_')}{extension}.pkl"
-    file_name_melt_out = f"melt_out{('' if extension=='' else '_')}{extension}.pkl"
+    file_name = f"df_stats{('' if site=='' else '_')}{site}.pkl"
+    file_name_df = f"df{('' if site=='' else '_')}{site}.pkl"
+    file_name_reanalysis_stats = f"reanalysis_stats{('' if site=='' else '_')}{site}.pkl"
+    file_name_list_valid_sim = f"list_valid_sim{('' if site=='' else '_')}{site}.pkl"
+    file_name_melt_out = f"melt_out{('' if site=='' else '_')}{site}.pkl"
     my_path = pickle_path + file_name
 
     snow_height = open_snow_nc(path_snow)[1]
@@ -931,12 +931,12 @@ def rockfall_values(site):
 
     return rockfall_values[site]
 
-def assign_weight_sim(extension='', no_weight=True):
+def assign_weight_sim(site, no_weight=True):
     """ Function returns a statistical weight for each simulation according to the importance in rockfall starting zone 
     
     Parameters
     ----------
-    extension : str, optional
+    site : str
         Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
     no_weight : bool, optional
         If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
@@ -948,7 +948,7 @@ def assign_weight_sim(extension='', no_weight=True):
         and an overall weight.
     """
 
-    file_name = f"df_stats{('' if extension=='' else '_')}{extension}.pkl"
+    file_name = f"df_stats{('' if site=='' else '_')}{site}.pkl"
     my_path = pickle_path + file_name
     with open(my_path, 'rb') as file: 
         # Call load method to deserialize 
@@ -958,10 +958,10 @@ def assign_weight_sim(extension='', no_weight=True):
     if no_weight:
         dict_weight = {i: [1,1,1] for i in list(df_stats.index.values)}
     else:
-        alt_distance = np.max([np.abs(i-rockfall_values(extension)['altitude']) for i in np.sort(np.unique(df_stats['altitude']))])
-        dict_weight = {i: [1 - np.abs(df_stats.loc[i]['altitude']-rockfall_values(extension)['altitude'])/(2*alt_distance),
-                        np.cos((np.pi)/180*(df_stats.loc[i]['aspect']-rockfall_values(extension)['aspect']))/4+3/4,
-                        np.cos((np.pi)/30*(df_stats.loc[i]['slope']-rockfall_values(extension)['slope']))/4+3/4]
+        alt_distance = np.max([np.abs(i-rockfall_values(site)['altitude']) for i in np.sort(np.unique(df_stats['altitude']))])
+        dict_weight = {i: [1 - np.abs(df_stats.loc[i]['altitude']-rockfall_values(site)['altitude'])/(2*alt_distance),
+                        np.cos((np.pi)/180*(df_stats.loc[i]['aspect']-rockfall_values(site)['aspect']))/4+3/4,
+                        np.cos((np.pi)/30*(df_stats.loc[i]['slope']-rockfall_values(site)['slope']))/4+3/4]
                         for i in list(df_stats.index.values)}
     
     pd_weight = pd.DataFrame.from_dict(dict_weight, orient='index',
@@ -970,7 +970,7 @@ def assign_weight_sim(extension='', no_weight=True):
     
     return pd_weight
 
-def plot_hist_valid_sim_all_variables(path_thaw_depth, extension=''): 
+def plot_hist_valid_sim_all_variables(path_thaw_depth, site): 
     """ Function returns a histogram of the number of valid/glacier simulations for each of the following variable
         ('altitude', 'aspect', 'slope', 'forcing') 
         It also shows the breakdown of valid simulations into permafrost and no-permafrost ones
@@ -979,7 +979,7 @@ def plot_hist_valid_sim_all_variables(path_thaw_depth, extension=''):
     ----------
     path_thaw_depth : str
         Path to the .nc file where the aggregated thaw depth simulations are stored
-    extension : str, optional
+    site : str
         Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
 
     Returns
@@ -987,8 +987,8 @@ def plot_hist_valid_sim_all_variables(path_thaw_depth, extension=''):
     Histogram (subplot(2,2))
     """
 
-    file_name_df = f"df{('' if extension=='' else '_')}{extension}.pkl"
-    file_name_df_stats = f"df_stats{('' if extension=='' else '_')}{extension}.pkl"
+    file_name_df = f"df{('' if site=='' else '_')}{site}.pkl"
+    file_name_df_stats = f"df_stats{('' if site=='' else '_')}{site}.pkl"
 
     _, thaw_depth = open_thaw_depth_nc(path_thaw_depth)
 
@@ -1161,7 +1161,7 @@ def mean_all_reanalyses(time_files, files_to_smooth, year_bkg_end, year_trans_en
 
     return mean
 
-def assign_tot_water_prod_generic(path_forcing_list, path_ground, path_swe, year_bkg_end, year_trans_end, extension='', no_weight=True):
+def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, year_bkg_end, year_trans_end, site, no_weight=True):
     """ Function returns the total water production at daily intervals in [mm s-1] 
     
     Parameters
@@ -1176,7 +1176,7 @@ def assign_tot_water_prod_generic(path_forcing_list, path_ground, path_swe, year
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
         Same for transient period
-    extension : str, optional
+    site : str
         Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
     no_weight : bool, optional
         If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
@@ -1191,7 +1191,7 @@ def assign_tot_water_prod_generic(path_forcing_list, path_ground, path_swe, year
         Mean precipitation time series over all reanalyses
     """
 
-    file_name = f"df_stats{('' if extension=='' else '_')}{extension}.pkl"
+    file_name = f"df_stats{('' if site=='' else '_')}{site}.pkl"
     my_path = pickle_path + file_name
     with open(my_path, 'rb') as file: 
         # Call load method to deserialize 
@@ -1201,7 +1201,7 @@ def assign_tot_water_prod_generic(path_forcing_list, path_ground, path_swe, year
     _, time_ground, _ = open_ground_nc(path_ground)
     _, _, _, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end)    
 
-    pd_weight = assign_weight_sim(extension, no_weight)
+    pd_weight = assign_weight_sim(site, no_weight)
 
     time_air_all = [open_air_nc(i)[0] for i in path_forcing_list]
     precipitation_all = [open_air_nc(i)[-1] for i in path_forcing_list]
@@ -1302,7 +1302,7 @@ def running_mean_std(time_file, file_to_smooth, window, fill_before=False):
 
     return running_mean, running_std
 
-def aggregating_distance_temp_generic(time_file, file_to_smooth, window, year=0, year_bkg_end=2010, year_trans_end=2023, fill_before=False):
+def aggregating_distance_temp(time_file, file_to_smooth, window, year=0, year_bkg_end=2010, year_trans_end=2023, fill_before=False):
     """ Function returns the distance to the mean in units of standard deviation for a given date yy-mm-dd
         relative to the sensemble of same date for previous years: {year-mm-dd for year<=yy}
         Should only be applied to a previously 'smoothed' function through a running average
@@ -1371,7 +1371,7 @@ def aggregating_distance_temp_generic(time_file, file_to_smooth, window, year=0,
 
     return distance
 
-def plot_aggregating_distance_temp_all_generic(yaxes, xdata, ydata, window, site, year, year_bkg_end=2010, year_trans_end=2023, fill_before=False):
+def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, year, year_bkg_end=2010, year_trans_end=2023, fill_before=False):
     """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
         Vertical subplots for different variables
     
@@ -1413,7 +1413,7 @@ def plot_aggregating_distance_temp_all_generic(yaxes, xdata, ydata, window, site
 
     f, a = plt.subplots(num_rows, num_cols, figsize=(8, 2*num_rows), sharey='row')
     for idx,ax in enumerate(a):
-        distance = [aggregating_distance_temp_generic(xdata[idx], ydata[idx], i, year, year_bkg_end, year_trans_end, fill_before) for i in window]
+        distance = [aggregating_distance_temp(xdata[idx], ydata[idx], i, year, year_bkg_end, year_trans_end, fill_before) for i in window]
         list_dates = list_tokens_year(xdata[idx], year_bkg_end, year_trans_end)[0]
 
         if year in list(list_dates.keys()):
@@ -1494,13 +1494,13 @@ def plot_aggregating_distance_temp_all_generic(yaxes, xdata, ydata, window, site
     plt.close()
     plt.clf()
 
-def table_background_evolution_mean_GST_aspect_slope(extension=''):
+def table_background_evolution_mean_GST_aspect_slope(site):
     """ Function returns a table of mean background and evolution of GST (ground-surface temperature)
         as a function of slope, aspect, and altitude
     
     Parameters
     ----------
-    extension : str, optional
+    site : str
         Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
     
     Returns
@@ -1517,7 +1517,7 @@ def table_background_evolution_mean_GST_aspect_slope(extension=''):
         Number of valid simulation per cell, returns NaN if different number of simulation per forcing for that cell
     """
 
-    file_name = f"df_stats{('' if extension=='' else '_')}{extension}.pkl"
+    file_name = f"df_stats{('' if site=='' else '_')}{site}.pkl"
     my_path = pickle_path + file_name
     with open(my_path, 'rb') as file: 
         # Call load method to deserialize 
@@ -1547,7 +1547,7 @@ def table_background_evolution_mean_GST_aspect_slope(extension=''):
 
     return list_grd_temp, list_mean_grd_temp, list_diff_temp, list_mean_diff_temp, list_num_sim
 
-def plot_table_mean_GST_aspect_slope_generic(df_stats, site, altitude, background=True, box=True):
+def plot_table_mean_GST_aspect_slope(site, altitude, background=True, box=True):
     """ Function returns a plot of the table of either mean background GST (ground-surface temperature)
         or its evolution vetween the background and the transient periods,
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
@@ -1555,8 +1555,6 @@ def plot_table_mean_GST_aspect_slope_generic(df_stats, site, altitude, backgroun
     
     Parameters
     ----------
-    df_stats : pandas.core.frame.DataFrame
-        Panda dataframe with at least the following columns: 'aspect', 'slope', 'bkg_grd_temp'
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
     altitude : int
@@ -1571,6 +1569,8 @@ def plot_table_mean_GST_aspect_slope_generic(df_stats, site, altitude, backgroun
     -------
     Table
     """
+
+    _, _, _, _, _, df_stats = load_all_pickles(site)
     
     rf_values = rockfall_values(site)
     variables = ['aspect', 'slope','altitude']
@@ -1582,7 +1582,7 @@ def plot_table_mean_GST_aspect_slope_generic(df_stats, site, altitude, backgroun
         if altitude == j:
             alt_index = i
 
-    list_mean = (table_background_evolution_mean_GST_aspect_slope(df_stats)[1][alt_index] if background else table_background_evolution_mean_GST_aspect_slope(df_stats)[3][alt_index])
+    list_mean = (table_background_evolution_mean_GST_aspect_slope(site)[1][alt_index] if background else table_background_evolution_mean_GST_aspect_slope(site)[3][alt_index])
     df_temp = pd.DataFrame(list_mean, index=list(dic_var['slope']), columns=list(dic_var['aspect']))
 
     vals = np.around(df_temp.values, 2)
@@ -1626,7 +1626,7 @@ def plot_table_mean_GST_aspect_slope_generic(df_stats, site, altitude, backgroun
     plt.close()
     plt.clf()
 
-def plot_table_aspect_slope_all_altitudes_generic(df, df_stats, site, show_glacier=True, box=True):
+def plot_table_aspect_slope_all_altitudes(site, show_glacier=True, box=True):
     """ Function returns 1 plot per altitude of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
@@ -1634,10 +1634,6 @@ def plot_table_aspect_slope_all_altitudes_generic(df, df_stats, site, show_glaci
     
     Parameters
     ----------
-    df : pandas.core.frame.DataFrame
-        Panda DataFrame df, should at least include the following columns: 'altitude', 'aspect', 'slope'
-    df_stats : pandas.core.frame.DataFrame
-        Panda dataframe with at least the following columns: 'aspect', 'slope', 'bkg_grd_temp'
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
     show_glacier : bool, opional
@@ -1649,6 +1645,8 @@ def plot_table_aspect_slope_all_altitudes_generic(df, df_stats, site, show_glaci
     -------
     (2 or 3)*(# altitudes) tables
     """
+
+    df, _, _, _, _, df_stats = load_all_pickles(site)
     
     variables = ['aspect', 'slope','altitude']
     dic_var = {}
@@ -1667,7 +1665,7 @@ def plot_table_aspect_slope_all_altitudes_generic(df, df_stats, site, show_glaci
     center = [0, 0]
     cmap = ['seismic', 'seismic']
 
-    table_all = table_background_evolution_mean_GST_aspect_slope(df_stats)
+    table_all = table_background_evolution_mean_GST_aspect_slope(site)
 
     list_mean = [# evolution mean GST
                 table_all[3],
@@ -1725,7 +1723,7 @@ def plot_table_aspect_slope_all_altitudes_generic(df, df_stats, site, show_glaci
     plt.close()
     plt.clf() 
  
-def plot_table_aspect_slope_all_altitudes_polar_generic(df_stats, site, box=True):
+def plot_table_aspect_slope_all_altitudes_polar(site, box=True):
     """ Function returns 3 polar plots (1 per altitude) of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
@@ -1733,8 +1731,6 @@ def plot_table_aspect_slope_all_altitudes_polar_generic(df_stats, site, box=True
     
     Parameters
     ----------
-    df_stats : pandas.core.frame.DataFrame
-        Panda dataframe with at least the following columns: 'aspect', 'slope', 'bkg_grd_temp'
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
     box : bool, optional 
@@ -1744,6 +1740,8 @@ def plot_table_aspect_slope_all_altitudes_polar_generic(df_stats, site, box=True
     -------
     2*3 polar plots
     """
+
+    _, _, _, _, _, df_stats = load_all_pickles(site)
 
     variables = ['aspect', 'slope','altitude']
     dic_var = {}
@@ -1755,7 +1753,7 @@ def plot_table_aspect_slope_all_altitudes_polar_generic(df_stats, site, box=True
             if rockfall_values(site)['altitude'] == j:
                 alt_index = i
 
-    list_mean = [table_background_evolution_mean_GST_aspect_slope(df_stats)[1], table_background_evolution_mean_GST_aspect_slope(df_stats)[3]]
+    list_mean = [table_background_evolution_mean_GST_aspect_slope(site)[1], table_background_evolution_mean_GST_aspect_slope(site)[3]]
     data = [[pd.DataFrame(i, index=list(dic_var['slope']), columns=list(dic_var['aspect'])) for i in j] for j in list_mean]
     no_nan = [[l for j in i for k in j.values for l in k if not np.isnan(l)] for i in data]
     vmin = [np.min(i) for i in no_nan]
@@ -1825,15 +1823,13 @@ def plot_table_aspect_slope_all_altitudes_polar_generic(df_stats, site, box=True
     plt.close()
     plt.clf()
 
-def plot_permafrost_all_altitudes_polar_generic(df_stats, site, depth_thaw, box=True):
+def plot_permafrost_all_altitudes_polar(site, depth_thaw, box=True):
     """ Function returns 3 polar plots (1 per altitude) of the permafrost and glacier spatial distribution,
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
         rockfall starting zone
     
     Parameters
     ----------
-    df_stats : pandas.core.frame.DataFrame
-        Panda dataframe with at least the following columns: 'aspect', 'slope', 'bkg_grd_temp'
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
     depth_thaw : netCDF4._netCDF4.Variable
@@ -1845,6 +1841,8 @@ def plot_permafrost_all_altitudes_polar_generic(df_stats, site, depth_thaw, box=
     -------
     2*3 polar plots
     """
+
+    _, _, _, _, _, df_stats = load_all_pickles(site)
 
     variables = ['aspect', 'slope','altitude']
     dic_var = {}
@@ -1940,13 +1938,13 @@ def stat_model_aspect_slope_alt(X, offset, c_alt, d_alt, c_asp, c_slope):
             + c_asp * (altitude - d_alt) * np.cos(aspect * 2 * np.pi / 360) 
             + c_slope * slope)
 
-def fit_stat_model_grd_temp(df_stats, all=True, diff_forcings=True):
+def fit_stat_model_grd_temp(site, all=True, diff_forcings=True):
     """ Function returns the value of the statistical model 
     
     Parameters
     ----------
-    df_stats : pandas.core.frame.DataFrame
-        Panda dataframe with at least the following columns: 'forcing', 'aspect', 'slope', 'bkg_grd_temp'
+    site : str
+        Location of the event, e.g. 'Joffre' or 'Fingerpost'
     all : bool, optional
         If True, considers all data at once
     diff_forcings : bool, optional
@@ -1968,6 +1966,8 @@ def fit_stat_model_grd_temp(df_stats, all=True, diff_forcings=True):
         List of R^2 grouped by forcing if all=False
     parity plot (predicted vs actual)
     """
+
+    _, _, _, _, _, df_stats = load_all_pickles(site)
     
     plt.figure(figsize=(6,6))
 
@@ -2130,20 +2130,22 @@ def coordinates_percentile_cdf(data_sorted, proba_bins, percentile):
 
     return low_point
 
-def plot_cdf_GST(df_stats):
+def plot_cdf_GST(site):
     """ Function returns coordinates of the point corresponing to the percentile of the 
         Cumulated Distribution Dunction (CDF)
     
     Parameters
     ----------
-    df_stats : pandas.core.frame.DataFrame
-        Panda dataframe with at least the following columns: 'aspect', 'slope', 'bkg_grd_temp'
+    site : str
+        Location of the event, e.g. 'Joffre' or 'Fingerpost'
 
     Returns
     -------
     2 plots: left panel shows the CDF of background, transient, and evolution of mean GST
              right panel shows the CDF of background, transient, and evolution of mean SO
     """
+
+    _, _, _, _, _, df_stats = load_all_pickles(site)
     
     # sort the data:
     data_bkg_sorted = np.sort(df_stats['bkg_grd_temp'])
@@ -2228,20 +2230,22 @@ def plot_cdf_GST(df_stats):
     plt.close()
     plt.clf()
 
-def plot_10_cold_warm(df_stats):
+def plot_10_cold_warm(site):
     """ Function returns a plot of mean GST evolution vs background GST, with an emphasis on the 10% colder and warmer simulations
     
     Parameters
     ----------
-    df_stats : pandas.core.frame.DataFrame
-        Panda dataframe with at least the following columns: 'aspect', 'slope', 'bkg_grd_temp'
+    site : str
+        Location of the event, e.g. 'Joffre' or 'Fingerpost'
 
     Returns
     -------
     Plot of mean GST evolution vs background GST, with an emphasis on the 10% colder and warmer simulations
     """
 
-    table_all = table_background_evolution_mean_GST_aspect_slope(df_stats)
+    _, _, _, _, _, df_stats = load_all_pickles(site)
+
+    table_all = table_background_evolution_mean_GST_aspect_slope(site)
 
     # create some randomly ddistributed data:
     data_bkg = [l for i in table_all[0] for j in i for k in j for l in k]
@@ -2305,20 +2309,20 @@ def plot_10_cold_warm(df_stats):
     plt.close()
     plt.clf()
     
-def heatmap_percentile_GST(df_stats):
+def heatmap_percentile_GST(site):
     """ Function returns a heatmap of 10th, 25th, 50th, 75th, and 90th percentile in background and transient GST, and the difference
     
     Parameters
     ----------
-    df_stats : pandas.core.frame.DataFrame
-        Panda dataframe with at least the following columns: 'aspect', 'slope', 'bkg_grd_temp'
+    site : str
+        Location of the event, e.g. 'Joffre' or 'Fingerpost'
 
     Returns
     -------
     Heatmap of 10th, 25th, 50th, 75th, and 90th percentile in background and transient GST, and the difference
     """
 
-    table_all = table_background_evolution_mean_GST_aspect_slope(df_stats)
+    table_all = table_background_evolution_mean_GST_aspect_slope(site)
 
     # create some randomly ddistributed data:
     data_bkg = [l for i in table_all[0] for j in i for k in j for l in k]
@@ -3015,15 +3019,15 @@ def plot_yearly_quantiles_all_sims_side_by_side(time_file, time_series, list_val
     plt.close()
     plt.clf()
 
-def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(df_stats):
+def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site):
     """ Function return scatter plot of background GST vs GST evolution for a single site.
     The site is binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
     A linear regression is produced too.
     
     Parameters
     ----------
-    df_stats : pandas.core.frame.DataFrame
-        Panda dataframe with at least the following columns: 'bkg_grd_temp' and 'evol_grd_temp'
+    site : str
+        Location of the event, e.g. 'Joffre' or 'Fingerpost'
     
     Returns
     -------
@@ -3037,6 +3041,8 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(df_stats):
     The single site is binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
     A linear regression is produced too.
     """
+
+    _, _, _, _, _, df_stats = load_all_pickles(site)
 
     df_stats_bis = pd.DataFrame(data=df_stats, columns=['bkg_grd_temp', 'evol_grd_temp'])
     df_stats_bis['bkg_grd_temp'] = pd.Categorical(df_stats_bis['bkg_grd_temp'], np.sort(df_stats['bkg_grd_temp']))
@@ -3084,15 +3090,13 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(df_stats):
 
     return slope, intercept, r
 
-def plot_GST_bkg_vs_evol_quantile_bins_fit(df_stats, list_site):
+def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site):
     """ Function return scatter plot of background GST vs GST evolution for 2 sites.
     Both sites are binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
     A linear regression is produced for each site.
     
     Parameters
     ----------
-    df_stats : list of pandas.core.frame.DataFrame
-        List of 2 panda dataframe with at least the following columns: 'bkg_grd_temp' and 'evol_grd_temp'
     list_site : list
         List of labels for the site of each entry
     
@@ -3108,6 +3112,8 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(df_stats, list_site):
     Both sites are binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
     A linear regression is produced for each site.
     """
+
+    df_stats = [load_all_pickles(i)[-1] for i in list_site]
 
     num = len(df_stats)
 
@@ -3201,15 +3207,15 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(df_stats, list_site):
 
     return slope, intercept, r
 
-def plot_mean_bkg_GST_vs_evolution(df_stats):
+def plot_mean_bkg_GST_vs_evolution(site):
     """ Function returns a scatter plot of mean background GST (ground-surface temperature)
         vs evolution of mean GST between the background and transient period.
         Note that each point is computed from an average over the 3 reanalyses to avoid bias.
     
     Parameters
     ----------
-    df_stats : pandas.core.frame.DataFrame
-        Panda dataframe with at least the following columns: 'aspect', 'slope', 'bkg_grd_temp'
+    site : str
+        Location of the event, e.g. 'Joffre' or 'Fingerpost'
 
 
     Returns
@@ -3217,10 +3223,12 @@ def plot_mean_bkg_GST_vs_evolution(df_stats):
     Scatter plot
     """
 
+    _, _, _, _, _, df_stats = load_all_pickles(site)
+
     colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd', u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf']
 
-    xx = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(df_stats)[1]]
-    yy = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(df_stats)[3]]
+    xx = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(site)[1]]
+    yy = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(site)[3]]
 
     alt_list = list(np.sort(np.unique(df_stats['altitude'])))
 
@@ -3274,7 +3282,7 @@ def plot_visible_skymap_from_horizon_file(hor_path):
     plt.show()
 
 def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground, path_snow,
-                  year_bkg_end, year_trans_end, consecutive, extension='',
+                  year_bkg_end, year_trans_end, consecutive, site,
                   glacier=False, min_glacier_depth=100, max_glacier_depth=20000):
     """ Creates a number of pickle files (if they don't exist yet)
     
@@ -3296,7 +3304,7 @@ def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground,
         Same for transient period
     consecutive : int
         number of consecutive snow-free days to consider that snow has melted for the season
-    extension : str, optional
+    site : str
         Location of the event, e.g. 'Aksaut_Ridge' (not a list, 1 single location)
     glacier : bool, optional
         By default only keeps non-glacier simulations but can be changed to True to select only glaciated simulations
@@ -3325,20 +3333,20 @@ def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground,
 
     """
 
-    df = assign_value_df(path_repository, path_ground, extension)
-    reanalysis_stats = assign_value_reanalysis_stat(forcing_list, path_forcing_list, year_bkg_end, year_trans_end, extension)
-    list_valid_sim = glacier_filter(path_snow, extension, glacier, min_glacier_depth, max_glacier_depth)
-    dict_melt_out, stats_melt_out_dic = melt_out_date(consecutive, path_ground, path_snow, year_bkg_end, year_trans_end, extension)
-    df_stats = assign_value_df_stats(path_ground, path_snow, year_bkg_end, year_trans_end, extension)
+    df = assign_value_df(path_repository, path_ground, site)
+    reanalysis_stats = assign_value_reanalysis_stat(forcing_list, path_forcing_list, year_bkg_end, year_trans_end, site)
+    list_valid_sim = glacier_filter(path_snow, site, glacier, min_glacier_depth, max_glacier_depth)
+    dict_melt_out, stats_melt_out_dic = melt_out_date(consecutive, path_ground, path_snow, year_bkg_end, year_trans_end, site)
+    df_stats = assign_value_df_stats(path_ground, path_snow, year_bkg_end, year_trans_end, site)
 
     return df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats
 
-def load_all_pickles(extension=''):
+def load_all_pickles(site):
     """ Loads all pickles corresponding to the site name
     
     Parameters
     ----------
-    extension : str, optional
+    site : str
         Location of the event, e.g. 'Aksaut_Ridge'
 
     Returns
@@ -3361,11 +3369,11 @@ def load_all_pickles(extension=''):
 
     """
 
-    list_file_names = [f"df{('' if extension=='' else '_')}{extension}.pkl",
-                       f"reanalysis_stats{('' if extension=='' else '_')}{extension}.pkl",
-                       f"list_valid_sim{('' if extension=='' else '_')}{extension}.pkl",
-                       f"melt_out{('' if extension=='' else '_')}{extension}.pkl",
-                       f"df_stats{('' if extension=='' else '_')}{extension}.pkl"]
+    list_file_names = [f"df{('' if site=='' else '_')}{site}.pkl",
+                       f"reanalysis_stats{('' if site=='' else '_')}{site}.pkl",
+                       f"list_valid_sim{('' if site=='' else '_')}{site}.pkl",
+                       f"melt_out{('' if site=='' else '_')}{site}.pkl",
+                       f"df_stats{('' if site=='' else '_')}{site}.pkl"]
 
     output = [0 for _ in list_file_names]
 
@@ -3382,7 +3390,7 @@ def load_all_pickles(extension=''):
     return df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats
 
 def plot_all(site, forcing_list, path_forcing_list, path_ground, path_swe, path_thaw_depth,
-             year_bkg_end, year_trans_end, extension='', no_weight=True,
+             year_bkg_end, year_trans_end, no_weight=True,
              individual_heatmap=False, polar_plots=False, parity_plot=False):
     """ Function returns a series of summary plots for a given site.
     
@@ -3404,7 +3412,7 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_swe, path_
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int, optional
         Same for transient period
-    extension : str, optional
+    site : str
         Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
     no_weight : bool, optional
         If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
@@ -3424,14 +3432,14 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_swe, path_
     # OPEN THE VARIOUS FILES
     #####################################################################################
 
-    df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats = load_all_pickles(extension)
+    df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats = load_all_pickles(site)
 
     #####################################################################################
     # PLOTS
     #####################################################################################
 
     # assign a subjective weight to all simulations
-    pd_weight = assign_weight_sim(extension, no_weight)
+    pd_weight = assign_weight_sim(site, no_weight)
     _, thaw_depth = open_thaw_depth_nc(path_thaw_depth)
 
     list_vars = ['time_air', 'temp_air', 'SW_flux', 'SW_direct_flux', 'SW_diffuse_flux', 'precipitation']
@@ -3449,7 +3457,7 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_swe, path_
     print('The following plot is a histogram of the distribution of the statistical weights of all simulations:')
     plot_hist_stat_weights(pd_weight, df, zero=True)
     print('The following plot is a histogram of the distribution of glacier simulations wrt to altitude, aspect, slope, and forcing:')
-    plot_hist_valid_sim_all_variables(path_thaw_depth, extension)
+    plot_hist_valid_sim_all_variables(path_thaw_depth, site)
 
     alt_list = sorted(set(df_stats['altitude']))
     alt_index = int(np.floor((len(alt_list)-1)/2))
@@ -3462,17 +3470,17 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_swe, path_
     mean_air_temp = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in temp_air_all], year_bkg_end, year_trans_end)
     
     # finally we get the total water production, averaged over all reanalyses
-    tot_water_prod, _, mean_prec = assign_tot_water_prod_generic(path_forcing_list, path_ground, path_swe, year_bkg_end, year_trans_end, extension, no_weight)
+    tot_water_prod, _, mean_prec = assign_tot_water_prod(path_forcing_list, path_ground, path_swe, year_bkg_end, year_trans_end, site, no_weight)
 
     year_rockfall = rockfall_values(site)['year']
     print('Plots of the normalized distance of air and ground temperature, water production, and thaw_depth as a function of time')
     print('Granularity: week and month side by side')
-    plot_aggregating_distance_temp_all_generic(['Air temperature', 'Water production', 'Ground temperature'],
+    plot_aggregating_distance_temp_all(['Air temperature', 'Water production', 'Ground temperature'],
                                        [time_air_all[0], time_ground, time_ground],
                                        [mean_air_temp, tot_water_prod, temp_ground_mean],
                                        ['week', 'month'], site, year_rockfall, year_bkg_end, year_trans_end, False)
     print('Granularity: year, plotted for all years')
-    plot_aggregating_distance_temp_all_generic(['Air temperature', 'Water production', 'Ground temperature'],
+    plot_aggregating_distance_temp_all(['Air temperature', 'Water production', 'Ground temperature'],
                                         [time_air_all[0], time_ground, time_ground],
                                         [mean_air_temp, tot_water_prod, temp_ground_mean],
                                         ['year'], site, 0, year_bkg_end, year_trans_end, False)
@@ -3485,36 +3493,36 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_swe, path_
 
     if individual_heatmap:
         print('Heatmap of the background mean GST as a function of aspect and slope at %s m:' % alt_index_abs)
-        plot_table_mean_GST_aspect_slope_generic(df_stats, site, alt_index_abs, True, False)
+        plot_table_mean_GST_aspect_slope(site, alt_index_abs, True, False)
         print('Heatmap of the evolution of the mean GST between the background and the transient periods as a function of aspect and slope at %s m:' % alt_index_abs)
-        plot_table_mean_GST_aspect_slope_generic(df_stats, site, alt_index_abs, False, False)
+        plot_table_mean_GST_aspect_slope(site, alt_index_abs, False, False)
 
     print('Heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitude')
-    plot_table_aspect_slope_all_altitudes_generic(df, df_stats, site, show_glacier=False, box=False)
+    plot_table_aspect_slope_all_altitudes(site, show_glacier=False, box=False)
 
 
     if polar_plots:
         print('Polar heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitude')
-        plot_table_aspect_slope_all_altitudes_polar_generic(df_stats, site, False)
+        plot_table_aspect_slope_all_altitudes_polar(site, box=False)
 
         print('Polar plot of the permafrost and glacier spatial distribution as a function of aspect and slope at all altitude')
-        plot_permafrost_all_altitudes_polar_generic(df_stats, site, thaw_depth, False)
+        plot_permafrost_all_altitudes_polar(site, thaw_depth, box=False)
 
     print('CDF of background, transient, and evolution GST:')
-    plot_cdf_GST(df_stats)
+    plot_cdf_GST(site)
     print('Heatmap of 10th, 25th, 50th, 75th, and 90th percentile in background and transient GST, and the difference:')
-    heatmap_percentile_GST(df_stats)
+    heatmap_percentile_GST(site)
     print('Plot of mean GST evolution vs background GST, with an emphasis on the 10% colder and warmer simulations')
-    plot_10_cold_warm(df_stats)
+    plot_10_cold_warm(site)
     print('Plot of mean GST evolution vs background GST, fit, and binning per 10% quntiles')
-    plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(df_stats)
+    plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site)
 
     print('Scatter plot of mean background GST vs evolution of mean GST between the background and transient period')
-    plot_mean_bkg_GST_vs_evolution(df_stats)
+    plot_mean_bkg_GST_vs_evolution(site)
 
     if parity_plot:
         print('Parity plot (statistically-modeled vs numerically-simulated) of background mean GST:')
-        xdata, ydata, optimizedParameters, pcov, corr_matrix, R_sq = fit_stat_model_grd_temp(df_stats, all=False, diff_forcings=True)
+        xdata, ydata, optimizedParameters, pcov, corr_matrix, R_sq = fit_stat_model_grd_temp(site, all=False, diff_forcings=True)
         list_ceof = ['offset', 'c_alt', 'd_alt', 'c_asp', 'c_slope']
         pd_coef = pd.DataFrame(list_ceof, columns=['Coefficient'])
         # previously was columns=['all', 'era5', 'merra2', 'jra55'] when had all 3 forcings
