@@ -3201,6 +3201,45 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(df_stats, list_site):
 
     return slope, intercept, r
 
+def plot_mean_bkg_GST_vs_evolution(df_stats):
+    """ Function returns a scatter plot of mean background GST (ground-surface temperature)
+        vs evolution of mean GST between the background and transient period.
+        Note that each point is computed from an average over the 3 reanalyses to avoid bias.
+    
+    Parameters
+    ----------
+    df_stats : pandas.core.frame.DataFrame
+        Panda dataframe with at least the following columns: 'aspect', 'slope', 'bkg_grd_temp'
+
+
+    Returns
+    -------
+    Scatter plot
+    """
+
+    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd', u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf']
+
+    xx = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(df_stats)[1]]
+    yy = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(df_stats)[3]]
+
+    alt_list = list(np.sort(np.unique(df_stats['altitude'])))
+
+    for i in range(len(xx)):
+        slope, intercept, r, p, se = linregress(xx[i],yy[i])
+        print('altitude:', alt_list[i],', R-square:', r**2, ', regression slope:', slope , ', regression intercept:', intercept)
+        u = np.arange(np.min(xx[i])-0.1, np.max(xx[i])+0.1, 0.01)
+        plt.scatter(xx[i],yy[i], c=colorcycle[i], label=('%s m' % (alt_list[i])))
+        plt.plot(u, slope*u+intercept, c=colorcycle[i], label=('slope: %s' % (round(slope,3))))
+
+    plt.legend(loc='lower left')
+    plt.xlabel('Mean background GST [°C]')
+    plt.ylabel('Mean GST evolution [°C]')
+
+    # displaying the scatter plot 
+    plt.show()
+    plt.close()
+    plt.clf() 
+
 def plot_visible_skymap_from_horizon_file(hor_path):
     """ Function returns a fisheye view of the sky with the visible portion in blue and the blocked one in black.
     
@@ -3342,31 +3381,33 @@ def load_all_pickles(extension=''):
 
     return df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats
 
-def plot_all_generic(site, forcings, path_forcings,
-                     path_ground, path_snow, path_swe, path_thaw_depth,
-                     year_bkg_end=2010, year_trans_end=2023,
-                     individual_heatmap=False, polar_plots=False,
-                     parity_plot=False):
+def plot_all(site, forcing_list, path_forcing_list, path_ground, path_swe, path_thaw_depth,
+             year_bkg_end, year_trans_end, extension='', no_weight=True,
+             individual_heatmap=False, polar_plots=False, parity_plot=False):
     """ Function returns a series of summary plots for a given site.
     
     Parameters
     ----------
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
-    forcings : list of str
+    forcing_list : list of str
         List of forcings provided, with a number of entries between 1 and 3 in 'era5', 'merra2', and 'jra55'. E.g. ['era5', 'merra2']
-    path_forcings : list of str
-        List of string paths to the locations of the different forcings for that particular site (.nc)
+    path_forcing_list : list of str
+        List of paths to the .nc file where the atmospheric forcing data for the given reanalysis is stored
     path_ground : str
         String path to the location of the ground output file from GTPEM (.nc)
-    path_snow : str
-        String path to the location of the snow output file from GTPEM (.nc)
+    path_swe : str
+        Path to the .nc file where the aggregated SWE simulations are stored
     path_thaw_depth : str
         String path to the location of the thaw depth output file from GTPEM (.nc)
     year_bkg_end : int, optional
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int, optional
         Same for transient period
+    extension : str, optional
+        Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
+    no_weight : bool, optional
+        If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
     individual_heatmap : bool, optional
         Show or not heatmaps for unique altitude
     polar_plots : bool, optional
@@ -3391,13 +3432,24 @@ def plot_all_generic(site, forcings, path_forcings,
 
     # assign a subjective weight to all simulations
     pd_weight = assign_weight_sim(extension, no_weight)
+    _, thaw_depth = open_thaw_depth_nc(path_thaw_depth)
+
+    list_vars = ['time_air', 'temp_air', 'SW_flux', 'SW_direct_flux', 'SW_diffuse_flux', 'precipitation']
+    list_series = [open_air_nc(i) for i in path_forcing_list]
+    list_series_b = [[list_series[j][i] for j in range(len(list_series))] for i in range(len(list_series[0]))]
+    air_all_dict = dict(zip(list_vars, list_series_b))
+
+    time_air_all = air_all_dict['time_air']
+    temp_air_all = air_all_dict['temp_air']
+
+    _, time_ground, temp_ground = open_ground_nc(path_ground)
 
     # weighted mean GST
     temp_ground_mean = list(np.average([temp_ground[i,:,0] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight['weight']))
     print('The following plot is a histogram of the distribution of the statistical weights of all simulations:')
     plot_hist_stat_weights(pd_weight, df, zero=True)
     print('The following plot is a histogram of the distribution of glacier simulations wrt to altitude, aspect, slope, and forcing:')
-    plot_hist_valid_sim_all_variables(df, df_stats, depth_thaw)
+    plot_hist_valid_sim_all_variables(path_thaw_depth, extension)
 
     alt_list = sorted(set(df_stats['altitude']))
     alt_index = int(np.floor((len(alt_list)-1)/2))
@@ -3407,12 +3459,10 @@ def plot_all_generic(site, forcings, path_forcings,
 
     # Note that this is selecting the elevation in the 'middle': index 2 in the list [0,1,2,3,4]
     # and it returns the mean air temperature over all reanalyses
-    mean_air_temp = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in temp_air_all])
-    # here we get the mean precipitation and then water from snow melting 
-    mean_prec = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in precipitation_all])
-    swe_mean = list(np.average([swe[i,:] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight['weight']))
+    mean_air_temp = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in temp_air_all], year_bkg_end, year_trans_end)
+    
     # finally we get the total water production, averaged over all reanalyses
-    tot_water_prod = assign_tot_water_prod_generic(swe_mean, mean_prec, time_ground, time_pre_trans_ground, time_air_merra2)
+    tot_water_prod, _, mean_prec = assign_tot_water_prod_generic(path_forcing_list, path_ground, path_swe, year_bkg_end, year_trans_end, extension, no_weight)
 
     year_rockfall = rockfall_values(site)['year']
     print('Plots of the normalized distance of air and ground temperature, water production, and thaw_depth as a function of time')
@@ -3428,10 +3478,10 @@ def plot_all_generic(site, forcings, path_forcings,
                                         ['year'], site, 0, year_bkg_end, year_trans_end, False)
 
     print('Yearly statistics for air and ground surface temperature, and also precipitation and water production')
-    plot_box_yearly_stat('Air temperature', time_air_all[0], mean_air_temp, year_bkg_end=2010, year_trans_end=2023)
-    plot_box_yearly_stat('GST', time_ground, temp_ground_mean, year_bkg_end=2010, year_trans_end=2023)
-    plot_box_yearly_stat('Precipitation', time_ground, mean_prec, year_bkg_end=2010, year_trans_end=2023)
-    plot_box_yearly_stat('Water production', time_ground, tot_water_prod, year_bkg_end=2010, year_trans_end=2023)
+    plot_box_yearly_stat('Air temperature', time_air_all[0], mean_air_temp, year_bkg_end, year_trans_end)
+    plot_box_yearly_stat('GST', time_ground, temp_ground_mean, year_bkg_end, year_trans_end)
+    plot_box_yearly_stat('Precipitation', time_ground, mean_prec, year_bkg_end, year_trans_end)
+    plot_box_yearly_stat('Water production', time_ground, tot_water_prod, year_bkg_end, year_trans_end)
 
     if individual_heatmap:
         print('Heatmap of the background mean GST as a function of aspect and slope at %s m:' % alt_index_abs)
@@ -3448,7 +3498,7 @@ def plot_all_generic(site, forcings, path_forcings,
         plot_table_aspect_slope_all_altitudes_polar_generic(df_stats, site, False)
 
         print('Polar plot of the permafrost and glacier spatial distribution as a function of aspect and slope at all altitude')
-        plot_permafrost_all_altitudes_polar_generic(df_stats, site, depth_thaw, False)
+        plot_permafrost_all_altitudes_polar_generic(df_stats, site, thaw_depth, False)
 
     print('CDF of background, transient, and evolution GST:')
     plot_cdf_GST(df_stats)
@@ -3464,10 +3514,10 @@ def plot_all_generic(site, forcings, path_forcings,
 
     if parity_plot:
         print('Parity plot (statistically-modeled vs numerically-simulated) of background mean GST:')
-        xdata, ydata, optimizedParameters, pcov, corr_matrix, R_sq = fit_stat_model_grd_temp_Aksaut(df_stats, all=False, diff_forcings=True)
+        xdata, ydata, optimizedParameters, pcov, corr_matrix, R_sq = fit_stat_model_grd_temp(df_stats, all=False, diff_forcings=True)
         list_ceof = ['offset', 'c_alt', 'd_alt', 'c_asp', 'c_slope']
         pd_coef = pd.DataFrame(list_ceof, columns=['Coefficient'])
         # previously was columns=['all', 'era5', 'merra2', 'jra55'] when had all 3 forcings
-        pd_coef = pd.concat([pd_coef, pd.DataFrame((np.array([list(i) for i in optimizedParameters]).transpose()), columns=forcings)], axis=1)
+        pd_coef = pd.concat([pd_coef, pd.DataFrame((np.array([list(i) for i in optimizedParameters]).transpose()), columns=forcing_list)], axis=1)
         print('The coefficients of the statistical model for the mean background GST are given by:')
         print(pd_coef)
