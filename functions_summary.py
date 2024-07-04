@@ -117,6 +117,56 @@ def open_snow_nc(path_snow):
 
     return f_snow, snow_height
 
+def open_swe_nc(path_swe):
+    """ Function returns data from the .nc file for the snow water equivalent (SWE) simulation results
+    
+    Parameters
+    ----------
+    path_swe : str
+        Path to the .nc file where the aggregated SWE simulations are stored
+
+    Returns
+    -------
+    f_swe : netCDF4._netCDF4.Group
+        geotop netCDF group with description of dimensions, variables, and data for the SWE
+    swe : netCDF4._netCDF4.Variable
+        SWE in the shape (simulation, time)
+    """
+
+    # Open file for snow depth
+    ncfile_swe = Dataset(path_swe, mode='r')
+    # Select geotop model data
+    f_swe = ncfile_swe.groups['geotop']
+    
+    swe = f_swe['snow_water_equivalent']
+
+    return f_swe, swe
+
+def open_thaw_depth_nc(path_thaw_depth):
+    """ Function returns data from the .nc file for the depth of thaw simulation results
+    
+    Parameters
+    ----------
+    path_thaw_depth : str
+        Path to the .nc file where the aggregated thaw depth simulations are stored
+
+    Returns
+    -------
+    f_thaw_depth : netCDF4._netCDF4.Group
+        geotop netCDF group with description of dimensions, variables, and data for the thaw depth
+    thaw_depth : netCDF4._netCDF4.Variable
+        Depth of thaw in the shape (simulation, time)
+    """
+
+    # Open file for snow depth
+    ncfile_thaw_depth = Dataset(path_thaw_depth, mode='r')
+    # Select geotop model data
+    f_thaw_depth = ncfile_thaw_depth.groups['geotop']
+    
+    thaw_depth = f_thaw_depth['AL']
+
+    return f_thaw_depth, thaw_depth
+
 def time_unit_stamp(time_file):
     """ Function returns frequency of datapoints and exact date and time of the initial datapoint, converted into a datetime
     
@@ -418,8 +468,7 @@ def assign_value_df(path_repository, path_ground, extension=''):
 
     return df
 
-def assign_value_reanalysis_stat(forcing_list, path_forcing_list,
-                                 year_bkg_end, year_trans_end, extension=''):
+def assign_value_reanalysis_stat(forcing_list, path_forcing_list, year_bkg_end, year_trans_end, extension=''):
     """ Creates a dictionary of mean quantities over the background and transient periods
     
     Parameters
@@ -437,7 +486,8 @@ def assign_value_reanalysis_stat(forcing_list, path_forcing_list,
 
     Returns
     -------
-        dict
+    reanalysis_stats : dict
+        dictionary of mean quntities over the background and transient periods
 
     """
 
@@ -514,7 +564,7 @@ def assign_value_reanalysis_stat(forcing_list, path_forcing_list,
 
     return var_name
 
-def glacier_filter_generic(path_snow, extension='', glacier=False, min_glacier_depth=100, max_glacier_depth=20000):
+def glacier_filter(path_snow, extension='', glacier=False, min_glacier_depth=100, max_glacier_depth=20000):
     """ Function returns a list of valid simulations regarding the glacier criteria
     
     Parameters
@@ -534,7 +584,7 @@ def glacier_filter_generic(path_snow, extension='', glacier=False, min_glacier_d
     Returns
     -------
     list_valid_sim : list
-        List of valid simulations.
+        list of simulation number for all valid simulations
     """
     # This saves a lot of time since it is not re-evaluated each time but just the first
     # time and then saved into a pickle.
@@ -581,15 +631,313 @@ def glacier_filter_generic(path_snow, extension='', glacier=False, min_glacier_d
 
     return list_valid_sim
 
-def assign_weight_sim(df_stats, site, no_weight=True):
+def melt_out_date(consecutive, path_ground, path_snow, year_bkg_end, year_trans_end, extension=''):
+    """ Function returns a list of melt out dates given the criterion of a number of consecutive snow-free days
+    
+    Parameters
+    ----------
+    consecutive : int
+        Number of minimum consecutive snow-free days to declare seasonal melt out of the snow
+    path_ground : str
+        Path to the .nc file where the aggregated ground simulations are stored
+    path_snow : str
+        Path to the .nc file where the aggregated snow simulations are stored
+    year_bkg_end : int
+        Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
+    year_trans_end : int
+        Same for transient period
+    extension : str, optional
+        Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
+    
+
+    Returns
+    -------
+    dict_melt_out : dict
+        Dictionary that assings a melt-out date to each simulation and each year
+        Note that if snow does NOT melt at all, we assign the maximal value corresponding to the end of the year 
+    stats_melt_out_dic : dict
+        Background, transient and full mean of the melt-out date for each simulation
+    """
+
+    # This saves a lot of time since it is not re-evaluated each time but just the first
+    # time and then saved into a pickle. 
+
+    file_name = f"melt_out{('' if extension=='' else '_')}{extension}.pkl"
+    file_name_list_valid_sim = f"list_valid_sim{('' if extension=='' else '_')}{extension}.pkl"
+    my_path = pickle_path + file_name
+
+    snow_height = open_snow_nc(path_snow)[1]
+    time_ground = open_ground_nc(path_ground)[1]
+    with open(pickle_path + file_name_list_valid_sim, 'rb') as file: 
+        # Call load method to deserialize 
+        list_valid_sim = pickle.load(file)
+
+    # try to open the pickle file, if it exists
+    try: 
+        # Open the file in binary mode 
+        with open(my_path, 'rb') as file: 
+            # Call load method to deserialze 
+            dict_melt_out, stats_melt_out_dic = pickle.load(file) 
+        print('Succesfully opened the pre-existing pickle:', file_name)
+
+    # if the pickle file does not exist, we have to create it
+    except (OSError, IOError) as e:
+        # we start by importing the list of time indexes separated by year
+        dictionary = list_tokens_year(time_ground, year_bkg_end, year_trans_end)[0]
+
+        # we create the dictionary of melt-out dates
+        dict_melt_out = defaultdict(dict)
+        for sim in list_valid_sim:
+            for year in list(dictionary.keys()):
+                # we extract the time series indices corresponding to the year selected
+                time_particular_year = dictionary[year]
+
+                # we get a list of snow free day
+                test_list = [i for i, x in enumerate(snow_height[sim, time_particular_year]) if x == 0]
+                # this counter goes through test_list and checks that there is a number of consecutive days without snow
+                counter = 0
+                # this will be the final result and is initialized to 0
+                result = 0
+                # we start by making sure that the list of snow-free days is at least as long as the number of consecutive
+                # days we are after, if not we conclude that there is snow all year round
+                if len(test_list) >= counter + consecutive + 1:   
+                    if test_list[counter+consecutive] == test_list[counter]+consecutive:
+                        result = test_list[counter]
+                    # keep going through the loop while we don't have the number of snow-free consecutive days
+                    while test_list[counter+consecutive] != test_list[counter]+consecutive:
+                        counter += 1
+                        result = test_list[counter]
+                        if len(test_list) < counter + consecutive + 1:
+                            result = len(snow_height[sim, time_particular_year])
+                            break
+                else:
+                    result = len(snow_height[sim, time_particular_year])
+
+                dict_melt_out[sim][year] = result
+            
+        stats_melt_out_dic = {}
+        for sim_index in list(dict_melt_out.keys()):
+            stats_melt_out_dic[sim_index] = {'bkg_mean': np.mean([dict_melt_out[sim_index][k] for k in list(dict_melt_out[sim_index].keys()) if k < year_bkg_end]),
+                                             'trans_mean': np.mean([dict_melt_out[sim_index][k] for k in list(dict_melt_out[sim_index].keys()) if k >= year_bkg_end]),
+                                             'full_mean': np.mean(list(dict_melt_out[sim_index].values())),
+                                             'full_std': np.std(list(dict_melt_out[sim_index].values()))}
+        
+        # Open a file and use dump() 
+        with open(my_path, 'wb') as file:
+            # A new file will be created 
+            pickle.dump([dict_melt_out, stats_melt_out_dic], file)
+        print('Created a new pickle:', file_name)
+
+        # useless line just to use the variable 'e' so that I don't get an error
+        if e == 0:
+            pass
+
+    return dict_melt_out, stats_melt_out_dic
+
+def assign_value_df_stats(path_ground, path_snow, year_bkg_end, year_trans_end, extension=''):
+    """ Function returns a large panda dataframe with information about the air, ground, snow, topography, etc. for all simulations
+    
+    Parameters
+    ----------
+    path_ground : str
+        Path to the .nc file where the aggregated ground simulations are stored
+    path_snow : str
+        Path to the .nc file where the aggregated snow simulations are stored
+    year_bkg_end : int
+        Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
+    year_trans_end : int
+        Same for transient period
+    extension : str, optional
+        Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
+    
+
+    Returns
+    -------
+    df_stats : pandas.core.frame.DataFrame
+        Large panda dataframe with information about the air, ground, snow, topography, etc. for all simulations
+    """
+
+    file_name = f"df_stats{('' if extension=='' else '_')}{extension}.pkl"
+    file_name_df = f"df{('' if extension=='' else '_')}{extension}.pkl"
+    file_name_reanalysis_stats = f"reanalysis_stats{('' if extension=='' else '_')}{extension}.pkl"
+    file_name_list_valid_sim = f"list_valid_sim{('' if extension=='' else '_')}{extension}.pkl"
+    file_name_melt_out = f"melt_out{('' if extension=='' else '_')}{extension}.pkl"
+    my_path = pickle_path + file_name
+
+    snow_height = open_snow_nc(path_snow)[1]
+    _, time_ground, temp_ground = open_ground_nc(path_ground)
+    _, time_bkg_ground, time_trans_ground, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end)
+
+    with open(pickle_path + file_name_df, 'rb') as file: 
+        # Call load method to deserialize 
+        df = pickle.load(file)
+
+    with open(pickle_path + file_name_reanalysis_stats, 'rb') as file: 
+        # Call load method to deserialize 
+        reanalysis_stats = pickle.load(file)
+
+    with open(pickle_path + file_name_list_valid_sim, 'rb') as file: 
+        # Call load method to deserialize 
+        list_valid_sim = pickle.load(file)
+
+    with open(pickle_path + file_name_melt_out, 'rb') as file: 
+        # Call load method to deserialize 
+        _, stats_melt_out_dic = pickle.load(file)
+
+    # try to open the pickle file, if it exists
+    try: 
+        # Open the file in binary mode 
+        with open(my_path, 'rb') as file: 
+            # Call load method to deserialze 
+            var_name = pickle.load(file) 
+        print('Succesfully opened the pre-existing pickle:', file_name)
+
+    # if the pickle file does not exist, we have to create it
+    except (OSError, IOError) as e:
+        # this dictionary will tell you pretty much everything you need to know for each simulation
+        dict_stats = {}
+        len_tot = list(time_pre_trans_ground).count(True)
+        len_bkg = list(time_bkg_ground).count(True)
+        len_trans = list(time_trans_ground).count(True)
+
+        for sim_index in list_valid_sim:
+            dict_stats[sim_index] = [df.iloc[sim_index].directory,
+                                    # hash code of the simulation, e.g. 'gt_joffre_2000_merra2_ba887ec'
+                                    temp_ground[sim_index, time_bkg_ground,0].mean(),
+                                    # background ground temperature for that particular simulation
+                                    temp_ground[sim_index, time_trans_ground,0].mean(),
+                                    # transient ground temperature for that particular simulation
+                                    temp_ground[sim_index, time_trans_ground,0].mean()
+                                    - temp_ground[sim_index, time_bkg_ground,0].mean(),
+                                    # ground temperature evolution between background and transient for that particular simulation
+                                    reanalysis_stats[df.loc[sim_index].forcing][df.loc[sim_index].altitude]['temp_bkg'],
+                                    # background air temperature for that particular simulation
+                                    reanalysis_stats[df.loc[sim_index].forcing][df.loc[sim_index].altitude]['temp_trans'],
+                                    # transient air temperature for that particular simulation
+                                    reanalysis_stats[df.loc[sim_index].forcing][df.loc[sim_index].altitude]['air_warming'],
+                                    # air temperature evolution between background and transient for that particular simulation
+                                    temp_ground[sim_index, time_bkg_ground,0].mean()
+                                    - reanalysis_stats[df.iloc[sim_index].forcing][df.iloc[sim_index].altitude]['temp_bkg'],
+                                    # background surface offset (SO) for that particular simulation
+                                    temp_ground[sim_index, time_trans_ground,0].mean()
+                                    - reanalysis_stats[df.iloc[sim_index].forcing][df.iloc[sim_index].altitude]['temp_trans'],
+                                    # transient surface offset (SO) for that particular simulation
+                                    temp_ground[sim_index, time_trans_ground,0].mean()
+                                    - temp_ground[sim_index, time_bkg_ground,0].mean()
+                                    - reanalysis_stats[df.iloc[sim_index].forcing][df.iloc[sim_index].altitude]['air_warming'],
+                                    # differential warming for that particular simulation
+                                    temp_ground[sim_index, time_pre_trans_ground, 0].std(),
+                                    # standard deviation of the temperature for that particular simulation
+                                    np.min(snow_height[sim_index, time_pre_trans_ground]),
+                                    # minimum snow depth
+                                    np.max(snow_height[sim_index, time_pre_trans_ground]),
+                                    # maximum snow depth 
+                                    snow_height[sim_index, time_pre_trans_ground].mean(),
+                                    # average snow depth
+                                    snow_height[sim_index, time_bkg_ground].mean(),
+                                    # average snow depth for the background
+                                    snow_height[sim_index, time_trans_ground].mean(),
+                                    # average snow depth for the transient
+                                    stats_melt_out_dic[sim_index]['full_mean'],
+                                    # average snow melt out date
+                                    stats_melt_out_dic[sim_index]['full_std'],
+                                    # standard deviation of the snow melt out date
+                                    stats_melt_out_dic[sim_index]['bkg_mean'],
+                                    # average snow melt out date for the background
+                                    stats_melt_out_dic[sim_index]['trans_mean'],
+                                    # average snow melt out date for the transient
+                                    np.count_nonzero(snow_height[sim_index, time_pre_trans_ground])/len_tot,
+                                    # fraction of days with snow
+                                    np.count_nonzero(snow_height[sim_index, time_bkg_ground])/len_bkg,
+                                    # fraction of days with snow for the background
+                                    np.count_nonzero(snow_height[sim_index, time_trans_ground])/len_trans,
+                                    # fraction of days with snow for the transient
+                                    reanalysis_stats[df.loc[sim_index].forcing][df.loc[sim_index].altitude]['SW'],
+                                    # mean SW for that particular simulation
+                                    reanalysis_stats[df.loc[sim_index].forcing][df.loc[sim_index].altitude]['SW_direct'],
+                                    # mean direct SW for that particular simulation
+                                    reanalysis_stats[df.loc[sim_index].forcing][df.loc[sim_index].altitude]['SW_diffuse'],
+                                    # mean diffuse SW for that particular simulation
+                                    df.iloc[sim_index].altitude, # altitude of the simulation
+                                    df.iloc[sim_index].aspect, # aspect of the simulation
+                                    df.iloc[sim_index].slope, # slope of the simulation
+                                    df.iloc[sim_index].snow, # snow correction factor of the simulation
+                                    df.iloc[sim_index].maxswe, # maximum snow water equivalent of the simulation
+                                    df.iloc[sim_index].material, # ground material of the simulation, e.g. 'rock'
+                                    df.iloc[sim_index].forcing, # data reanalysis forcing of the simulation, e.g. 'era5'
+                                    df.iloc[sim_index].site_name, # site name of the simulation
+                                    ]
+        
+        var_name = pd.DataFrame.from_dict(dict_stats,
+                                            orient='index',
+                                            columns=['directory', 'bkg_grd_temp', 'trans_grd_temp', 'evol_grd_temp',
+                                                    'bkg_air_temp', 'trans_air_temp', 'evol_air_temp',
+                                                    'bkg_SO', 'trans_SO', 'diff_warming', 'std_temp',
+                                                    'min_snow', 'max_snow', 'mean_snow', 'mean_snow_bkg', 'mean_snow_trans',
+                                                    'melt_out_mean', 'melt_out_std', 'melt_out_bkg', 'melt_out_trans',
+                                                    'frac_snow', 'frac_snow_bkg', 'frac_snow_trans',
+                                                    'mean_SW','mean_SW_direct','mean_SW_diffuse', 'altitude', 'aspect',
+                                                    'slope', 'snow_corr', 'max_swe', 'material', 'forcing', 'site_name'])
+        
+        # Open a file and use dump() 
+        with open(my_path, 'wb') as file:
+            # A new file will be created 
+            pickle.dump(var_name, file)
+        print('Created a new pickle:', file_name)
+
+        # useless line just to use the variable 'e' so that I don't get an error
+        if e == 0:
+            pass
+
+    return var_name
+
+def rockfall_values(site):
+    """ Function returns a dictionary of the topography and other details of the rockfall event at 'site'
+    
+    Parameters
+    ----------
+    site : str
+        Location of the event, e.g. 'Joffre' or 'Fingerpost'
+
+    Returns
+    -------
+    Dictionary
+    """
+
+    rockfall_values = {'Joffre': {'aspect': 45, 'slope': 60, 'altitude': 2500, 'year': 2019,
+                                  'datetime': datetime(2019, 5, 13, 0, 0, 0, 0), 'time_index': [14376, 345043, 345048]},
+                       'Fingerpost': {'aspect': 270, 'slope': 50, 'altitude': 2600, 'year': 2015,
+                                      'datetime': datetime(2015, 12, 16, 0, 0, 0, 0), 'time_index': [13132, 315187, 315192]},
+                       'Dawson': {'aspect': 90, 'slope': 40, 'altitude': 500, 'year': 2015,
+                                      'datetime': datetime(2015, 12, 16, 0, 0, 0, 0), 'time_index': [13132, 315187, 315192]},
+                       'Aksaut_North': {'year': 2021,
+                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                       'Aksaut_North_test_no_SWEtop': {'year': 2021,
+                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                       'Aksaut_North_test_no_SnowSMIN': {'year': 2021,
+                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                       'Aksaut_North_slope_scf': {'year': 2021,
+                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                       'Aksaut_North_LWin': {'year': 2021,
+                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                       'Aksaut_North_spin_up': {'year': 2021,
+                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                       'Aksaut_Ridge': {'year': 2021,
+                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                       'Aksaut_South': {'year': 2021,
+                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                       'Aksaut_South_slope_scf': {'year': 2021,
+                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]}}
+
+    return rockfall_values[site]
+
+def assign_weight_sim(extension='', no_weight=True):
     """ Function returns a statistical weight for each simulation according to the importance in rockfall starting zone 
     
     Parameters
     ----------
-    df_stats : pandas.core.frame.DataFrame
-        Panda DataFrame df_stats, should at least include the following columns: 'altitude', 'aspect', 'slope'
-    site : str
-        Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    extension : str, optional
+        Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
     no_weight : bool, optional
         If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
 
@@ -600,14 +948,20 @@ def assign_weight_sim(df_stats, site, no_weight=True):
         and an overall weight.
     """
 
+    file_name = f"df_stats{('' if extension=='' else '_')}{extension}.pkl"
+    my_path = pickle_path + file_name
+    with open(my_path, 'rb') as file: 
+        # Call load method to deserialize 
+        df_stats = pickle.load(file)
+
     dict_weight = {}
     if no_weight:
         dict_weight = {i: [1,1,1] for i in list(df_stats.index.values)}
     else:
-        alt_distance = np.max([np.abs(i-rockfall_values(site)['altitude']) for i in np.sort(np.unique(df_stats['altitude']))])
-        dict_weight = {i: [1 - np.abs(df_stats.loc[i]['altitude']-rockfall_values(site)['altitude'])/(2*alt_distance),
-                        np.cos((np.pi)/180*(df_stats.loc[i]['aspect']-rockfall_values(site)['aspect']))/4+3/4,
-                        np.cos((np.pi)/30*(df_stats.loc[i]['slope']-rockfall_values(site)['slope']))/4+3/4]
+        alt_distance = np.max([np.abs(i-rockfall_values(extension)['altitude']) for i in np.sort(np.unique(df_stats['altitude']))])
+        dict_weight = {i: [1 - np.abs(df_stats.loc[i]['altitude']-rockfall_values(extension)['altitude'])/(2*alt_distance),
+                        np.cos((np.pi)/180*(df_stats.loc[i]['aspect']-rockfall_values(extension)['aspect']))/4+3/4,
+                        np.cos((np.pi)/30*(df_stats.loc[i]['slope']-rockfall_values(extension)['slope']))/4+3/4]
                         for i in list(df_stats.index.values)}
     
     pd_weight = pd.DataFrame.from_dict(dict_weight, orient='index',
@@ -616,68 +970,168 @@ def assign_weight_sim(df_stats, site, no_weight=True):
     
     return pd_weight
 
-def assign_tot_water_prod_generic(swe_mean, mean_prec, time_ground, time_pre_trans_ground, time_air_merra2):
-    """ Function returns the total water production at daily intervals in [mm s-1] 
-    
+def plot_hist_valid_sim_all_variables(path_thaw_depth, extension=''): 
+    """ Function returns a histogram of the number of valid/glacier simulations for each of the following variable
+        ('altitude', 'aspect', 'slope', 'forcing') 
+        It also shows the breakdown of valid simulations into permafrost and no-permafrost ones
+
     Parameters
     ----------
-    swe_mean : list
-        Mean swe over all 3 reanalyses
-    mean_prec : list
-        Mean precipitation over all simulations (weighted average)
-    time_ground : netCDF4._netCDF4.Variable
-        Time series for the ground timestamps
-    time_pre_trans_ground : numpy.ma.core.MaskedArray
-        Selects only the timestamps before the cutoff of the end of the transient era
-    time_air_merra2 : netCDF4._netCDF4.Variable
-        Time series for the air timestamps
+    path_thaw_depth : str
+        Path to the .nc file where the aggregated thaw depth simulations are stored
+    extension : str, optional
+        Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
 
     Returns
     -------
-    list of daily total water production
+    Histogram (subplot(2,2))
     """
 
-    # here we get the mean precipitation and then water from snow melting 
-    mean_prec = mean_all_reanalyses_generic(time_air_all, [i[:,alt_index] for i in precipitation_all])
-    swe_mean = list(np.average([swe[i,:] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight['weight']))
+    file_name_df = f"df{('' if extension=='' else '_')}{extension}.pkl"
+    file_name_df_stats = f"df_stats{('' if extension=='' else '_')}{extension}.pkl"
 
-    # convert mean precipitation into a panda dataframe to facilitate grouping by 24.
-    # This way the data is reported daily (as it is for the swe) rather than hourly
-    pd_prec_day = ((pd.DataFrame(mean_prec).rolling(24).mean()).iloc[23::24, :]).reset_index(drop=True)
+    _, thaw_depth = open_thaw_depth_nc(path_thaw_depth)
 
-    # convert swe into panda df to make the diff() operation easier. Swe is a total and
-    # we get the instantaneous flux by taking the difference between consecutive datapoints.
-    # The total precipitation between 2 datapoints is over 1 day = 864000 hence we divide by 86400.
-    # Finally, swe is in [kg m-2] which is equivalent to [mm] so we're good.
+    with open(pickle_path + file_name_df, 'rb') as file: 
+        # Call load method to deserialize 
+        df = pickle.load(file)
 
-    # Number of days between the start of the ground and air timeseries
-    num_day = int((num2date(time_ground[0], time_ground.units) - num2date(time_air_merra2[0], time_air_merra2.units)).total_seconds()/86400)
-    # we add num_days zeros at the beginning to make sure the dfs have the same dimension and span Jan 1, 1980 to Dec 31, 2019
-    # We make sure to multiply by (-1) and to divide by 86400
-    pd_diff_swe = pd.concat([pd.DataFrame([0]*num_day), (pd.DataFrame(swe_mean[:len(time_ground[time_pre_trans_ground][:])]).diff()).fillna(0)/86400*(-1)], ignore_index=True)
+    with open(pickle_path + file_name_df_stats, 'rb') as file: 
+        # Call load method to deserialize 
+        df_stats = pickle.load(file)
 
-    if len(pd_prec_day)!=len(pd_diff_swe):
-        raise ValueError('VictorCustomError: The lengths of the precipitation and swe time series are different!')
+    data=np.random.random((4,10))
+    variables = ['altitude','aspect','slope','forcing']
+    xaxes = ['Altitude [m]','Aspect [°]','Slope [°]','Forcing']
+    yaxes = ['Number of simulations','','Number of simulations','']
 
-    # The total water production is returned in the list type as the sum of precipitation and swe
-    tot_water_prod = list(pd_prec_day.add(pd_diff_swe.reset_index(drop=True), fill_value=0)[0])
+    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd', u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf']
 
-    return tot_water_prod
+    list_valid_sim = list(df_stats.index.values)
 
-def mean_all_reanalyses_generic(time_files, files_to_smooth, year_bkg_end=2010, year_trans_end=2023):
-    """ Function returns the mean time series over a number of reanalysis 
+    list_no_perma = []
+    for sim in list_valid_sim:
+        if np.std(thaw_depth[sim,:]) < 1 and np.max(thaw_depth[sim,:])> 19:
+            list_no_perma.append(sim)
+
+    list_perma = list(set(list_valid_sim) - set(list_no_perma))
+
+    f, a = plt.subplots(2,2, figsize=(6,6))
+    for idx,ax in enumerate(a.ravel()):
+        # list_var_prev: lists values the variable can take, e.g. [0, 45, 90, 135, etc.] for 'aspect'
+        # number_no_glaciers: number of valid simulations (without glaciers) per value in list_var_prev
+        list_var_prev, number_no_glaciers = np.unique(df_stats.loc[:, variables[idx]], return_counts=True)
+        _, number_perma = np.unique((df_stats.loc[list_perma, :]).loc[:, variables[idx]], return_counts=True)
+        print(number_perma)
+        
+        # translate into strings
+        list_var = [str(i) for i in list_var_prev]
+        # total number of simulations per value in list_var
+        tot = list(np.unique(df.loc[:, variables[idx]], return_counts=True)[1])
+
+        if len(number_perma) == 0:
+            number_perma = [0]*len(tot)
+
+        # number_glaciers: number of glaciers per value in list_var
+        number_glaciers = [tot[i] - number_no_glaciers[i] for i in range(len(tot))]
+        # number_no_perma: number of simulation swith no glaciers and no permafrost per value in list_var
+        number_no_perma = [number_no_glaciers[i] - number_perma[i] for i in range(len(tot))]
+
+
+        bottom = np.zeros(len(tot))
+        counts = {
+            'Permafrost': number_perma,
+            'No permafrost, no glaciers': number_no_perma,
+            'Glaciers': number_glaciers
+        }
+
+        colorbar = {
+            'Permafrost': colorcycle[1],
+            'No permafrost, no glaciers': colorcycle[2],
+            'Glaciers': colorcycle[0]
+        }
+
+        for name, data in counts.items():
+            p = ax.bar(list_var, data, label=name, bottom=bottom, color=colorbar[name])
+            bottom += data
+            data_no_zero = [i if i>0 else "" for i in data]
+            ax.bar_label(p, labels=data_no_zero, label_type='center')
+
+        ax.set_xlabel(xaxes[idx])
+        ax.set_ylim(0, np.max(tot))
+        ax.set_ylabel(yaxes[idx])
+
+
+    f.align_ylabels(a[:,0])
+    plt.legend(loc='lower right', reverse=True)
+    plt.tight_layout()
+    plt.show()
+    plt.close()
+    plt.clf()
+
+def plot_hist_stat_weights(pd_weight, df, zero=True): 
+    """ Function returns a histogram of the weight distribution over all (valid) simulations 
     
     Parameters
     ----------
-    time_file : list of netCDF4._netCDF4.Variable
+    pd_weight : pandas.core.frame.DataFrame
+        Panda DataFrame assigning a statistical weight to each simulation for each of 'altitude', 'aspect', 'slope'
+        and an overall weight.
+    df : pandas.core.frame.DataFrame
+        Panda DataFrame df, used to count the total number of simulations pre glacier filter and hence count total number of glaciers
+    df_stats : pandas.core.frame.DataFrame
+        Panda DataFrame df_stats, should at least include the following columns: 'altitude', 'aspect', 'slope'
+    zero : bool, optional
+        If True, shows the glacier simulations with a 0 weight, if False, those are ignored.
+
+    Returns
+    -------
+    Histogram
+    """
+
+    list_hist = list(pd_weight['weight'])
+    list_hist_b = [0 for _ in range(len(df)-len(pd_weight))]
+
+    counts, bins = np.histogram(list_hist, 10, (0, 1))
+    counts_b = 0
+    if zero == True:
+        counts_b, bins_b = np.histogram(list_hist_b, 10, (0, 1))
+    tot_count = np.sum(counts) + (np.sum(counts_b) if zero == True else 0)
+
+    colorcycle = [u'#1f77b4', u'#ff7f0e']
+    
+    plt.hist(bins[:-1], bins, weights=counts/tot_count, label='No glaciers', color=colorcycle[1])
+    if zero == True:
+        plt.hist(bins_b[:-1], bins_b, weights=counts_b/tot_count, label='Glaciers', color=colorcycle[0])
+
+    max_count = np.ceil((np.max([np.max(counts), np.max(counts_b)])/tot_count)/0.05+1)*0.05
+    
+    ticks = list(np.arange(0, max_count, 0.05))
+    plt.yticks(ticks, ["{:0.2f}".format(i) for i in ticks])
+
+    # Show the graph
+    if zero == True:
+        plt.legend(loc='upper right')
+    plt.xlabel('Statistical weight')
+    plt.ylabel('Frequency')
+    plt.show()
+    plt.close()
+    plt.clf()
+
+def mean_all_reanalyses(time_files, files_to_smooth, year_bkg_end, year_trans_end):
+    """ Function returns the mean time series over a number of reanalysis (has the length of a timeseries)
+    
+    Parameters
+    ----------
+    time_files : list of netCDF4._netCDF4.Variable
         List of files where the time index of each datapoint is stored
-    file_to_smooth : list of list
-        List ime series (could be temperature, precipitation, snow depth, etc.) that needs to be smoothed
+    files_to_smooth : list of list
+        List of time series (could be temperature, precipitation, snow depth, etc.) that needs to be smoothed
         Note that it needs to be in the shape (n,) and not (n,3) for instance, hence the altitude has
         to be pre-selected. E.g. accepts [temp_air_era5[:,0]] but not [temp_air_era5]
-    year_bkg_end : int, optional
+    year_bkg_end : int
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
-    year_trans_end : int, optional
+    year_trans_end : int
         Same for transient period
 
     Returns
@@ -706,6 +1160,147 @@ def mean_all_reanalyses_generic(time_files, files_to_smooth, year_bkg_end=2010, 
                                         for i in range(len(time_files)) if len(files_to_smooth[i][list_years[i][y]]) > (order[j-1] if j>0 else 0)], axis=0))
 
     return mean
+
+def assign_tot_water_prod_generic(path_forcing_list, path_ground, path_swe, year_bkg_end, year_trans_end, extension='', no_weight=True):
+    """ Function returns the total water production at daily intervals in [mm s-1] 
+    
+    Parameters
+    ----------
+    path_forcing_list : list of str
+        List of paths to the .nc file where the atmospheric forcing data for the given reanalysis is stored
+    path_ground : str
+        Path to the .nc file where the aggregated ground simulations are stored
+    path_swe : str
+        Path to the .nc file where the aggregated SWE simulations are stored
+    year_bkg_end : int
+        Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
+    year_trans_end : int
+        Same for transient period
+    extension : str, optional
+        Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
+    no_weight : bool, optional
+        If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
+
+    Returns
+    -------
+    tot_water_prod : list
+        list of daily total water production
+    mean_swe : list
+        Weighted mean SWE time series over all simulations
+    mean_prec : list
+        Mean precipitation time series over all reanalyses
+    """
+
+    file_name = f"df_stats{('' if extension=='' else '_')}{extension}.pkl"
+    my_path = pickle_path + file_name
+    with open(my_path, 'rb') as file: 
+        # Call load method to deserialize 
+        df_stats = pickle.load(file)
+
+    _, swe = open_swe_nc(path_swe)
+    _, time_ground, _ = open_ground_nc(path_ground)
+    _, _, _, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end)    
+
+    pd_weight = assign_weight_sim(extension, no_weight)
+
+    time_air_all = [open_air_nc(i)[0] for i in path_forcing_list]
+    precipitation_all = [open_air_nc(i)[-1] for i in path_forcing_list]
+
+    # Note that this is selecting the elevation in the 'middle': index 2 in the list [0,1,2,3,4]
+    # and it returns the mean air temperature over all reanalyses
+    alt_list = sorted(set(df_stats['altitude']))
+    alt_index = int(np.floor((len(alt_list)-1)/2))
+    alt_index_abs = alt_list[alt_index]
+    print('List of altitudes:', alt_list)
+    print('Altitude at which we plot the time series:', alt_index_abs)
+
+    # here we get the mean precipitation and then water from snow melting 
+    mean_swe = list(np.average([swe[i,:] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight['weight']))
+    mean_prec = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in precipitation_all], year_bkg_end, year_trans_end)
+
+    # convert mean precipitation into a panda dataframe to facilitate grouping by 24.
+    # This way the data is reported daily (as it is for the swe) rather than hourly
+    pd_prec_day = ((pd.DataFrame(mean_prec).rolling(24).mean()).iloc[23::24, :]).reset_index(drop=True)
+
+    # convert swe into panda df to make the diff() operation easier. Swe is a total and
+    # we get the instantaneous flux by taking the difference between consecutive datapoints.
+    # The total precipitation between 2 datapoints is over 1 day = 864000 hence we divide by 86400.
+    # Finally, swe is in [kg m-2] which is equivalent to [mm] so we're good.
+
+    # Number of days between the start of the ground and air timeseries
+    num_day = int((num2date(time_ground[0], time_ground.units) - num2date(time_air_all[0][0], time_air_all[0].units)).total_seconds()/86400)
+    # we add num_days zeros at the beginning to make sure the dfs have the same dimension and span Jan 1, 1980 to Dec 31, 2019
+    # We make sure to multiply by (-1) and to divide by 86400
+    pd_diff_swe = pd.concat([pd.DataFrame([0]*num_day), (pd.DataFrame(mean_swe[:len(time_ground[time_pre_trans_ground][:])]).diff()).fillna(0)/86400*(-1)], ignore_index=True)
+
+    if len(pd_prec_day)!=len(pd_diff_swe):
+        raise ValueError('VictorCustomError: The lengths of the precipitation and swe time series are different!')
+
+    # The total water production is returned in the list type as the sum of precipitation and swe
+    tot_water_prod = list(pd_prec_day.add(pd_diff_swe.reset_index(drop=True), fill_value=0)[0])
+
+    return tot_water_prod, mean_swe, mean_prec
+
+def running_mean_std(time_file, file_to_smooth, window, fill_before=False):
+    """ Function returns a running average (and standard deviation) of the time series over a given time window
+        adpated from Welford's online algorithm, computing everything in a single-pass 
+    
+    Parameters
+    ----------
+    time_file : netCDF4._netCDF4.Variable
+        File where the time index of each datapoint is stored
+    file_to_smooth : list
+        Time series (could be temperature, precipitation, snow depth, etc.) that needs to be smoothed
+        Note that it needs to be in the shape (n,) and not (n,3) for instance, hence the altitude has
+        to be pre-selected. E.g. accepts temp_air_era5[:,0] but not temp_air_era5
+    window : str
+        Time window of datapoints to average over.
+        Can take the following arguments: 'day', 'week', 'year', 'climate'
+    fill_before : bool, optional
+        Option to fill the first empty values of the smoothed data with the first running average value if True
+
+    Returns
+    -------
+    running_mean : dict
+        Smoothed time series
+    running_std : dict
+        Running standard deviation
+
+    """
+
+    # number of hours between consecutive measurements: 1 for air, 24 for ground
+    cons_hours = int((num2date(time_file[1], time_file.units) - num2date(time_file[0], time_file.units)).total_seconds()/3600)
+    window_size = int({'day': 24, 'week': 24*7, 'month': 24*30, 'year':24*365, 'climate':24*35*20}[window]/cons_hours)
+
+    
+    # range of the timestamp whether the user chose a given year of the whole study period
+    index_range = list(range(len(file_to_smooth)))
+
+    # initialize the running mean, the first value is at (window_size-1+index_range[0])
+    # the initial window extends from index_range[0] to window_size-1+index_range[0] and has (window_size) elements
+    init = np.sum(file_to_smooth[index_range[0]:window_size+index_range[0]])/window_size
+    running_mean = {}
+    running_std = {}
+
+    # fill the first values if fill_before==True
+    if fill_before:
+        for i in range(index_range[0], window_size-1+index_range[0]):
+            running_mean[i] = init
+            # running_std[i] = 0
+    
+    running_mean[window_size-1+index_range[0]] = init
+    # running_std[window_size-1+index_range[0]] = np.std(file_to_smooth[index_range[0]:window_size+index_range[0]])
+
+    # the following values are evaluated recursively in a single-pass (more efficient)
+    # I have derived the running version of the Welford's online algorithm and tested it.
+    for i in range(window_size+index_range[0], index_range[-1]+1):
+        running_mean[i] = running_mean[i-1] + (file_to_smooth[i] - file_to_smooth[i-window_size])/window_size
+        # running_std[i] = np.sqrt( (window_size * running_std[i-1]**2
+        #                            + (file_to_smooth[i] - file_to_smooth[i-window_size])**2/window_size
+        #                            + (file_to_smooth[i] - running_mean[i])**2
+        #                            - (file_to_smooth[i-window_size] - running_mean[i])**2) / window_size )
+
+    return running_mean, running_std
 
 def aggregating_distance_temp_generic(time_file, file_to_smooth, window, year=0, year_bkg_end=2010, year_trans_end=2023, fill_before=False):
     """ Function returns the distance to the mean in units of standard deviation for a given date yy-mm-dd
@@ -775,91 +1370,6 @@ def aggregating_distance_temp_generic(time_file, file_to_smooth, window, year=0,
 
 
     return distance
-
-def plot_aggregating_distance_temp_generic(name_series, time_file, file_to_smooth, window, site, year=0, year_bkg_end=2010, year_trans_end=2023, fill_before=False):
-    """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
-    
-    Parameters
-    ----------
-    name_series : str
-        Name of the quantity to plot, has to be 'air temperature', precipitation', 'snow depth'
-    time_file : netCDF4._netCDF4.Variable
-        File where the time index of each datapoint is stored        
-    file_to_smooth : list
-        Time series (could be temperature, precipitation, snow depth, etc.) that needs to be smoothed
-        Note that it needs to be in the shape (n,) and not (n,3) for instance, hence the altitude has
-        to be pre-selected. E.g. accepts temp_air_era5[:,0] but not temp_air_era5
-    window : str
-        Time window of datapoints to average over.
-        Can take the following arguments: 'day', 'week', 'year', 'climate'
-    site : str
-        Location of the event, e.g. 'Joffre' or 'Fingerpost'
-    year : int, optional
-        One can choose to display a specific year or the whole set by choosing an integer not in the study sample, e.g. 0.
-    year_bkg_end : int, optional
-        Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
-    year_trans_end : int, optional
-        Same for transient period
-    fill_before : bool, optional
-        Option to fill the first empty values of the smoothed data with the first running average value if True
-
-    Returns
-    -------
-        plot
-
-    """
-
-    distance = aggregating_distance_temp_generic(time_file, file_to_smooth, window, year, year_bkg_end, year_trans_end, fill_before)
-    list_dates = list_tokens_year(time_file, year_bkg_end=2010, year_trans_end=2023)[0]
-
-    if year in list(list_dates.keys()):
-        index_range = list_dates[year]
-    else:
-        index_range = list(range(len(file_to_smooth)))[list_dates[np.min(list(distance.keys()))][0]:]
-
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c']
-
-    plt.ticklabel_format(axis='both', style='sci', scilimits=(-3,3))
-    if year in list(list_dates.keys()):
-        plt.plot(time_file[list_dates[year][:][:len(distance[year].values())]], distance[year].values(), label='Distance')
-    else:
-        for y in list(distance.keys()):
-            plt.plot(time_file[list_dates[y][:][:len(distance[y].values())]], distance[y].values(), label=('Deviation' if y==year_bkg_end else ''), color= colorcycle[0])
-
-    for indx in rockfall_values(site)['time_index']:
-        if indx in index_range:
-            if int((num2date(time_file[indx], time_file.units)-rockfall_values(site)['datetime']).total_seconds()) == 0:
-                plt.axvline(x = time_file[indx], color = 'r', linestyle='--', label = 'Landslide')
-
-    for i in range(-3,4):
-        plt.axhline(y = i, color = 'black', linestyle='--', linewidth=(1 if i ==0 else 0.5))
-    # Because the data is stored in seconds since 0001-01-01 00:00:00 (ugh!!) 
-    # we have to do some formatting of the x bar
-    locs, labels = plt.xticks()
-
-    if year in list(list_dates.keys()):
-        locs = np.linspace(time_file[index_range[0]], time_file[index_range[-1]], num=12, endpoint=False)
-        labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-    else:
-        locs = np.linspace(time_file[index_range[0]], time_file[list_dates[year_trans_end][0]], num=11, endpoint=True)
-        labels = list(range(year_bkg_end,year_trans_end))
-    plt.xticks(locs, labels)
-
-    plt.title(f"Deviation from {name_series} data at %s%s" % (f"{site}", f" in {year}" if year in list(list_dates.keys()) else ""))
-    plt.xlabel('Date')
-    plt.ylabel((f'{name_series} deviation [$\sigma$]').capitalize())
-    plt.legend()
-    plt.show()
-
-    # Closing figure
-    plt.close()
-    plt.clf()
-
-def plot_aggregating_distance_temp_mean_reanalyses_generic(name_series, time_files, files_to_smooth, window, year=0, year_bkg_end=2010, year_trans_end=2023, fill_before=False):
-
-    mean_plot = mean_all_reanalyses_generic(time_files, files_to_smooth, year_bkg_end, year_trans_end)
-
-    plot_aggregating_distance_temp_generic(name_series, time_files[0], mean_plot, window, year, year_bkg_end, year_trans_end, fill_before=False)
 
 def plot_aggregating_distance_temp_all_generic(yaxes, xdata, ydata, window, site, year, year_bkg_end=2010, year_trans_end=2023, fill_before=False):
     """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
@@ -983,6 +1493,59 @@ def plot_aggregating_distance_temp_all_generic(yaxes, xdata, ydata, window, site
     plt.show()
     plt.close()
     plt.clf()
+
+def table_background_evolution_mean_GST_aspect_slope(extension=''):
+    """ Function returns a table of mean background and evolution of GST (ground-surface temperature)
+        as a function of slope, aspect, and altitude
+    
+    Parameters
+    ----------
+    extension : str, optional
+        Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
+    
+    Returns
+    -------
+    list_grd_temp : list
+        List of background GST per cell of given altitude, aspect, and slope
+    list_mean_grd_temp : list
+        Average background GST over all simulations in that cell
+    list_diff_temp : list
+        List of the evolution of mean GST per cell of given altitude, aspect, and slope
+    list_mean_diff_temp : list
+        Average the evolution of mean GST over all simulations in that cell
+    list_num_sim : list
+        Number of valid simulation per cell, returns NaN if different number of simulation per forcing for that cell
+    """
+
+    file_name = f"df_stats{('' if extension=='' else '_')}{extension}.pkl"
+    my_path = pickle_path + file_name
+    with open(my_path, 'rb') as file: 
+        # Call load method to deserialize 
+        df_stats = pickle.load(file)
+    
+    variables = ['aspect', 'slope','altitude']
+    dic_var = {}
+    dic_var = {i: np.sort(np.unique(df_stats.loc[:, i], return_counts=False)) for i in variables}
+    forcings = list(np.unique(df_stats['forcing']))
+
+    list_grd_temp = [[[0 for aspect in dic_var['aspect']] for slope in dic_var['slope']] for altitude in dic_var['altitude']]
+    list_mean_grd_temp = [[[0 for aspect in dic_var['aspect']] for slope in dic_var['slope']] for altitude in dic_var['altitude']]
+    list_diff_temp = [[[0 for aspect in dic_var['aspect']] for slope in dic_var['slope']] for altitude in dic_var['altitude']]
+    list_mean_diff_temp = [[[0 for aspect in dic_var['aspect']] for slope in dic_var['slope']] for altitude in dic_var['altitude']]
+    list_num_sim = [[[0 for aspect in dic_var['aspect']] for slope in dic_var['slope']] for altitude in dic_var['altitude']]
+
+    for altitude in range(len(dic_var['altitude'])):
+        for slope in range(len(dic_var['slope'])):
+            for aspect in range(len(dic_var['aspect'])):
+                list_grd_temp[altitude][slope][aspect] = list(df_stats[(df_stats['aspect']==dic_var['aspect'][aspect]) & (df_stats['slope']==dic_var['slope'][slope]) & (df_stats['altitude']==dic_var['altitude'][altitude])]['bkg_grd_temp'])
+                list_sim_per_forcing = [list(df_stats[(df_stats['aspect']==dic_var['aspect'][aspect]) & (df_stats['slope']==dic_var['slope'][slope]) & (df_stats['altitude']==dic_var['altitude'][altitude])]['forcing']).count(i) for i in forcings]
+                list_num_sim[altitude][slope][aspect] = (np.sum(list_sim_per_forcing) if len(set(list_sim_per_forcing))==1 else np.nan)
+                list_mean_grd_temp[altitude][slope][aspect] = round(np.mean((list_grd_temp[altitude][slope][aspect])),3)
+                list_diff_temp[altitude][slope][aspect] = list(df_stats[(df_stats['aspect']==dic_var['aspect'][aspect]) & (df_stats['slope']==dic_var['slope'][slope]) & (df_stats['altitude']==dic_var['altitude'][altitude])]['trans_grd_temp'] -
+                                                               df_stats[(df_stats['aspect']==dic_var['aspect'][aspect]) & (df_stats['slope']==dic_var['slope'][slope]) & (df_stats['altitude']==dic_var['altitude'][altitude])]['bkg_grd_temp'])
+                list_mean_diff_temp[altitude][slope][aspect] = round(np.mean((list_diff_temp[altitude][slope][aspect])),3)
+
+    return list_grd_temp, list_mean_grd_temp, list_diff_temp, list_mean_diff_temp, list_num_sim
 
 def plot_table_mean_GST_aspect_slope_generic(df_stats, site, altitude, background=True, box=True):
     """ Function returns a plot of the table of either mean background GST (ground-surface temperature)
@@ -1354,7 +1917,30 @@ def plot_permafrost_all_altitudes_polar_generic(df_stats, site, depth_thaw, box=
     plt.close()
     plt.clf()
 
-def fit_stat_model_grd_temp_Aksaut(df_stats, all=True, diff_forcings=True):
+def stat_model_aspect_slope_alt(X, offset, c_alt, d_alt, c_asp, c_slope):
+    """ Function returns the value of the statistical model 
+    
+    Parameters
+    ----------
+    X : list
+        List of aspects and altitudes
+    offset, c_asp, d_asp, c_slope, d_slope, c_alt : floats
+        coefficients of the model
+
+    Returns
+    -------
+    Value output of the model given the input
+    """
+
+    # This is the statistical model we are trying to fit to the data.
+    # unpack the variables in X
+    aspect, slope, altitude = X
+    return (offset
+            + c_alt * altitude
+            + c_asp * (altitude - d_alt) * np.cos(aspect * 2 * np.pi / 360) 
+            + c_slope * slope)
+
+def fit_stat_model_grd_temp(df_stats, all=True, diff_forcings=True):
     """ Function returns the value of the statistical model 
     
     Parameters
@@ -2648,28 +3234,28 @@ def plot_visible_skymap_from_horizon_file(hor_path):
     # plt.title('Scatter Plot on Polar Axis', fontsize=15)
     plt.show()
 
-def get_all_stats_generic(forcings, path_forcings,
-                          path_ground, path_snow, path_repository,
-                          year_bkg_end=2010, year_trans_end=2024,
-                          consecutive=7, extension='',
-                          glacier=False, min_glacier_depth=100, max_glacier_depth=20000):
+def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground, path_snow,
+                  year_bkg_end, year_trans_end, consecutive, extension='',
+                  glacier=False, min_glacier_depth=100, max_glacier_depth=20000):
     """ Creates a number of pickle files (if they don't exist yet)
     
     Parameters
     ----------
-    forcings : list of str
+    forcing_list : list of str
         List of forcings provided, with a number of entries between 1 and 3 in 'era5', 'merra2', and 'jra55'. E.g. ['era5', 'merra2']
-    path_forcings : list
-        list of paths to the location of each forcing data set
+    path_forcing_list : list of str
+        List of paths to the .nc file where the atmospheric forcing data for the given reanalysis is stored
+    path_repository : str
+        Path to the .csv file with all the simulation parameters
+    path_ground : str
+        Path to the .nc file where the aggregated ground simulations are stored
     path_snow : str
         path to the snow data
-    path_repository : str
-        path to the repostiroy .csv
-    year_bkg_end : int, optional
+    year_bkg_end : int
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
-    year_trans_end : int, optional
+    year_trans_end : int
         Same for transient period
-    consecutive : int, optional
+    consecutive : int
         number of consecutive snow-free days to consider that snow has melted for the season
     extension : str, optional
         Location of the event, e.g. 'Aksaut_Ridge' (not a list, 1 single location)
@@ -2682,268 +3268,33 @@ def get_all_stats_generic(forcings, path_forcings,
 
     Returns
     -------
-        list_valid_sim : list
-            list of simulation number for all valid simulations
-        reanalysis_stats : dict
-            dictionary of mean quntities over the background and transient periods
-        df : pandas.core.frame.DataFrame
-            basic information for all simulations
-        df_stats : pandas.core.frame.DataFrame
-            basic statistics for all simulations
-        dict_melt_out : collections.defaultdict
-            melt out day for each year and each simulation
-        dict_melt_out_consecutive : collections.defaultdict
-            melt out day for each year and each simulation, with a minimum number of consecutive snow-free days
+    df : pandas.core.frame.DataFrame
+        A panda dataframe version of the .csv file where the simulation paramaters have been unpacked into readable columns,
+        saved to a pickle file
+        The 'directory' column is ordered by the simulation index provided in 'path_ground'
+    reanalysis_stats : dict
+        dictionary of mean quntities over the background and transient periods
+    list_valid_sim : list
+        list of simulation number for all valid simulations
+    dict_melt_out : dict
+        Dictionary that assings a melt-out date to each simulation and each year
+        Note that if snow does NOT melt at all, we assign the maximal value corresponding to the end of the year 
+    stats_melt_out_dic : dict
+        Background, transient and full mean of the melt-out date for each simulation
+    df_stats : pandas.core.frame.DataFrame
+        Large panda dataframe with information about the air, ground, snow, topography, etc. for all simulations
 
     """
 
+    df = assign_value_df(path_repository, path_ground, extension)
+    reanalysis_stats = assign_value_reanalysis_stat(forcing_list, path_forcing_list, year_bkg_end, year_trans_end, extension)
+    list_valid_sim = glacier_filter(path_snow, extension, glacier, min_glacier_depth, max_glacier_depth)
+    dict_melt_out, stats_melt_out_dic = melt_out_date(consecutive, path_ground, path_snow, year_bkg_end, year_trans_end, extension)
+    df_stats = assign_value_df_stats(path_ground, path_snow, year_bkg_end, year_trans_end, extension)
 
-    #####################################################################################
-    # OPEN THE VARIOUS FILES
-    #####################################################################################
+    return df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats
 
-    # we store the paths to all the files we will need for the analysis
-    # starting with the 3 data reanalysis forcings
-    path_forcings = {forcings[i]: path_forcings[i] for i in range(len(forcings))}
-
-    if 'era5' in forcings:
-        try: ncfile_air_era5.close()
-        except: pass
-        # Open file for air temperature
-        ncfile_air_era5 = Dataset(path_forcings['era5'], mode='r')
-
-    if 'merra2' in forcings:
-        try: ncfile_air_merra2.close()
-        except: pass
-        # Open file for air temperature
-        ncfile_air_merra2 = Dataset(path_forcings['merra2'], mode='r')
-
-    if 'jra55' in forcings:
-        try: ncfile_air_jra55.close()
-        except: pass
-        # Open file for air temperature
-        ncfile_air_jra55 = Dataset(path_forcings['jra55'], mode='r')
-
-    try: ncfile_ground.close()
-    except: pass
-    # Open file for ground temperature
-    ncfile_ground = Dataset(path_ground, mode='r')
-    # Select geotop model data
-    f_ground = ncfile_ground.groups['geotop'] 
-    try: ncfile_snow.close()
-    except: pass
-
-    # Open file for snow temperature
-    ncfile_snow = Dataset(path_snow, mode='r')
-    # Select geotop model data
-    f_snow = ncfile_snow.groups['geotop']
-
-    #####################################################################################
-    # CREATE VARIABLES
-    #####################################################################################
-
-    #####################################################################################
-    # GROUND
-    #####################################################################################
-
-    temp_ground = f_ground['Tg']
-    time_ground = f_ground['Date']
-
-    #####################################################################################
-    # SNOW
-    #####################################################################################
-
-    snow_height = f_snow['snow_depth_mm']
-
-    #####################################################################################
-    # MATCH SIMULATION INDEXES
-    #####################################################################################
-
-    # get the topographic info of each simulation, e.g. altitude, slope, etc.
-    df_raw = assign_value_df_raw(path_repository)
-
-    try: df
-    except NameError: df = None
-
-    df = assign_value_df(df, df_raw, f_ground, f_snow, extension)
-
-    #####################################################################################
-    # AIR
-    #####################################################################################
-
-    #####################################################################################
-    # PRECIPITATION CONSISTENCY TEST
-    #####################################################################################
-
-    # Here we print the sum of the precipitation flux over the whole length of the series
-    print('Sum of the precipitation fluxes for the whole series:')
-
-    if 'era5' in forcings:
-        precipitation_era5 = ncfile_air_era5['PREC_sur']
-        print('era5  :', np.sum(precipitation_era5[:,0]))
-    if 'merra2' in forcings:
-        precipitation_merra2 = ncfile_air_merra2['PREC_sur']
-        print('merra2:', np.sum(precipitation_merra2[:,0]))
-    if 'jra55' in forcings:
-        precipitation_jra55 = ncfile_air_jra55['PREC_sur']
-        print('jra55 :', np.sum(precipitation_jra55[:,0]))
-
-
-    #####################################################################################
-    # ERA5
-    #####################################################################################
-
-    if 'era5' in forcings:
-        time_air_era5 = ncfile_air_era5['time']
-        temp_air_era5 = ncfile_air_era5['AIRT_pl']
-        SW_flux_era5 = ncfile_air_era5['SW_sur']
-        SW_direct_flux_era5 = ncfile_air_era5['SW_topo_direct']
-        SW_diffuse_flux_era5 = ncfile_air_era5['SW_topo_diffuse']
-
-    #####################################################################################
-    # MERRA2
-    #####################################################################################
-
-    if 'merra2' in forcings:
-        time_air_merra2 = ncfile_air_merra2['time']
-        temp_air_merra2 = ncfile_air_merra2['AIRT_pl']
-        SW_flux_merra2 = ncfile_air_merra2['SW_sur']
-        SW_direct_flux_merra2 = ncfile_air_merra2['SW_topo_direct']
-        SW_diffuse_flux_merra2 = ncfile_air_merra2['SW_topo_diffuse']
-
-    #####################################################################################
-    # JRA55
-    #####################################################################################
-
-    if 'jra55' in forcings:
-        time_air_jra55 = ncfile_air_jra55['time']
-        temp_air_jra55 = ncfile_air_jra55['AIRT_pl']
-        SW_flux_jra55 = ncfile_air_jra55['SW_sur']
-        SW_direct_flux_jra55 = ncfile_air_jra55['SW_topo_direct']
-        SW_diffuse_flux_jra55 = ncfile_air_jra55['SW_topo_diffuse']
-        
-        
-    #####################################################################################
-    # SEPARATING INTO BACKGROUND AND TRANSIENT
-    #####################################################################################
-
-    # for lack of longer datasets, we will define the background as everything happening before 2000 (here it means from 1980)
-    # and we will limit the transient analysis to everything up to 2020-1-1
-
-    [time_bkg_ground, time_trans_ground, time_pre_trans_ground] = list_tokens_year(time_ground, year_bkg_end, year_trans_end)[1:]
-
-    if 'era5' in forcings:
-        [time_bkg_air_era5, time_trans_air_era5, time_pre_trans_air_era5] = list_tokens_year(time_air_era5, year_bkg_end, year_trans_end)[1:]
-    if 'merra2' in forcings:
-        [time_bkg_air_merra2, time_trans_air_merra2, time_pre_trans_air_merra2] = list_tokens_year(time_air_merra2, year_bkg_end, year_trans_end)[1:]
-    if 'jra55' in forcings:
-        [time_bkg_air_jra55, time_trans_air_jra55, time_pre_trans_air_jra55] = list_tokens_year(time_air_jra55, year_bkg_end, year_trans_end)[1:]
-
-    #####################################################################################
-    # ALL TOGETHER
-    #####################################################################################
-
-    # initialize list of time series over all forcings
-    time_bkg_air_all, time_trans_air_all, time_pre_trans_air_all, time_air_all, temp_air_all, SW_flux_all, SW_direct_flux_all, SW_diffuse_flux_all, precipitation_all = [[0 for _ in range(len(forcings))] for _ in range(9)]
-
-    if 'era5' in forcings:
-        index = forcings.index('era5')
-        precipitation_all[index] = precipitation_era5
-        time_air_all[index] = time_air_era5
-        temp_air_all[index] = temp_air_era5
-        SW_flux_all[index] = SW_flux_era5
-        SW_direct_flux_all[index] = SW_direct_flux_era5
-        SW_diffuse_flux_all[index] = SW_diffuse_flux_era5
-        time_bkg_air_all[index] = time_bkg_air_era5
-        time_trans_air_all[index] = time_trans_air_era5
-        time_pre_trans_air_all[index] = time_pre_trans_air_era5
-
-    if 'merra2' in forcings:
-        index = forcings.index('merra2')
-        precipitation_all[index] = precipitation_merra2
-        time_air_all[index] = time_air_merra2
-        temp_air_all[index] = temp_air_merra2
-        SW_flux_all[index] = SW_flux_merra2
-        SW_direct_flux_all[index] = SW_direct_flux_merra2
-        SW_diffuse_flux_all[index] = SW_diffuse_flux_merra2
-        time_bkg_air_all[index] = time_bkg_air_merra2
-        time_trans_air_all[index] = time_trans_air_merra2
-        time_pre_trans_air_all[index] = time_pre_trans_air_merra2
-
-    if 'jra55' in forcings:
-        index = forcings.index('jra55')
-        precipitation_all[index] = precipitation_jra55
-        time_air_all[index] = time_air_jra55
-        temp_air_all[index] = temp_air_jra55
-        SW_flux_all[index] = SW_flux_jra55
-        SW_direct_flux_all[index] = SW_direct_flux_jra55
-        SW_diffuse_flux_all[index] = SW_diffuse_flux_jra55
-        time_bkg_air_all[index] = time_bkg_air_jra55
-        time_trans_air_all[index] = time_trans_air_jra55
-        time_pre_trans_air_all[index] = time_pre_trans_air_jra55
-
-    #####################################################################################
-    # REANALYSIS STATS
-    #####################################################################################
-
-    try: reanalysis_stats
-    except NameError: reanalysis_stats = None
-
-    reanalysis_stats = assign_value_reanalysis_stat_generic(reanalysis_stats, df, forcings, temp_air_all,
-                                                            SW_flux_all, SW_direct_flux_all, SW_diffuse_flux_all,
-                                                            time_bkg_air_all, time_trans_air_all, time_pre_trans_air_all,
-                                                            extension)
-    
-    #####################################################################################
-    # FILTER GLACIERS OUT
-    #####################################################################################
-
-    try: list_valid_sim
-    except NameError: list_valid_sim = None
-
-    list_valid_sim = glacier_filter_generic(list_valid_sim, snow_height, extension,
-                                            glacier, min_glacier_depth, max_glacier_depth)
-
-
-    #####################################################################################
-    # MELT-OUT DATES
-    #####################################################################################
-
-    try: dict_melt_out
-    except NameError: dict_melt_out = None
-
-    dict_melt_out = melt_out_date(dict_melt_out, snow_height, list_valid_sim,
-                                  time_ground, year_bkg_end, year_trans_end, extension)
-    stats_melt_out_dic = stats_melt_out(dict_melt_out, year_bkg_end)
-
-    try: dict_melt_out_consecutive
-    except NameError: dict_melt_out_consecutive = None
-
-    dict_melt_out_consecutive = melt_out_date_consecutive(consecutive, dict_melt_out_consecutive,
-                                                          snow_height, list_valid_sim, time_ground,
-                                                          year_bkg_end, year_trans_end, extension)
-    stats_melt_out_dic_consecutive = stats_melt_out(dict_melt_out_consecutive, year_bkg_end)
-
-    #####################################################################################
-    # CREATE LIST OF STATS
-    #####################################################################################
-
-    try: df_stats
-    except NameError: df_stats = None
-
-    df_stats = assign_value_df_stat(df_stats, temp_ground, snow_height, reanalysis_stats,
-                                    stats_melt_out_dic, stats_melt_out_dic_consecutive, df, list_valid_sim,
-                                    time_bkg_ground, time_trans_ground, time_pre_trans_ground,
-                                    extension)
-
-                                           
-    #####################################################################################
-    # RETURN
-    #####################################################################################
-
-    return list_valid_sim, reanalysis_stats, df, df_stats, dict_melt_out, dict_melt_out_consecutive
-
-def load_all_pickles_generic(extension=''):
+def load_all_pickles(extension=''):
     """ Loads all pickles corresponding to the site name
     
     Parameters
@@ -2953,30 +3304,31 @@ def load_all_pickles_generic(extension=''):
 
     Returns
     -------
-        list_valid_sim : list
-            list of simulation number for all valid simulations
-        reanalysis_stats : dict
-            dictionary of mean quntities over the background and transient periods
-        df : pandas.core.frame.DataFrame
-            basic information for all simulations
-        df_stats : pandas.core.frame.DataFrame
-            basic statistics for all simulations
-        dict_melt_out : collections.defaultdict
-            melt out day for each year and each simulation
-        dict_melt_out_consecutive : collections.defaultdict
-            melt out day for each year and each simulation, with a minimum number of consecutive snow-free days
+    df : pandas.core.frame.DataFrame
+        A panda dataframe version of the .csv file where the simulation paramaters have been unpacked into readable columns,
+        saved to a pickle file
+        The 'directory' column is ordered by the simulation index provided in 'path_ground'
+    reanalysis_stats : dict
+        dictionary of mean quntities over the background and transient periods
+    list_valid_sim : list
+        list of simulation number for all valid simulations
+    dict_melt_out : dict
+        Dictionary that assings a melt-out date to each simulation and each year
+        Note that if snow does NOT melt at all, we assign the maximal value corresponding to the end of the year 
+    stats_melt_out_dic : dict
+        Background, transient and full mean of the melt-out date for each simulation
+    df_stats : pandas.core.frame.DataFrame
+        Large panda dataframe with information about the air, ground, snow, topography, etc. for all simulations
 
     """
 
-    list_file_names = [f"list_valid_sim{('' if extension=='' else '_')}{extension}.pkl",
+    list_file_names = [f"df{('' if extension=='' else '_')}{extension}.pkl",
                        f"reanalysis_stats{('' if extension=='' else '_')}{extension}.pkl",
-                       f"df{('' if extension=='' else '_')}{extension}.pkl",
-                       f"df_stats{('' if extension=='' else '_')}{extension}.pkl",
-                       f"dict_melt_out{('' if extension=='' else '_')}{extension}.pkl",
-                       f"dict_melt_out_consecutive{('' if extension=='' else '_')}{extension}.pkl"
-                       ]
+                       f"list_valid_sim{('' if extension=='' else '_')}{extension}.pkl",
+                       f"melt_out{('' if extension=='' else '_')}{extension}.pkl",
+                       f"df_stats{('' if extension=='' else '_')}{extension}.pkl"]
 
-    output = [0]*len(list_file_names)
+    output = [0 for _ in list_file_names]
 
     for i, file_name in enumerate(list_file_names):
         my_path = pickle_path + file_name
@@ -2986,9 +3338,9 @@ def load_all_pickles_generic(extension=''):
             output[i] = pickle.load(file) 
         print('Succesfully opened the pre-existing pickle:', file_name)
 
-    [list_valid_sim, reanalysis_stats, df, df_stats, dict_melt_out, dict_melt_out_consecutive] = output
+    [df, reanalysis_stats, list_valid_sim, [dict_melt_out, stats_melt_out_dic], df_stats] = output
 
-    return list_valid_sim, reanalysis_stats, df, df_stats, dict_melt_out, dict_melt_out_consecutive
+    return df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats
 
 def plot_all_generic(site, forcings, path_forcings,
                      path_ground, path_snow, path_swe, path_thaw_depth,
@@ -3031,124 +3383,15 @@ def plot_all_generic(site, forcings, path_forcings,
     # OPEN THE VARIOUS FILES
     #####################################################################################
 
-    list_valid_sim, reanalysis_stats, df, df_stats, dict_melt_out, dict_melt_out_consecutive = load_all_pickles_generic(site)
-
-    # we store the paths to all the files we will need for the analysis
-    # starting with the 3 data reanalysis forcings
-    path_forcings = {forcings[i]: path_forcings[i] for i in range(len(forcings))}
-
-    if 'era5' in forcings:
-        try: ncfile_air_era5.close()
-        except: pass
-        # Open file for air temperature
-        ncfile_air_era5 = Dataset(path_forcings['era5'], mode='r')
-
-    if 'merra2' in forcings:
-        try: ncfile_air_merra2.close()
-        except: pass
-        # Open file for air temperature
-        ncfile_air_merra2 = Dataset(path_forcings['merra2'], mode='r')
-
-    if 'jra55' in forcings:
-        try: ncfile_air_jra55.close()
-        except: pass
-        # Open file for air temperature
-        ncfile_air_jra55 = Dataset(path_forcings['jra55'], mode='r')
-
-    try: ncfile_ground.close()
-    except: pass
-
-    # Open file for ground temperature
-    ncfile_ground = Dataset(path_ground, mode='r')
-    # Select geotop model data
-    f_ground = ncfile_ground.groups['geotop'] 
-
-    try: ncfile_snow.close()
-    except: pass
-
-    # Open file for snow depth
-    ncfile_snow = Dataset(path_snow, mode='r')
-    # Select geotop model data
-    f_snow = ncfile_snow.groups['geotop']
-
-    try: ncfile_swe.close()
-    except: pass
-
-    # Open file for snow depth
-    ncfile_swe = Dataset(path_swe, mode='r')
-    # Select geotop model data
-    f_swe = ncfile_swe.groups['geotop']
-
-    try: ncfile_thaw_depth.close()
-    except: pass
-
-    # Open file for snow depth
-    ncfile_thaw_depth = Dataset(path_thaw_depth, mode='r')
-    # Select geotop model data
-    f_thaw_depth = ncfile_thaw_depth.groups['geotop']
-
-    #####################################################################################
-    # ASSIGN VARIABLES
-    #####################################################################################
-
-    temp_ground = f_ground['Tg']
-    time_ground = f_ground['Date']
-
-    snow_height = f_snow['snow_depth_mm']
-    swe = f_swe['snow_water_equivalent']
-    depth_thaw = f_thaw_depth['AL']
-
-    [time_bkg_ground, time_trans_ground, time_pre_trans_ground] = list_tokens_year(time_ground, year_bkg_end, year_trans_end)[1:]
-
-    # initialize list of time series over all forcings
-    precipitation_all = [0]*len(forcings)
-    time_air_all = [0]*len(forcings)
-    temp_air_all = [0]*len(forcings)
-
-    if 'era5' in forcings:
-        precipitation_era5 = ncfile_air_era5['PREC_sur']
-        time_air_era5 = ncfile_air_era5['time']
-        temp_air_era5 = ncfile_air_era5['AIRT_pl']
-        SW_flux_era5 = ncfile_air_era5['SW_sur']
-        SW_direct_flux_era5 = ncfile_air_era5['SW_topo_direct']
-        SW_diffuse_flux_era5 = ncfile_air_era5['SW_topo_diffuse']
-        [time_bkg_air_era5, time_trans_air_era5, time_pre_trans_air_era5] = list_tokens_year(time_air_era5, year_bkg_end, year_trans_end)[1:]
-        index = forcings.index('era5')
-        precipitation_all[index] = precipitation_era5
-        time_air_all[index] = time_air_era5
-        temp_air_all[index] = temp_air_era5
-    if 'merra2' in forcings:
-        precipitation_merra2 = ncfile_air_merra2['PREC_sur']
-        time_air_merra2 = ncfile_air_merra2['time']
-        temp_air_merra2 = ncfile_air_merra2['AIRT_pl']
-        SW_flux_merra2 = ncfile_air_merra2['SW_sur']
-        SW_direct_flux_merra2 = ncfile_air_merra2['SW_topo_direct']
-        SW_diffuse_flux_merra2 = ncfile_air_merra2['SW_topo_diffuse']
-        [time_bkg_air_merra2, time_trans_air_merra2, time_pre_trans_air_merra2] = list_tokens_year(time_air_merra2, year_bkg_end, year_trans_end)[1:]
-        index = forcings.index('merra2')
-        precipitation_all[index] = precipitation_merra2
-        time_air_all[index] = time_air_merra2
-        temp_air_all[index] = temp_air_merra2
-    if 'jra55' in forcings:
-        precipitation_jra55 = ncfile_air_jra55['PREC_sur']
-        time_air_jra55 = ncfile_air_jra55['time']
-        temp_air_jra55 = ncfile_air_jra55['AIRT_pl']
-        SW_flux_jra55 = ncfile_air_jra55['SW_sur']
-        SW_direct_flux_jra55 = ncfile_air_jra55['SW_topo_direct']
-        SW_diffuse_flux_jra55 = ncfile_air_jra55['SW_topo_diffuse']
-        [time_bkg_air_jra55, time_trans_air_jra55, time_pre_trans_air_jra55] = list_tokens_year(time_air_jra55, year_bkg_end, year_trans_end)[1:]
-        index = forcings.index('jra55')
-        precipitation_all[index] = precipitation_jra55
-        time_air_all[index] = time_air_jra55
-        temp_air_all[index] = temp_air_jra55
-
+    df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats = load_all_pickles(extension)
 
     #####################################################################################
     # PLOTS
     #####################################################################################
 
     # assign a subjective weight to all simulations
-    pd_weight = assign_weight_sim_Aksaut(df_stats)
+    pd_weight = assign_weight_sim(extension, no_weight)
+
     # weighted mean GST
     temp_ground_mean = list(np.average([temp_ground[i,:,0] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight['weight']))
     print('The following plot is a histogram of the distribution of the statistical weights of all simulations:')
@@ -3164,9 +3407,9 @@ def plot_all_generic(site, forcings, path_forcings,
 
     # Note that this is selecting the elevation in the 'middle': index 2 in the list [0,1,2,3,4]
     # and it returns the mean air temperature over all reanalyses
-    mean_air_temp = mean_all_reanalyses_generic(time_air_all, [i[:,alt_index] for i in temp_air_all])
+    mean_air_temp = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in temp_air_all])
     # here we get the mean precipitation and then water from snow melting 
-    mean_prec = mean_all_reanalyses_generic(time_air_all, [i[:,alt_index] for i in precipitation_all])
+    mean_prec = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in precipitation_all])
     swe_mean = list(np.average([swe[i,:] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight['weight']))
     # finally we get the total water production, averaged over all reanalyses
     tot_water_prod = assign_tot_water_prod_generic(swe_mean, mean_prec, time_ground, time_pre_trans_ground, time_air_merra2)
