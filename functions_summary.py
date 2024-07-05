@@ -906,6 +906,8 @@ def rockfall_values(site):
 
     rockfall_values = {'Joffre': {'aspect': 45, 'slope': 60, 'altitude': 2500, 'year': 2019,
                                   'datetime': datetime(2019, 5, 13, 0, 0, 0, 0), 'time_index': [14376, 345043, 345048]},
+                       'Joffre_new': {'aspect': 45, 'slope': 60, 'altitude': 2500, 'year': 2019,
+                                  'datetime': datetime(2019, 5, 13, 0, 0, 0, 0), 'time_index': [14376, 345043, 345048]},
                        'Fingerpost': {'aspect': 270, 'slope': 50, 'altitude': 2600, 'year': 2015,
                                       'datetime': datetime(2015, 12, 16, 0, 0, 0, 0), 'time_index': [13132, 315187, 315192]},
                        'Dawson': {'aspect': 90, 'slope': 40, 'altitude': 500, 'year': 2015,
@@ -1302,7 +1304,7 @@ def running_mean_std(time_file, file_to_smooth, window, fill_before=False):
 
     return running_mean, running_std
 
-def aggregating_distance_temp(time_file, file_to_smooth, window, year=0, year_bkg_end=2010, year_trans_end=2023, fill_before=False):
+def aggregating_distance_temp(time_file, file_to_smooth, window, year_bkg_end, year_trans_end, year=0, fill_before=False):
     """ Function returns the distance to the mean in units of standard deviation for a given date yy-mm-dd
         relative to the sensemble of same date for previous years: {year-mm-dd for year<=yy}
         Should only be applied to a previously 'smoothed' function through a running average
@@ -1318,12 +1320,12 @@ def aggregating_distance_temp(time_file, file_to_smooth, window, year=0, year_bk
     window : str
         Time window of datapoints to average over.
         Can take the following arguments: 'day', 'week', 'year', 'climate'
-    year : int, optional
-        One can choose to display a specific year or the whole set by choosing an integer not in the study sample, e.g. 0.
     year_bkg_end : int, optional
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int, optional
         Same for transient period
+    year : int, optional
+        One can choose to display a specific year or the whole set by choosing an integer not in the study sample, e.g. 0.
     fill_before : bool, optional
         Option to fill the first empty values of the smoothed data with the first running average value if True
 
@@ -1338,7 +1340,7 @@ def aggregating_distance_temp(time_file, file_to_smooth, window, year=0, year_bk
     # keys are timestamps (end of window) and values are running average of temperatures over window
     temp_smoothed = running_mean_std(time_file, file_to_smooth, window, fill_before)[0]
 
-    list_dates = list_tokens_year(time_file, year_bkg_end=2010, year_trans_end=2023)[0]
+    list_dates = list_tokens_year(time_file, year_bkg_end, year_trans_end)[0]
 
     num_min = np.min([len(list_dates[year]) for year in list_dates.keys() if year < year_trans_end])
     min_temp_index = list(temp_smoothed.keys())[0]
@@ -1371,7 +1373,7 @@ def aggregating_distance_temp(time_file, file_to_smooth, window, year=0, year_bk
 
     return distance
 
-def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, year, year_bkg_end=2010, year_trans_end=2023, fill_before=False):
+def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, year_bkg_end, year_trans_end, year, fill_before=False):
     """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
         Vertical subplots for different variables
     
@@ -1394,12 +1396,12 @@ def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, year, 
         Can take the following arguments: 'day', 'week', 'year', 'climate'
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
-    year : int, optional
-        One can choose to display a specific year or the whole set by choosing an integer not in the study sample, e.g. 0.
-    year_bkg_end : int, optional
+    year_bkg_end : int
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
-    year_trans_end : int, optional
+    year_trans_end : int
         Same for transient period
+    year : int
+        One can choose to display a specific year or the whole set by choosing an integer not in the study sample, e.g. 0.
     fill_before : bool, optional
         Option to fill the first empty values of the smoothed data with the first running average value if True
 
@@ -1413,7 +1415,7 @@ def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, year, 
 
     f, a = plt.subplots(num_rows, num_cols, figsize=(8, 2*num_rows), sharey='row')
     for idx,ax in enumerate(a):
-        distance = [aggregating_distance_temp(xdata[idx], ydata[idx], i, year, year_bkg_end, year_trans_end, fill_before) for i in window]
+        distance = [aggregating_distance_temp(xdata[idx], ydata[idx], i, year_bkg_end, year_trans_end, year, fill_before) for i in window]
         list_dates = list_tokens_year(xdata[idx], year_bkg_end, year_trans_end)[0]
 
         if year in list(list_dates.keys()):
@@ -1468,7 +1470,9 @@ def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, year, 
             len_year = xdata[idx][list_dates[year_bkg_end+1][0]] - loc_init
             num_year = year_trans_end - year_bkg_end
             locs = np.linspace(loc_init, loc_init + num_year * len_year, num=num_year+1, endpoint=True)
+            locs = locs[::int(len(locs)/10)]
             labels = list(range(year_bkg_end,year_trans_end+1,1))
+            labels = labels[::int(len(labels)/10)]
 
         if idx < num_rows-1:
             labels_end = ['']*len(labels)
@@ -1971,7 +1975,7 @@ def fit_stat_model_grd_temp(site, all=True, diff_forcings=True):
     
     plt.figure(figsize=(6,6))
 
-    forcings = ['merra2']
+    forcings = np.unique(df_stats['forcing'])
     data_set = []
     if all:
         data_set.append(df_stats)
@@ -2038,7 +2042,7 @@ def fit_stat_model_grd_temp(site, all=True, diff_forcings=True):
 
     return xdata, ydata, optimizedParameters, pcov, corr_matrix, R_sq
 
-def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end=2010, year_trans_end=2023):
+def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, year_trans_end):
     """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
     
     Parameters
@@ -2049,9 +2053,9 @@ def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end=2010
         File where the time index of each datapoint is stored        
     file_to_plot : list
         Mean time series (temp_ground_mean, mean_air_temp, mean_prec, swe_mean, tot_water_prod)
-    year_bkg_end : int, optional
+    year_bkg_end : int
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
-    year_trans_end : int, optional
+    year_trans_end : int
         Same for transient period
 
     Returns
@@ -2078,7 +2082,6 @@ def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end=2010
     sn.boxplot(x='Year', y=name_series, data=x, showmeans=True, showfliers=False, meanprops=meanpointprops, color='grey', linecolor='black')
 
     formatted_mean = ["{:.2e}".format(i) for i in mean] if ((exponent < -1) | (exponent>2)) else [float("{:.2f}".format(i)) for i in mean]
-    print(formatted_mean)
 
     units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm s-1', 'SWE': 'mm s-1', 'Water production': 'mm s-1'}
     colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c']
@@ -2089,8 +2092,9 @@ def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end=2010
 
     plt.tight_layout()
     locs, labels = plt.xticks()  # Get the current locations and labels.
-    locs = locs[::2]
-    labels = labels[::2]
+    dt = int(np.floor(len(locs)/10))
+    locs = locs[::dt]
+    labels = labels[::dt]
     plt.xticks(locs, labels, rotation=0)
     plt.ylabel(name_series+' ['+units[name_series]+']')
     ax.ticklabel_format(axis='y', style='sci', useMathText=True, scilimits=(-3,3))
@@ -2473,7 +2477,8 @@ def stats_air_all_years_simulations_to_single_year(time_file, time_series, mask_
     return quantiles, mean_end
 
 def plot_sanity_one_year_quantiles_two_periods(time_file, time_series_list, list_valid_sim_list, axis_label, list_label, list_mask_period):
-    """ Function returns a plot of 2 timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread.
+    """ Function returns a plot of a single timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread,
+    for background and transient piods
     
     Parameters
     ----------
@@ -2686,14 +2691,14 @@ def plot_sanity_two_variables_one_year_quantiles_side_by_side(time_file, time_se
     plt.close()
     plt.clf()
 
-def stats_yearly_quantiles_air(time_file, time_series, label_plot, year_trans_end):
-    """ Function returns yearly statistics for 'air' timeseries
+def stats_yearly_quantiles_air(list_time_file, list_time_series, label_plot, year_trans_end):
+    """ Function returns yearly statistics for 'air' timeseries, averaged over all reanalyses and altitudes
     
     Parameters
     ----------
-    time_file : netCDF4._netCDF4.Variable
-        File where the time index of each datapoint is stored (air time)
-    time_series : netCDF4._netCDF4.Variable
+    list_time_file : list of netCDF4._netCDF4.Variable
+        List of files where the time index of each datapoint is stored (air time), one per reanalysis
+    list_time_series : list of netCDF4._netCDF4.Variable
         List of time series with air time shape (could be air temperature, precipitation, SW, etc.)
     label_plot : str
         label associated to the plot, if 'Precipitation' or 'Water production', rescales data to mm/day
@@ -2715,17 +2720,20 @@ def stats_yearly_quantiles_air(time_file, time_series, label_plot, year_trans_en
         List of years
     """
 
-    # create a panda dataframe with month, day, hour for each timestamp
-    panda_test = pd.DataFrame(num2date(time_file[:], time_file.units), columns=['date'])
-    panda_test['year'] = [i.year for i in panda_test['date']]
-    panda_test['month'] = [i.month for i in panda_test['date']]
-    panda_test['day'] = [i.day for i in panda_test['date']]
-    panda_test['hour'] = [i.hour for i in panda_test['date']]
-    panda_test = panda_test.drop(columns=['date', 'hour'])
-    # Note that this is selecting the elevation in the 'middle': index 2 in the list [0,1,2,3,4]
-    alt_index = int(np.floor((time_series.shape[1]-1)/2))
-    panda_test['timeseries'] = time_series[:,alt_index]
+    panda_list = [[] for _ in list_time_series]
 
+    for i in range(len(list_time_series)):
+        # create a panda dataframe with month, day, hour for each timestamp
+        panda_list[i] = pd.DataFrame(num2date(list_time_file[i][:], list_time_file[i].units), columns=['date'])
+        panda_list[i]['year'] = [j.year for j in panda_list[i]['date']]
+        panda_list[i]['month'] = [j.month for j in panda_list[i]['date']]
+        panda_list[i]['day'] = [j.day for j in panda_list[i]['date']]
+        panda_list[i]['hour'] = [j.hour for j in panda_list[i]['date']]
+        # Note that this is avergaing the timeseries over all altitudes
+        panda_list[i]['timeseries'] = np.mean(list_time_series[i], axis=1)
+        panda_list[i] = panda_list[i].drop(columns=['date', 'hour'])
+    
+    panda_test = pd.concat(panda_list)
     panda_test = panda_test.groupby(['year', 'month', 'day']).mean()
 
     if label_plot in ['Precipitation', 'Water production']:
@@ -2744,14 +2752,14 @@ def stats_yearly_quantiles_air(time_file, time_series, label_plot, year_trans_en
 
     return panda_test, quantiles, mean_end, dict_indices_quantiles, xdata
 
-def plot_yearly_quantiles_air(time_file, time_series, label_plot, year_bkg_end, year_trans_end):
-    """ Function plots yearly statistics for 'air' timeseries
+def plot_yearly_quantiles_air(list_time_file, list_time_series, label_plot, year_bkg_end, year_trans_end):
+    """ Function plots yearly statistics for 'air' timeseries, averaged over all reanalyses and altitudes
     
     Parameters
     ----------
-    time_file : netCDF4._netCDF4.Variable
-        File where the time index of each datapoint is stored (air time)
-    time_series : netCDF4._netCDF4.Variable
+    list_time_file : list of netCDF4._netCDF4.Variable
+        List of files where the time index of each datapoint is stored (air time), one per reanalysis
+    list_time_series : list of netCDF4._netCDF4.Variable
         List of time series with air time shape (could be air temperature, precipitation, SW, etc.)
     label_plot : str
         label associated to the plot, if 'Precipitation' or 'Water production', rescales data to mm/day
@@ -2765,7 +2773,7 @@ def plot_yearly_quantiles_air(time_file, time_series, label_plot, year_bkg_end, 
     Plot of yearly statistics for 'air' timeseries. Mean and several quantiles for each year.
     """
 
-    panda_test, quantiles, mean_end, dict_indices_quantiles, xdata = stats_yearly_quantiles_air(time_file, time_series, label_plot, year_trans_end)
+    _, quantiles, mean_end, dict_indices_quantiles, xdata = stats_yearly_quantiles_air(list_time_file, list_time_series, label_plot, year_trans_end)
     list_quantiles = [0.023, 0.16, 0.5, 0.84, 0.977]
 
     mean_bkg = np.mean(mean_end.loc[xdata[0]:year_bkg_end-1])
@@ -2810,6 +2818,9 @@ def plot_yearly_quantiles_air(time_file, time_series, label_plot, year_bkg_end, 
         plt.axhline(y=0, color='grey', linestyle='dashed')
     
     plt.ylabel(label_plot+' ['+units[label_plot]+']')
+
+    locs = np.arange(xdata[0], xdata[-1]+1, np.floor((xdata[-1]+1-xdata[0])/8), dtype=int)
+    plt.xticks(locs, locs)
 
     # plt.tight_layout()  # otherwise the right y-label is slightly clipped
 
@@ -3248,6 +3259,69 @@ def plot_mean_bkg_GST_vs_evolution(site):
     plt.close()
     plt.clf() 
 
+def plot_evolution_snow_cover_melt_out(site, variable=None, value=None):
+    """ Function returns a histogram of the evolution of snow cover (in days) and melt out date
+        between background and transient periods
+        For all simulations or for a given subset, for instance the ones with 'slope'=50
+        Note that only the simulations with snow are accounted for,
+        otherwise, we would get a huge spike at 0 for all simulations that had no snow and kept it this way.
+
+    Parameters
+    ----------
+    site : str
+        Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    variable : str
+        A parameter in df_stats such as slope, aspect, altitude, etc.
+    value : float
+        A value for the parameter, e.g. 50 for a slope
+
+    Returns
+    -------
+    Histogram
+    """
+    _, _, _, _, _, df_stats = load_all_pickles(site)
+
+    # creates a subset of df_stats given the value of the variable entered as input. e.g. 'slope'=50
+    if variable==None:
+        data = df_stats
+    else:
+        data = df_stats[df_stats[variable]==value]
+
+    # creates a list of the time evolution of both parameters
+    # makes sure to only keep the simulations that have shown at least 1 day of snow over the whole study period
+    evol_melt_out = [data.iloc[k].melt_out_trans - data.iloc[k].melt_out_bkg for k in range(len(data)) if ((data.iloc[k].frac_snow_bkg != 0) | (data.iloc[k].frac_snow_trans != 0))]
+    evol_snow_cover = [(data.iloc[k].frac_snow_trans - data.iloc[k].frac_snow_bkg)*365.25 for k in range(len(data)) if ((data.iloc[k].frac_snow_bkg != 0) | (data.iloc[k].frac_snow_trans != 0))]
+
+    # plots both histograms
+    plt.hist(evol_snow_cover, bins=20, alpha=0.75, weights=np.ones_like(evol_snow_cover) / len(evol_snow_cover), label='Snow cover')
+    plt.hist(evol_melt_out, bins=20, alpha=0.75, weights=np.ones_like(evol_melt_out) / len(evol_melt_out), label='Melt out date')
+
+    mean_snow_cov = np.mean(evol_snow_cover)
+    mean_melt_out = np.mean(evol_melt_out)
+
+    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd', u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf']
+    # adds a vertical line denoting the mean values
+    plt.axvline(mean_snow_cov, color=colorcycle[0], linestyle='dashed', linewidth=2)
+    plt.axvline(mean_melt_out, color=colorcycle[1], linestyle='dashed', linewidth=2)
+
+    plt.annotate(r"$\overline{\Delta}_{\rm snow\ cover}=$%s%s [days]" % (("+" if mean_snow_cov > 0 else ""), float("{:.2f}".format(mean_snow_cov))),
+                 (0.12,0.5), xycoords='figure fraction',
+                 fontsize=12, horizontalalignment='left', verticalalignment='top', color=colorcycle[0])
+    plt.annotate(r"$\overline{\Delta}_{\rm mod}=$%s%s [days]" % (("+" if mean_melt_out > 0 else ""), float("{:.2f}".format(mean_melt_out))),
+                 (0.12,0.45), xycoords='figure fraction',
+                 fontsize=12, horizontalalignment='left', verticalalignment='top', color=colorcycle[1])
+
+    plt.xlabel('Evolution [days]')
+    plt.ylabel('Frequency')
+    units = {'altitude': 'm', 'aspect': '°', 'slope': '°', 'forcing': ''}
+    # plt.title(f'Time evolution of the snow mantle{('' if variable==None else f' for {variable} = {value}{units[variable]}')}')
+
+    # Show the graph
+    plt.legend(loc='upper left')
+    plt.show()
+    plt.close()
+    plt.clf()
+
 def plot_visible_skymap_from_horizon_file(hor_path):
     """ Function returns a fisheye view of the sky with the visible portion in blue and the blocked one in black.
     
@@ -3389,7 +3463,7 @@ def load_all_pickles(site):
 
     return df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats
 
-def plot_all(site, forcing_list, path_forcing_list, path_ground, path_swe, path_thaw_depth,
+def plot_all(site, forcing_list, path_forcing_list, path_ground, path_snow, path_swe, path_thaw_depth,
              year_bkg_end, year_trans_end, no_weight=True,
              individual_heatmap=False, polar_plots=False, parity_plot=False):
     """ Function returns a series of summary plots for a given site.
@@ -3404,6 +3478,8 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_swe, path_
         List of paths to the .nc file where the atmospheric forcing data for the given reanalysis is stored
     path_ground : str
         String path to the location of the ground output file from GTPEM (.nc)
+    path_snow : str
+        Path to the .nc file where the aggregated snow simulations are stored
     path_swe : str
         Path to the .nc file where the aggregated SWE simulations are stored
     path_thaw_depth : str
@@ -3449,8 +3525,13 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_swe, path_
 
     time_air_all = air_all_dict['time_air']
     temp_air_all = air_all_dict['temp_air']
+    precipitation_all = air_all_dict['precipitation']
 
     _, time_ground, temp_ground = open_ground_nc(path_ground)
+    _, snow_height = open_snow_nc(path_snow)
+    _, swe = open_swe_nc(path_swe)
+
+    _, time_bkg_ground, time_trans_ground, _ = list_tokens_year(time_ground, year_bkg_end, year_trans_end)
 
     # weighted mean GST
     temp_ground_mean = list(np.average([temp_ground[i,:,0] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight['weight']))
@@ -3468,7 +3549,8 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_swe, path_
     # Note that this is selecting the elevation in the 'middle': index 2 in the list [0,1,2,3,4]
     # and it returns the mean air temperature over all reanalyses
     mean_air_temp = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in temp_air_all], year_bkg_end, year_trans_end)
-    
+    mean_air_temp = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in temp_air_all], year_bkg_end, year_trans_end)
+
     # finally we get the total water production, averaged over all reanalyses
     tot_water_prod, _, mean_prec = assign_tot_water_prod(path_forcing_list, path_ground, path_swe, year_bkg_end, year_trans_end, site, no_weight)
 
@@ -3478,12 +3560,12 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_swe, path_
     plot_aggregating_distance_temp_all(['Air temperature', 'Water production', 'Ground temperature'],
                                        [time_air_all[0], time_ground, time_ground],
                                        [mean_air_temp, tot_water_prod, temp_ground_mean],
-                                       ['week', 'month'], site, year_rockfall, year_bkg_end, year_trans_end, False)
+                                       ['week', 'month'], site, year_bkg_end, year_trans_end, year_rockfall, False)
     print('Granularity: year, plotted for all years')
     plot_aggregating_distance_temp_all(['Air temperature', 'Water production', 'Ground temperature'],
                                         [time_air_all[0], time_ground, time_ground],
                                         [mean_air_temp, tot_water_prod, temp_ground_mean],
-                                        ['year'], site, 0, year_bkg_end, year_trans_end, False)
+                                        ['year'], site, year_bkg_end, year_trans_end, 0, False)
 
     print('Yearly statistics for air and ground surface temperature, and also precipitation and water production')
     plot_box_yearly_stat('Air temperature', time_air_all[0], mean_air_temp, year_bkg_end, year_trans_end)
@@ -3529,3 +3611,25 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_swe, path_
         pd_coef = pd.concat([pd_coef, pd.DataFrame((np.array([list(i) for i in optimizedParameters]).transpose()), columns=forcing_list)], axis=1)
         print('The coefficients of the statistical model for the mean background GST are given by:')
         print(pd_coef)
+
+    print('Plot of yearly statistics for atmospheric timeseries. Mean and several quantiles for each year:')
+    plot_yearly_quantiles_air(time_air_all, temp_air_all, 'Air temperature', year_bkg_end, year_trans_end)
+    plot_yearly_quantiles_air(time_air_all, precipitation_all, 'Precipitation', year_bkg_end, year_trans_end)
+
+    print('Plot of yearly statistics for simulated timeseries. Mean and several quantiles for each year:')
+    plot_yearly_quantiles_all_sims(time_ground, temp_ground, list_valid_sim, 'GST', year_bkg_end, year_trans_end)
+    plot_yearly_quantiles_all_sims(time_ground, snow_height, list_valid_sim, 'Snow depth', year_bkg_end, year_trans_end)
+    plot_yearly_quantiles_all_sims(time_ground, swe, list_valid_sim, 'SWE', year_bkg_end, year_trans_end)
+
+    print('Histogram of the evolution of the snow cover (in days) and melt-out date:')
+    plot_evolution_snow_cover_melt_out(site)
+
+    print('Plot of 2 timeseries reduced to a 1-year window with mean and 1- and 2-sigma spread:')
+    plot_sanity_two_variables_one_year_quantiles(time_ground, [temp_ground, snow_height], [list_valid_sim, list_valid_sim], ['GST', 'Snow depth'])
+
+    print('Plot of a single timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread, for background and transient piods:')
+    plot_sanity_one_year_quantiles_two_periods(time_ground, [temp_ground, temp_ground], [list_valid_sim, list_valid_sim], 'Snow depth', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground])
+    plot_sanity_one_year_quantiles_two_periods(time_ground, [snow_height, snow_height], [list_valid_sim, list_valid_sim], 'Snow depth', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground])
+
+    # print('')
+    # plot_sanity_one_year_quantiles_two_periods(time_air_merra2, [temp_air_merra2, temp_air_merra2], [None, None], 'Air temperature', ['Background', 'Transient'], [time_bkg_air_merra2, time_trans_air_merra2])
