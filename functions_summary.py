@@ -1,32 +1,27 @@
-import xarray as xr
+from datetime import datetime
+from collections import defaultdict
+import re
+import pickle
 import pandas as pd
-from netCDF4 import Dataset, num2date
+from netCDF4 import Dataset, num2date #pylint: disable=no-name-in-module
 import numpy as np
 import numpy.ma as ma
-import matplotlib.dates as mdates
+import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-import matplotlib.colors
-from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
-from matplotlib.transforms import blended_transform_factory
-from matplotlib import patches, colors
-from datetime import datetime, timedelta
-from collections import defaultdict
-from collections import Counter
 import scipy.optimize as opt
-import plotly.express as px
-import scipy.stats as stats
 from scipy.stats import linregress
-import re
-import pickle 
-import time
-import warnings
 import seaborn as sn
 import cmasher as cmr
 import mpl_axes_aligner
 
+#pylint: disable=line-too-long
+#pylint: disable=trailing-whitespace
+#pylint: disable=invalid-name
+
 pickle_path = '/fs/yedoma/home/vpo001/VikScriptsTests/Python_Pickles/'
+colorcycle = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+             '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 
 def open_air_nc(path_forcing):
     """ Function returns data from the .nc file for a given atmospheric forcing
@@ -54,7 +49,7 @@ def open_air_nc(path_forcing):
 
     # Open file for air temperature
     ncfile_air = Dataset(path_forcing, mode='r')
-    
+
     time_air = ncfile_air['time']
     temp_air = ncfile_air['AIRT_pl']
     SW_flux = ncfile_air['SW_sur']
@@ -86,7 +81,7 @@ def open_ground_nc(path_ground):
     ncfile_ground = Dataset(path_ground, mode='r')
     # Select geotop model data
     f_ground = ncfile_ground.groups['geotop']
-    
+
     time_ground = f_ground['Date']
     temp_ground = f_ground['Tg']
 
@@ -112,13 +107,14 @@ def open_snow_nc(path_snow):
     ncfile_snow = Dataset(path_snow, mode='r')
     # Select geotop model data
     f_snow = ncfile_snow.groups['geotop']
-    
+
     snow_height = f_snow['snow_depth_mm']
 
     return f_snow, snow_height
 
 def open_swe_nc(path_swe):
-    """ Function returns data from the .nc file for the snow water equivalent (SWE) simulation results
+    """ Function returns data from the .nc file
+    for the snow water equivalent (SWE) simulation results
     
     Parameters
     ----------
@@ -137,7 +133,7 @@ def open_swe_nc(path_swe):
     ncfile_swe = Dataset(path_swe, mode='r')
     # Select geotop model data
     f_swe = ncfile_swe.groups['geotop']
-    
+
     swe = f_swe['snow_water_equivalent']
 
     return f_swe, swe
@@ -162,13 +158,14 @@ def open_thaw_depth_nc(path_thaw_depth):
     ncfile_thaw_depth = Dataset(path_thaw_depth, mode='r')
     # Select geotop model data
     f_thaw_depth = ncfile_thaw_depth.groups['geotop']
-    
+
     thaw_depth = f_thaw_depth['AL']
 
     return f_thaw_depth, thaw_depth
 
 def time_unit_stamp(time_file):
-    """ Function returns frequency of datapoints and exact date and time of the initial datapoint, converted into a datetime
+    """ Function returns frequency of datapoints and exact date and time
+    of the initial datapoint, converted into a datetime
     
     Parameters
     ----------
@@ -904,34 +901,34 @@ def rockfall_values(site):
     Dictionary
     """
 
-    rockfall_values = {'Joffre': {'aspect': 45, 'slope': 60, 'altitude': 2500, 'year': 2019,
-                                  'datetime': datetime(2019, 5, 13, 0, 0, 0, 0), 'time_index': [14376, 345043, 345048]},
-                       'Joffre_new': {'aspect': 45, 'slope': 60, 'altitude': 2500, 'year': 2019,
-                                  'datetime': datetime(2019, 5, 13, 0, 0, 0, 0), 'time_index': [14376, 345043, 345048]},
-                       'Fingerpost': {'aspect': 270, 'slope': 50, 'altitude': 2600, 'year': 2015,
-                                      'datetime': datetime(2015, 12, 16, 0, 0, 0, 0), 'time_index': [13132, 315187, 315192]},
-                       'Dawson': {'aspect': 90, 'slope': 40, 'altitude': 500, 'year': 2015,
-                                      'datetime': datetime(2015, 12, 16, 0, 0, 0, 0), 'time_index': [13132, 315187, 315192]},
-                       'Aksaut_North': {'year': 2021,
-                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                       'Aksaut_North_test_no_SWEtop': {'year': 2021,
-                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                       'Aksaut_North_test_no_SnowSMIN': {'year': 2021,
-                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                       'Aksaut_North_slope_scf': {'year': 2021,
-                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                       'Aksaut_North_LWin': {'year': 2021,
-                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                       'Aksaut_North_spin_up': {'year': 2021,
-                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                       'Aksaut_Ridge': {'year': 2021,
-                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                       'Aksaut_South': {'year': 2021,
-                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                       'Aksaut_South_slope_scf': {'year': 2021,
-                                      'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]}}
+    rockfall_values_dict = {'Joffre': {'aspect': 45, 'slope': 60, 'altitude': 2500, 'year': 2019,
+                                       'datetime': datetime(2019, 5, 13, 0, 0, 0, 0), 'time_index': [14376, 345043, 345048]},
+                            'Joffre_new': {'aspect': 45, 'slope': 60, 'altitude': 2500, 'year': 2019,
+                                           'datetime': datetime(2019, 5, 13, 0, 0, 0, 0), 'time_index': [14376, 345043, 345048]},
+                            'Fingerpost': {'aspect': 270, 'slope': 50, 'altitude': 2600, 'year': 2015,
+                                           'datetime': datetime(2015, 12, 16, 0, 0, 0, 0), 'time_index': [13132, 315187, 315192]},
+                            'Dawson': {'aspect': 90, 'slope': 40, 'altitude': 500, 'year': 2015,
+                                       'datetime': datetime(2015, 12, 16, 0, 0, 0, 0), 'time_index': [13132, 315187, 315192]},
+                            'Aksaut_North': {'year': 2021,
+                                             'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                            'Aksaut_North_test_no_SWEtop': {'year': 2021,
+                                                            'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                            'Aksaut_North_test_no_SnowSMIN': {'year': 2021,
+                                                              'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                            'Aksaut_North_slope_scf': {'year': 2021,
+                                                       'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                            'Aksaut_North_LWin': {'year': 2021,
+                                                  'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                            'Aksaut_North_spin_up': {'year': 2021,
+                                                     'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                            'Aksaut_Ridge': {'year': 2021,
+                                             'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                            'Aksaut_South': {'year': 2021,
+                                             'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
+                            'Aksaut_South_slope_scf': {'year': 2021,
+                                                       'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]}}
 
-    return rockfall_values[site]
+    return rockfall_values_dict[site]
 
 def assign_weight_sim(site, no_weight=True):
     """ Function returns a statistical weight for each simulation according to the importance in rockfall starting zone 
@@ -1006,8 +1003,6 @@ def plot_hist_valid_sim_all_variables(path_thaw_depth, site):
     variables = ['altitude','aspect','slope','forcing']
     xaxes = ['Altitude [m]','Aspect [°]','Slope [°]','Forcing']
     yaxes = ['Number of simulations','','Number of simulations','']
-
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd', u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf']
 
     list_valid_sim = list(df_stats.index.values)
 
@@ -1096,23 +1091,21 @@ def plot_hist_stat_weights(pd_weight, df, zero=True):
 
     counts, bins = np.histogram(list_hist, 10, (0, 1))
     counts_b = 0
-    if zero == True:
+    if zero:
         counts_b, bins_b = np.histogram(list_hist_b, 10, (0, 1))
-    tot_count = np.sum(counts) + (np.sum(counts_b) if zero == True else 0)
-
-    colorcycle = [u'#1f77b4', u'#ff7f0e']
+    tot_count = np.sum(counts) + (np.sum(counts_b) if zero else 0)
     
     plt.hist(bins[:-1], bins, weights=counts/tot_count, label='No glaciers', color=colorcycle[1])
-    if zero == True:
+    if zero:
         plt.hist(bins_b[:-1], bins_b, weights=counts_b/tot_count, label='Glaciers', color=colorcycle[0])
 
     max_count = np.ceil((np.max([np.max(counts), np.max(counts_b)])/tot_count)/0.05+1)*0.05
     
     ticks = list(np.arange(0, max_count, 0.05))
-    plt.yticks(ticks, ["{:0.2f}".format(i) for i in ticks])
+    plt.yticks(ticks, [f"{i:0.2f}" for i in ticks])
 
     # Show the graph
-    if zero == True:
+    if zero:
         plt.legend(loc='upper right')
     plt.xlabel('Statistical weight')
     plt.ylabel('Frequency')
@@ -1423,8 +1416,6 @@ def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, year_b
         else:
             index_range = list(range(len(ydata[idx])))[list_dates[np.min(list(distance[0].keys()))][0]:]
 
-        colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c']
-
         if year in list(list_dates.keys()):
             if num_cols == 1:
                 ax.plot(xdata[idx][list_dates[year][:][:len(distance[0][year].values())]], distance[0][year].values(), label='Deviation')
@@ -1573,6 +1564,7 @@ def plot_table_mean_GST_aspect_slope(site, altitude, background=True, box=True):
     -------
     Table
     """
+    #pylint: disable=no-member
 
     _, _, _, _, _, df_stats = load_all_pickles(site)
     
@@ -1598,10 +1590,10 @@ def plot_table_mean_GST_aspect_slope(site, altitude, background=True, box=True):
     normal = plt.Normalize((np.max(max_vals - 2*dilute*range_vals,0) if np.min(vals)>0 else -dilute*np.max(np.abs(vals))), dilute*np.max(np.abs(vals)))
     colours = plt.cm.seismic(normal(df_temp))
 
-    for i in range(len(list_mean)):
+    for i,l in enumerate(list_mean):
         for j in range(len(list_mean[0])):
-            if np.isnan(list_mean[i][j]):
-                colours[i][j] = list(colors.to_rgba('silver'))
+            if np.isnan(l[j]):
+                colours[i][j] = list(matplotlib.colors.to_rgba('silver'))
 
     fig = plt.figure()
     ax = fig.add_subplot(111, frameon=False, xticks=[], yticks=[])
@@ -1715,10 +1707,10 @@ def plot_table_aspect_slope_all_altitudes(site, show_glacier=True, box=True):
                                                     edgecolor = 'black', transform=axs[j,alt_index].transAxes, fill=False, lw=4))
 
     if ncols == 1:
-        axs[0].set_title('%s m' % alt_list[0])
+        axs[0].set_title(f'{alt_list[0]} m')
     if ncols > 1:
         for i in range(ncols):
-            axs[0,i].set_title('%s m' % alt_list[i])
+            axs[0,i].set_title(f'{alt_list[i]} m')
     fig.supxlabel('Aspect [°]')
     fig.supylabel('Slope [°]')
 
@@ -1784,16 +1776,16 @@ def plot_table_aspect_slope_all_altitudes_polar(site, box=True):
 
     ticks = [[],[]]
     tick_pos = [[],[]]
-    for i in range(len(vmin)):
+    for i,v in enumerate(vmin):
         for space in [0.05, 0.1, 0.2, 0.5, 1]:
-            pre_ticks = np.arange(np.ceil(vmin[i]/space)*space+0, np.min([vmax[i], np.floor(vmax[i]/space+1)*space]), space)
+            pre_ticks = np.arange(np.ceil(v/space)*space+0, np.min([vmax[i], np.floor(vmax[i]/space+1)*space]), space)
             if (len(pre_ticks)>=5 and len(pre_ticks)<10):
                 ticks[i] = [round(j,(2 if space<0.1 else 1)) for j in pre_ticks]
-        tick_pos[i] = [(j-vmin[i])/(vmax[i]-vmin[i]) for j in ticks[i] if (j>=vmin[i] and j<vmax[i])]
+        tick_pos[i] = [(j-v)/(vmax[i]-v) for j in ticks[i] if (j>=v and j<vmax[i])]
 
     for j in range(nrows):
         for i in range(ncols):
-            pc = axs[j,i].pcolormesh(A, R, np.repeat(list_mean[j][i], subdivs, axis=1), cmap=cmap[j], vmin=vmin[j], vmax=vmax[j])
+            axs[j,i].pcolormesh(A, R, np.repeat(list_mean[j][i], subdivs, axis=1), cmap=cmap[j], vmin=vmin[j], vmax=vmax[j])
             axs[j,i].set_facecolor("silver")
             axs[j,i].set_theta_zero_location('N')
             axs[j,i].set_theta_direction(-1)
@@ -1803,25 +1795,26 @@ def plot_table_aspect_slope_all_altitudes_polar(site, box=True):
             axs[j,i].xaxis.grid(False)
             axs[j,i].yaxis.grid(False)
             axs[j,i].set_rlim(95,25)
-            axs[0,i].set_title('%s m' % alt_list[i])
+            axs[0,i].set_title(f'{alt_list[i]} m')
             axs[j,i].bar(0, 1).remove()
             for k in range(30,80,10):
-                axs[j,i].text(np.pi/5, k, ('%s°' % k), horizontalalignment='center', verticalalignment='center')
+                axs[j,i].text(np.pi/5, k, (f'{k}°'), horizontalalignment='center', verticalalignment='center')
         if box:
-            axs[j,alt_index].add_patch(patches.Rectangle(((rockfall_values(site)['aspect']-45/2)/360*2*np.pi, rockfall_values(site)['slope']-5),
+            axs[j,alt_index].add_patch(matplotlib.patches.Rectangle(((rockfall_values(site)['aspect']-45/2)/360*2*np.pi, rockfall_values(site)['slope']-5),
                                                         width=np.pi/4, height=10, edgecolor = 'black', fill=False, lw=2))
         
-        
-    cbar = [fig.colorbar(matplotlib.cm.ScalarMappable(cmap=cmap[j]),
-                         shrink=.8,
-                         ax=axs[j,:].ravel().tolist(), orientation='vertical',
-                         label=('Mean background GST [°C]' if j==0 else 'Mean GST evolution [°C]'))
-            for j in range(nrows)]
+    for j in range(nrows):
+        #pylint: disable=no-member
+        fig.colorbar(matplotlib.colormaps.ScalarMappable(cmap=cmap[j]), shrink=.8,
+                     ax=axs[j,:].ravel().tolist(), orientation='vertical',
+                     label=('Mean background GST [°C]' if j==0 else 'Mean GST evolution [°C]'))
+    
     for idx,i in enumerate(range(-nrows,0)):
         axs[0,0].figure.axes[i].yaxis.set_ticks(tick_pos[idx])
         axs[0,0].figure.axes[i].set_yticklabels(ticks[idx]) 
     
-    [axs[0,0].figure.axes[i].yaxis.label.set_size(15) for i in [6,7]]
+    for i in [6,7]:
+        axs[0,0].figure.axes[i].yaxis.label.set_size(15)
 
     plt.show()
     plt.close()
@@ -1886,11 +1879,11 @@ def plot_permafrost_all_altitudes_polar(site, depth_thaw, box=True):
 
     fig, axs = plt.subplots(ncols=ncols, nrows=nrows, figsize=(5*ncols, 5*nrows), subplot_kw=dict(projection="polar"),
                             gridspec_kw={'hspace': -0.1, 'wspace': 0.3})
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd', u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf']
+
     cmap = matplotlib.colors.ListedColormap([colorcycle[1],colorcycle[2],colorcycle[0]]) 
 
     for i in range(ncols):
-        pc = axs[i].pcolormesh(A, R, np.repeat(list_data[i], subdivs, axis=1), cmap=cmap, vmin=0, vmax=1)
+        axs[i].pcolormesh(A, R, np.repeat(list_data[i], subdivs, axis=1), cmap=cmap, vmin=0, vmax=1)
         axs[i].set_facecolor("silver")
         axs[i].set_theta_zero_location('N')
         axs[i].set_theta_direction(-1)
@@ -1900,17 +1893,17 @@ def plot_permafrost_all_altitudes_polar(site, depth_thaw, box=True):
         axs[i].xaxis.grid(False)
         axs[i].yaxis.grid(False)
         axs[i].set_rlim(95,25)
-        axs[i].set_title('%s m' % alt_list[i])
+        axs[i].set_title(f'{alt_list[i]} m')
         axs[i].bar(0, 1).remove()
         for k in range(30,80,10):
-            axs[i].text(np.pi/5, k, ('%s°' % k), horizontalalignment='center', verticalalignment='center')
+            axs[i].text(np.pi/5, k, (f'{k}°'), horizontalalignment='center', verticalalignment='center')
     if box:
-        axs[alt_index].add_patch(patches.Rectangle(((rockfall_values(site)['aspect']-45/2)/360*2*np.pi, rockfall_values(site)['slope']-5),
+        axs[alt_index].add_patch(matplotlib.patches.Rectangle(((rockfall_values(site)['aspect']-45/2)/360*2*np.pi, rockfall_values(site)['slope']-5),
                                                         width=np.pi/4, height=10, edgecolor = 'black', fill=False, lw=2))
 
-    cbar = fig.colorbar(matplotlib.cm.ScalarMappable(cmap=cmap),
-                            shrink=.8,
-                            ax=axs[:].ravel().tolist(), orientation='vertical')
+    #pylint: disable=no-member
+    fig.colorbar(matplotlib.colormaps.ScalarMappable(cmap=cmap),
+                 shrink=.8, ax=axs[:].ravel().tolist(), orientation='vertical')
     axs[0].figure.axes[-1].yaxis.set_ticks([1/6,1/2,5/6])
     axs[0].figure.axes[-1].set_yticklabels(['Permafrost', 'No permafrost, no glaciers', 'Glaciers']) 
     axs[0].figure.axes[-1].yaxis.label.set_size(15)
@@ -1942,14 +1935,14 @@ def stat_model_aspect_slope_alt(X, offset, c_alt, d_alt, c_asp, c_slope):
             + c_asp * (altitude - d_alt) * np.cos(aspect * 2 * np.pi / 360) 
             + c_slope * slope)
 
-def fit_stat_model_grd_temp(site, all=True, diff_forcings=True):
+def fit_stat_model_grd_temp(site, all_data=True, diff_forcings=True):
     """ Function returns the value of the statistical model 
     
     Parameters
     ----------
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
-    all : bool, optional
+    all_data : bool, optional
         If True, considers all data at once
     diff_forcings : bool, optional
         If True, separates data by 'forcing'
@@ -1957,17 +1950,17 @@ def fit_stat_model_grd_temp(site, all=True, diff_forcings=True):
     Returns
     -------
     xdata : list
-        List of xdata (actual) grouped by forcing if all=False
+        List of xdata (actual) grouped by forcing if all_data=False
     ydata : list
-        List of ydata (predicted) grouped by forcing if all=False
+        List of ydata (predicted) grouped by forcing if all_data=False
     optimizedParameters : list
-        List of optimized model parameters grouped by forcing if all=False
+        List of optimized model parameters grouped by forcing if all_data=False
     pcov : list
-        List of covariances grouped by forcing if all=False
+        List of covariances grouped by forcing if all_data=False
     corr_matrix : list
-        List of correlation matrices grouped by forcing if all=False
+        List of correlation matrices grouped by forcing if all_data=False
     R_sq : list
-        List of R^2 grouped by forcing if all=False
+        List of R^2 grouped by forcing if all_data=False
     parity plot (predicted vs actual)
     """
 
@@ -1977,7 +1970,7 @@ def fit_stat_model_grd_temp(site, all=True, diff_forcings=True):
 
     forcings = np.unique(df_stats['forcing'])
     data_set = []
-    if all:
+    if all_data:
         data_set.append(df_stats)
     else: 
         pass
@@ -1987,7 +1980,7 @@ def fit_stat_model_grd_temp(site, all=True, diff_forcings=True):
     else:
         pass
 
-    input = [np.array([i['aspect'], i['slope'], i['altitude']]) for i in data_set]
+    input_var = [np.array([i['aspect'], i['slope'], i['altitude']]) for i in data_set]
     # all the measured differential warmings (from valid simulations) are in xdata
     xdata = [np.array(i['bkg_grd_temp']) for i in data_set]
     
@@ -1999,27 +1992,27 @@ def fit_stat_model_grd_temp(site, all=True, diff_forcings=True):
     corr_matrix = []
     bounds=((-50, -np.inf, -np.inf, -np.inf, -np.inf), (50, np.inf, np.inf, np.inf, np.inf))
     p0 = (0,0,1000,0,0)
-    for i in range(len(input)):
-        optimizedParameters.append(opt.curve_fit(stat_model_aspect_slope_alt, input[i], xdata[i], bounds=bounds, p0=p0)[0])
-        pcov.append(opt.curve_fit(stat_model_aspect_slope_alt, input[i], xdata[i], bounds=bounds, p0=p0)[0])
+    for i,in_var in enumerate(input_var):
+        optimizedParameters.append(opt.curve_fit(stat_model_aspect_slope_alt, in_var, xdata[i], bounds=bounds, p0=p0)[0])
+        pcov.append(opt.curve_fit(stat_model_aspect_slope_alt, in_var, xdata[i], bounds=bounds, p0=p0)[0])
 
         # this represents the fitted values, hence they are the statistically-modelled values 
         # of differential warming: we call them ydata
-        ydata.append(stat_model_aspect_slope_alt(input[i], *optimizedParameters[i]))
+        ydata.append(stat_model_aspect_slope_alt(in_var, *optimizedParameters[i]))
 
         # R^2 from numpy package, to check!
         corr_matrix.append(np.corrcoef(xdata[i], ydata[i]))
         corr = corr_matrix[i][0,1]
         R_sq.append(corr**2)
 
-        plt.scatter(xdata[i], ydata[i], marker=("D" if (all and i==0) else "o"),
-                    s=20, label=('all data' if (all and i==0) else forcings[len(forcings)-len(data_set)+i]) )
+        plt.scatter(xdata[i], ydata[i], marker=("D" if (all_data and i==0) else "o"),
+                    s=20, label=('all data' if (all_data and i==0) else forcings[len(forcings)-len(data_set)+i]) )
         
     # plot the y=x diagonal
     # start by setting the bounds
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd', u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf']
-    lim_up = float("{:.2g}".format(max(np.max([np.max(i) for i in xdata]), np.max([np.max(i) for i in ydata]))))
-    lim_down = float("{:.2g}".format(min(np.min([np.min(i) for i in xdata]), np.min([np.min(i) for i in ydata]))))
+
+    lim_up = float(f"{max(np.max([np.max(i) for i in xdata]), np.max([np.max(i) for i in ydata])):.2g}")
+    lim_down = float(f"{min(np.min([np.min(i) for i in xdata]), np.min([np.min(i) for i in ydata])):.2g}")
     x = np.arange(lim_down, lim_up, 0.01)
     plt.plot(x, x, color=colorcycle[len(data_set)], linestyle='dashed', label = 'y=x', linewidth=2)
     plt.legend(loc='upper right')
@@ -2030,8 +2023,8 @@ def fit_stat_model_grd_temp(site, all=True, diff_forcings=True):
 
     plt.xlabel(r'Numerically-simulated background GST $\overline{T_{\rm GST}^{\rm bkg}}_{(NS)}$ [°C]')
     plt.ylabel(r'Statistically-modelled background GST $\overline{T_{\rm GST}^{\rm bkg}}_{(SM)}$ [°C]')
-    for i in range(len(R_sq)):
-        plt.figtext(.7, .3 - i/30, f"$R^2$ = %s" % float("{:.2f}".format(R_sq[i])),
+    for i,r in enumerate(R_sq):
+        plt.figtext(.7, .3 - i/30, f"$R^2$ = {r:.2f}",
                     c=colorcycle[i])
 
     # Show the graph
@@ -2064,7 +2057,7 @@ def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, yea
 
     """
 
-    fig, ax = plt.subplots()
+    _, ax = plt.subplots()
 
     list_dates = list_tokens_year(time_file, year_bkg_end, year_trans_end)[0]
     overall_mean = np.mean(file_to_plot)
@@ -2081,14 +2074,14 @@ def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, yea
     meanpointprops = dict(marker='D', markeredgecolor='black', markerfacecolor='firebrick')
     sn.boxplot(x='Year', y=name_series, data=x, showmeans=True, showfliers=False, meanprops=meanpointprops, color='grey', linecolor='black')
 
-    formatted_mean = ["{:.2e}".format(i) for i in mean] if ((exponent < -1) | (exponent>2)) else [float("{:.2f}".format(i)) for i in mean]
+    formatted_mean = [f"{i:.2e}" for i in mean] if ((exponent < -1) | (exponent>2)) else [float(f"{i:.2f}") for i in mean]
 
     units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm s-1', 'SWE': 'mm s-1', 'Water production': 'mm s-1'}
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c']
+
     ax.hlines(mean[0], 0, year_bkg_end - list(list_dates.keys())[0] - 1 + 1/2, linewidth=2, color=colorcycle[0],
-              label=f'Background mean: %s%s' % (formatted_mean[0], units[name_series]))
+              label=f'Background mean: {formatted_mean[0]}{units[name_series]}')
     ax.hlines(mean[1], year_bkg_end - list(list_dates.keys())[0] - 1/2, year_trans_end - list(list_dates.keys())[0] - 1, linewidth=2, color=colorcycle[1],
-              label=f'Transient mean: %s%s' % (formatted_mean[1], units[name_series]))
+              label=f'Transient mean: {formatted_mean[1]}{units[name_series]}')
 
     plt.tight_layout()
     locs, labels = plt.xticks()  # Get the current locations and labels.
@@ -2173,11 +2166,9 @@ def plot_cdf_GST(site):
         for indx_j, j in enumerate(list_quant):
             point[indx_i][indx_j] = coordinates_percentile_cdf(i, p, j)
 
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd', u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf']
-
     # plot the sorted data:
-    fig = plt.figure()
-    fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
+    _ = plt.figure()
+    _, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
 
     ax1.plot(data_bkg_sorted, p, label='Background', color=colorcycle[0], linewidth=2)
     ax1.plot(data_trans_sorted, p, label='Transient', color=colorcycle[1], linewidth=2)
@@ -2193,11 +2184,11 @@ def plot_cdf_GST(site):
 
 
     ax1.hlines([i/100 for i in list_quant], xlim_ax1[0],
-            [np.max(i) for i in np.array(point).transpose()[0].transpose()[:2].transpose()],
-            color='black', linestyle="dashed", linewidth=0.5)
+               [np.max(i) for i in np.array(point).transpose()[0].transpose()[:2].transpose()],
+               color='black', linestyle="dashed", linewidth=0.5)
     for i in range(2):
-            ax1.vlines([j[0] for j in point[i]], ylim_ax1[0],
-                    [j/100 for j in list_quant], color=colorcycle[i], linestyle="dashed", linewidth=0.5)
+        ax1.vlines([j[0] for j in point[i]], ylim_ax1[0],
+                   [j/100 for j in list_quant], color=colorcycle[i], linestyle="dashed", linewidth=0.5)
 
     ax1.set_xlim(xlim_ax1)
     ax1.set_ylim(ylim_ax1)
@@ -2218,11 +2209,11 @@ def plot_cdf_GST(site):
             ax2.scatter(point[i][j][0], point[i][j][1], color=colorcycle[i-2])
 
     ax2.hlines([i/100 for i in list_quant], xlim_ax1[0],
-            [np.max(i) for i in np.array(point).transpose()[0].transpose()[2:].transpose()],
-            color='black', linestyle="dashed", linewidth=0.5)
+               [np.max(i) for i in np.array(point).transpose()[0].transpose()[2:].transpose()],
+               color='black', linestyle="dashed", linewidth=0.5)
     for i in range(2,4):
-            ax2.vlines([j[0] for j in point[i]], ylim_ax1[0],
-                    [j/100 for j in list_quant], color=colorcycle[i-2], linestyle="dashed", linewidth=0.5)
+        ax2.vlines([j[0] for j in point[i]], ylim_ax1[0],
+                   [j/100 for j in list_quant], color=colorcycle[i-2], linestyle="dashed", linewidth=0.5)
 
     ax2.set_xlim(xlim_ax2)
     ax2.set_ylim(ylim_ax2)
@@ -2272,10 +2263,10 @@ def plot_10_cold_warm(site):
     df_stats_bis['bkg_grd_temp'] = pd.Categorical(df_stats_bis['bkg_grd_temp'], data_bkg_sorted)
     df_stats_bis = df_stats_bis.sort_values('bkg_grd_temp')
 
-    list_x = list(df_stats_bis['bkg_grd_temp'])
+    #pylint: disable=unsubscriptable-object
+    list_x = list(df_stats_bis['bkg_grd_temp']) 
+    #pylint: disable=unsubscriptable-object
     list_y = [df_stats_bis['trans_grd_temp'].iloc[i] - df_stats_bis['bkg_grd_temp'].iloc[i] for i in range(len(df_stats_bis))]
-
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd', u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf']
 
     pos_10 = int(np.ceil(len(data_bkg)/10))
 
@@ -2288,10 +2279,10 @@ def plot_10_cold_warm(site):
     plt.axvline((list_x[pos_10-1]+list_x[pos_10])/2, c=colorcycle[0])
     plt.axvline((list_x[-pos_10-1]+list_x[-pos_10])/2, c=colorcycle[2])
     plt.axhline(mean[0], linestyle="dashed",
-                label=(r"$\overline{{\rm GST}_{\rm low 10}}$ =" + ('+' if mean[0]>0 else '') + r"%.3f°C" % (mean[0])),
+                label=(r"$\overline{{\rm GST}_{\rm low 10}}$ =" + ('+' if mean[0]>0 else '') + f"{mean[0]:.3f}°C"),
                 c=colorcycle[0])
     plt.axhline(mean[1], linestyle="dashed",
-                label=(r"$\overline{{\rm GST}_{\rm high 10}}$ =" + ('+' if mean[1]>0 else '') + r"%.3f°C" % (mean[1])),
+                label=(r"$\overline{{\rm GST}_{\rm high 10}}$ =" + ('+' if mean[1]>0 else '') + f"{mean[1]:.3f}°C"),
                 c=colorcycle[2])
     
     xlim = plt.gca().get_xlim()
@@ -2453,6 +2444,7 @@ def stats_air_all_years_simulations_to_single_year(time_file, time_series, mask_
     panda_test = panda_test.drop(columns=['date'])
 
     if mask_period is None:
+        #pylint: disable=unsupported-assignment-operation
         panda_test['timeseries'] = time_series[:,2]
     else:
         panda_test = panda_test.drop(index=np.arange(0,len(mask_period),1)[[not i for i in mask_period]])
@@ -2466,7 +2458,6 @@ def stats_air_all_years_simulations_to_single_year(time_file, time_series, mask_
     panda_test = panda_test.groupby(['month', 'day', 'hour']).quantile(list_quant)
     panda_test.index.names = ['month', 'day', 'hour', 'quantiles']
     panda_test = panda_test.reset_index().drop(columns=['month', 'day', 'hour'])
-    panda_test
 
     quantiles = []
     for i in range(len(list_quant)):
@@ -2504,7 +2495,6 @@ def plot_sanity_one_year_quantiles_two_periods(time_file, time_series_list, list
     """
     
     # fig, ax1 = plt.subplots()
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c']
     units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm/day', 'SWE': 'mm', 'Water production': 'mm/day', 'Snow depth': 'mm',
              'SW': 'W m-2', 'LW': 'W m-2'}
     
@@ -2578,7 +2568,6 @@ def plot_sanity_two_variables_one_year_quantiles(time_file, time_series_list, li
     """
     
     fig, ax1 = plt.subplots()
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c']
     units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm/day', 'SWE': 'mm', 'Water production': 'mm/day', 'Snow depth': 'mm',
              'SW': 'W m-2', 'LW': 'W m-2'}
 
@@ -2649,11 +2638,10 @@ def plot_sanity_two_variables_one_year_quantiles_side_by_side(time_file, time_se
 
     """
     
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c']
     units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm/day', 'SWE': 'mm', 'Water production': 'mm/day', 'Snow depth': 'mm',
              'SW': 'W m-2', 'LW': 'W m-2'}
 
-    f, a = plt.subplots(1, 2, figsize=(10, 5))
+    _, a = plt.subplots(1, 2, figsize=(10, 5))
     for idx,ax in enumerate(a):
 
         quantiles, mean_end = stats_all_years_simulations_to_single_year(time_file, time_series_list[idx][0], list_valid_sim_list[0])
@@ -2722,9 +2710,9 @@ def stats_yearly_quantiles_air(list_time_file, list_time_series, label_plot, yea
 
     panda_list = [[] for _ in list_time_series]
 
-    for i in range(len(list_time_series)):
+    for i,l in enumerate(list_time_file):
         # create a panda dataframe with month, day, hour for each timestamp
-        panda_list[i] = pd.DataFrame(num2date(list_time_file[i][:], list_time_file[i].units), columns=['date'])
+        panda_list[i] = pd.DataFrame(num2date(l[:], l.units), columns=['date'])
         panda_list[i]['year'] = [j.year for j in panda_list[i]['date']]
         panda_list[i]['month'] = [j.month for j in panda_list[i]['date']]
         panda_list[i]['day'] = [j.day for j in panda_list[i]['date']]
@@ -2778,9 +2766,8 @@ def plot_yearly_quantiles_air(list_time_file, list_time_series, label_plot, year
 
     mean_bkg = np.mean(mean_end.loc[xdata[0]:year_bkg_end-1])
     mean_trans = np.mean(mean_end.loc[year_bkg_end:year_trans_end-1])
-    formatted_mean = ["{:.2f}".format(i) for i in [mean_bkg, mean_trans]]
+    formatted_mean = [f"{i:.2f}" for i in [mean_bkg, mean_trans]]
 
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c']
     units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm/day', 'SWE': 'mm', 'Water production': 'mm/day', 'Snow depth': 'mm',
              'SW': 'W m-2', 'LW': 'W m-2'}
     dict_points = {0: {'alpha': 0.2, 'width': 0.5},
@@ -2804,9 +2791,9 @@ def plot_yearly_quantiles_air(list_time_file, list_time_series, label_plot, year
                         )
     
     plt.hlines(mean_bkg, xdata[0], year_bkg_end, color=colorcycle[1],
-               label=f'Background mean: %s%s' % (formatted_mean[0], units[label_plot]))
+               label=f'Background mean: {formatted_mean[0]}{units[label_plot]}')
     plt.hlines(mean_trans,  year_bkg_end, xdata[-1], color=colorcycle[2],
-               label=f'Transient mean: %s%s' % (formatted_mean[1], units[label_plot]))
+               label=f'Transient mean: {formatted_mean[1]}{units[label_plot]}')
 
     ylim = plt.gca().get_ylim()
 
@@ -2853,7 +2840,6 @@ def plot_yearly_quantiles_all_sims(time_file, time_series, list_valid_sim, label
     Plot of yearly statistics for 'ground' timeseries. Mean and several quantiles for each year.
     """
 
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c']
     units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm/day', 'SWE': 'mm', 'Water production': 'mm/day', 'Snow depth': 'mm',
              'SW': 'W m-2', 'LW': 'W m-2'}
     
@@ -2886,7 +2872,7 @@ def plot_yearly_quantiles_all_sims(time_file, time_series, list_valid_sim, label
 
     mean_bkg = np.mean(mean_end.loc[xdata[0]:year_bkg_end-1])
     mean_trans = np.mean(mean_end.loc[year_bkg_end:year_trans_end-1])
-    formatted_mean = ["{:.2f}".format(i) for i in [mean_bkg, mean_trans]]
+    formatted_mean = [f"{i:.2f}" for i in [mean_bkg, mean_trans]]
     
     plt.scatter(xdata, mean_end, color=colorcycle[0], linestyle='None', label='Yearly mean')
     # plt.plot(xdata, mean_end, color=colorcycle[0], label='Mean')
@@ -2905,9 +2891,9 @@ def plot_yearly_quantiles_all_sims(time_file, time_series, list_valid_sim, label
         plt.axhline(y=0, color='grey', linestyle='dashed')
 
     plt.hlines(mean_bkg, xdata[0], year_bkg_end, color=colorcycle[1],
-               label=f'Background mean: %s%s' % (formatted_mean[0], units[label_plot]))
+               label=f'Background mean: {formatted_mean[0]}{units[label_plot]}')
     plt.hlines(mean_trans,  year_bkg_end, xdata[-1], color=colorcycle[2],
-               label=f'Transient mean: %s%s' % (formatted_mean[1], units[label_plot]))
+               label=f'Transient mean: {formatted_mean[1]}{units[label_plot]}')
 
     ylim = plt.gca().get_ylim()
     plt.vlines(year_bkg_end, ylim[0], ylim[1], color='grey', linestyle='dashed')
@@ -2950,7 +2936,6 @@ def plot_yearly_quantiles_all_sims_side_by_side(time_file, time_series, list_val
     at 2 different sites. 1 plot per site, both plots side by side.
     """
 
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd', u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf']
     units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm/day', 'SWE': 'mm', 'Water production': 'mm/day', 'Snow depth': 'mm',
              'SW': 'W m-2', 'LW': 'W m-2'}
     
@@ -2962,7 +2947,7 @@ def plot_yearly_quantiles_all_sims_side_by_side(time_file, time_series, list_val
 
     list_quantiles = [0.023, 0.16, 0.5, 0.84, 0.977]
 
-    f, a = plt.subplots(1, 2, figsize=(8, 4), sharey='row')
+    _, a = plt.subplots(1, 2, figsize=(8, 4), sharey='row')
     for idx,ax in enumerate(a):
         long_timeseries = []
         for sim in list_valid_sim[idx]:
@@ -2985,7 +2970,7 @@ def plot_yearly_quantiles_all_sims_side_by_side(time_file, time_series, list_val
 
         mean_bkg = np.mean(mean_end.loc[xdata[0]:year_bkg_end-1])
         mean_trans = np.mean(mean_end.loc[year_bkg_end:year_trans_end-1])
-        formatted_mean = ["{:.2f}".format(i) for i in [mean_bkg, mean_trans]]
+        formatted_mean = [f"{i:.2f}" for i in [mean_bkg, mean_trans]]
         
         ax.scatter(xdata, mean_end, color=colorcycle[idx], linestyle='None', label='Yearly mean')
         # ax.plot(xdata, mean_end, color=colorcycle[idx], label='Mean')
@@ -3002,9 +2987,9 @@ def plot_yearly_quantiles_all_sims_side_by_side(time_file, time_series, list_val
                             )
 
         ax.hlines(mean_bkg, xdata[0], year_bkg_end, color=colorcycle[2],
-               label=f'Background mean: %s%s' % (formatted_mean[0], units[label_plot]))
+               label=f'Background mean: {formatted_mean[0]}{units[label_plot]}')
         ax.hlines(mean_trans,  year_bkg_end, xdata[-1], color=colorcycle[3],
-               label=f'Transient mean: %s%s' % (formatted_mean[1], units[label_plot]))
+               label=f'Transient mean: {formatted_mean[1]}{units[label_plot]}')
             
         if label_plot in ['GST', 'Air temperature']:
             ax.axhline(y=0, color='grey', linestyle='dashed')
@@ -3058,13 +3043,13 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site):
     df_stats_bis = pd.DataFrame(data=df_stats, columns=['bkg_grd_temp', 'evol_grd_temp'])
     df_stats_bis['bkg_grd_temp'] = pd.Categorical(df_stats_bis['bkg_grd_temp'], np.sort(df_stats['bkg_grd_temp']))
     df_stats_bis = df_stats_bis.sort_values('bkg_grd_temp')
-
-    list_x = list(df_stats_bis['bkg_grd_temp'])
-    list_y = list(df_stats_bis['evol_grd_temp'])
+    
+    list_x = list(df_stats_bis['bkg_grd_temp']) #pylint: disable=unsubscriptable-object
+    list_y = list(df_stats_bis['evol_grd_temp']) #pylint: disable=unsubscriptable-object
 
     quantiles = np.arange(0, 101, 10)
 
-    cmap = plt.cm.seismic
+    cmap = plt.cm.seismic #pylint: disable=no-member
 
     list_x_mean = []
 
@@ -3085,10 +3070,10 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site):
         plt.scatter(np.mean(list_x[low:up]), np.mean(list_y[low:up]), c=color, s=50)
         # plt.hlines(np.mean(list_y[low:up]),list_x[low],list_x[up-1], color=colorcycle[i], linewidth=2)
 
-    slope, intercept, r, p, se = linregress(list_x, list_y)
+    slope, intercept, r, _, _ = linregress(list_x, list_y)
     u = np.arange(np.min(list_x)-0.1, np.max(list_x)+0.1, 0.01)
     print('R-square:', r**2, ', regression slope:', slope , ', regression intercept:', intercept)
-    plt.plot(u, slope*u+intercept, c='grey', label=('slope: %s' % (round(slope,3))))
+    plt.plot(u, slope*u+intercept, c='grey', label=f'slope: {round(slope,3)}')
 
     plt.xlabel('Mean background GST [°C]')
     plt.ylabel('Mean GST evolution [°C]')
@@ -3136,11 +3121,9 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site):
     list_x = [list(i['bkg_grd_temp']) for i in df_stats_bis]
     list_y = [list(i['evol_grd_temp']) for i in df_stats_bis]
 
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd', u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf']
-
     quantiles = np.arange(0, 101, 10)
 
-    cmap = plt.cm.seismic
+    cmap = plt.cm.seismic #pylint: disable=no-member
     # colors = cmap(np.linspace(0, 1, len(quantiles)+(1 if len(quantiles)%2 else 0)))
 
     vmax = [[] for _ in df_stats]
@@ -3173,7 +3156,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site):
             plt.scatter(np.mean(list_x[j][low:up]), np.mean(list_y[j][low:up]), c=color, s=50)
             # plt.hlines(np.mean(list_y[low:up]),list_x[low],list_x[up-1], color=colorcycle[i], linewidth=2)
 
-        slope_i, intercept_i, r_i, p, se = linregress(list_x[j], list_y[j])
+        slope_i, intercept_i, r_i, _, _ = linregress(list_x[j], list_y[j])
         slope.append(slope_i)
         intercept.append(intercept_i)
         r.append(r_i)
@@ -3236,19 +3219,17 @@ def plot_mean_bkg_GST_vs_evolution(site):
 
     _, _, _, _, _, df_stats = load_all_pickles(site)
 
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd', u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf']
-
     xx = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(site)[1]]
     yy = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(site)[3]]
 
     alt_list = list(np.sort(np.unique(df_stats['altitude'])))
 
-    for i in range(len(xx)):
-        slope, intercept, r, p, se = linregress(xx[i],yy[i])
+    for i,x in enumerate(xx):
+        slope, intercept, r, _, _ = linregress(x,yy[i])
         print('altitude:', alt_list[i],', R-square:', r**2, ', regression slope:', slope , ', regression intercept:', intercept)
-        u = np.arange(np.min(xx[i])-0.1, np.max(xx[i])+0.1, 0.01)
-        plt.scatter(xx[i],yy[i], c=colorcycle[i], label=('%s m' % (alt_list[i])))
-        plt.plot(u, slope*u+intercept, c=colorcycle[i], label=('slope: %s' % (round(slope,3))))
+        u = np.arange(np.min(x)-0.1, np.max(x)+0.1, 0.01)
+        plt.scatter(x,yy[i], c=colorcycle[i], label=f'{alt_list[i]} m')
+        plt.plot(u, slope*u+intercept, c=colorcycle[i], label=f'slope: {round(slope,3)}')
 
     plt.legend(loc='lower left')
     plt.xlabel('Mean background GST [°C]')
@@ -3282,15 +3263,15 @@ def plot_evolution_snow_cover_melt_out(site, variable=None, value=None):
     _, _, _, _, _, df_stats = load_all_pickles(site)
 
     # creates a subset of df_stats given the value of the variable entered as input. e.g. 'slope'=50
-    if variable==None:
+    if variable is None:
         data = df_stats
     else:
         data = df_stats[df_stats[variable]==value]
 
     # creates a list of the time evolution of both parameters
     # makes sure to only keep the simulations that have shown at least 1 day of snow over the whole study period
-    evol_melt_out = [data.iloc[k].melt_out_trans - data.iloc[k].melt_out_bkg for k in range(len(data)) if ((data.iloc[k].frac_snow_bkg != 0) | (data.iloc[k].frac_snow_trans != 0))]
-    evol_snow_cover = [(data.iloc[k].frac_snow_trans - data.iloc[k].frac_snow_bkg)*365.25 for k in range(len(data)) if ((data.iloc[k].frac_snow_bkg != 0) | (data.iloc[k].frac_snow_trans != 0))]
+    evol_melt_out = [data.iloc[k].melt_out_trans - data.iloc[k].melt_out_bkg for k in range(len(data)) if (data.iloc[k].frac_snow_bkg != 0) | (data.iloc[k].frac_snow_trans != 0)]
+    evol_snow_cover = [(data.iloc[k].frac_snow_trans - data.iloc[k].frac_snow_bkg)*365.25 for k in range(len(data)) if (data.iloc[k].frac_snow_bkg != 0) | (data.iloc[k].frac_snow_trans != 0)]
 
     # plots both histograms
     plt.hist(evol_snow_cover, bins=20, alpha=0.75, weights=np.ones_like(evol_snow_cover) / len(evol_snow_cover), label='Snow cover')
@@ -3299,22 +3280,19 @@ def plot_evolution_snow_cover_melt_out(site, variable=None, value=None):
     mean_snow_cov = np.mean(evol_snow_cover)
     mean_melt_out = np.mean(evol_melt_out)
 
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c', u'#d62728', u'#9467bd', u'#8c564b', u'#e377c2', u'#7f7f7f', u'#bcbd22', u'#17becf']
     # adds a vertical line denoting the mean values
     plt.axvline(mean_snow_cov, color=colorcycle[0], linestyle='dashed', linewidth=2)
     plt.axvline(mean_melt_out, color=colorcycle[1], linestyle='dashed', linewidth=2)
 
-    plt.annotate(r"$\overline{\Delta}_{\rm snow\ cover}=$%s%s [days]" % (("+" if mean_snow_cov > 0 else ""), float("{:.2f}".format(mean_snow_cov))),
+    plt.annotate(r"$\overline{\Delta}_{\rm snow\ cover}=$%s%s [days]" % (("+" if mean_snow_cov > 0 else ""), float(f"{mean_snow_cov:.2f}")),
                  (0.12,0.5), xycoords='figure fraction',
                  fontsize=12, horizontalalignment='left', verticalalignment='top', color=colorcycle[0])
-    plt.annotate(r"$\overline{\Delta}_{\rm mod}=$%s%s [days]" % (("+" if mean_melt_out > 0 else ""), float("{:.2f}".format(mean_melt_out))),
+    plt.annotate(r"$\overline{\Delta}_{\rm mod}=$%s%s [days]" % (("+" if mean_melt_out > 0 else ""), float(f"{mean_melt_out:.2f}")),
                  (0.12,0.45), xycoords='figure fraction',
                  fontsize=12, horizontalalignment='left', verticalalignment='top', color=colorcycle[1])
 
     plt.xlabel('Evolution [days]')
     plt.ylabel('Frequency')
-    units = {'altitude': 'm', 'aspect': '°', 'slope': '°', 'forcing': ''}
-    # plt.title(f'Time evolution of the snow mantle{('' if variable==None else f' for {variable} = {value}{units[variable]}')}')
 
     # Show the graph
     plt.legend(loc='upper left')
@@ -3348,9 +3326,9 @@ def plot_visible_skymap_from_horizon_file(hor_path):
     ax.set_theta_direction(-1)
     ax.set_theta_offset(np.pi/2)
     ax.set_ylim(0, 90)
-    for i in range(len(r)):
-        ax.fill_between( np.linspace(theta[i], (0 if i==len(r)-1 else theta[i+1]), 2), 0, r[i], color='deepskyblue', alpha=0.5)
-        ax.fill_between( np.linspace(theta[i], (0 if i==len(r)-1 else theta[i+1]), 2), r[i], 90, color='black', alpha=1)
+    for i,j in enumerate(r):
+        ax.fill_between( np.linspace(theta[i], (0 if i==len(r)-1 else theta[i+1]), 2), 0, j, color='deepskyblue', alpha=0.5)
+        ax.fill_between( np.linspace(theta[i], (0 if i==len(r)-1 else theta[i+1]), 2), j, 90, color='black', alpha=1)
     ax.scatter(theta, r, c='blue', s=10, cmap='hsv', alpha=0.75)
     # plt.title('Scatter Plot on Polar Axis', fontsize=15)
     plt.show()
@@ -3508,7 +3486,7 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_snow, path
     # OPEN THE VARIOUS FILES
     #####################################################################################
 
-    df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats = load_all_pickles(site)
+    df, _, list_valid_sim, _, _, df_stats = load_all_pickles(site)
 
     #####################################################################################
     # PLOTS
@@ -3574,9 +3552,9 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_snow, path
     plot_box_yearly_stat('Water production', time_ground, tot_water_prod, year_bkg_end, year_trans_end)
 
     if individual_heatmap:
-        print('Heatmap of the background mean GST as a function of aspect and slope at %s m:' % alt_index_abs)
+        print(f'Heatmap of the background mean GST as a function of aspect and slope at {alt_index_abs} m:')
         plot_table_mean_GST_aspect_slope(site, alt_index_abs, True, False)
-        print('Heatmap of the evolution of the mean GST between the background and the transient periods as a function of aspect and slope at %s m:' % alt_index_abs)
+        print(f'Heatmap of the evolution of the mean GST between the background and the transient periods as a function of aspect and slope at {alt_index_abs} m:')
         plot_table_mean_GST_aspect_slope(site, alt_index_abs, False, False)
 
     print('Heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitude')
@@ -3604,7 +3582,7 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_snow, path
 
     if parity_plot:
         print('Parity plot (statistically-modeled vs numerically-simulated) of background mean GST:')
-        xdata, ydata, optimizedParameters, pcov, corr_matrix, R_sq = fit_stat_model_grd_temp(site, all=False, diff_forcings=True)
+        _, _, optimizedParameters, _, _, _ = fit_stat_model_grd_temp(site, all_data=False, diff_forcings=True)
         list_ceof = ['offset', 'c_alt', 'd_alt', 'c_asp', 'c_slope']
         pd_coef = pd.DataFrame(list_ceof, columns=['Coefficient'])
         # previously was columns=['all', 'era5', 'merra2', 'jra55'] when had all 3 forcings
@@ -3633,3 +3611,5 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_snow, path
 
     # print('')
     # plot_sanity_one_year_quantiles_two_periods(time_air_merra2, [temp_air_merra2, temp_air_merra2], [None, None], 'Air temperature', ['Background', 'Transient'], [time_bkg_air_merra2, time_trans_air_merra2])
+
+# LF (\n)
