@@ -13,7 +13,7 @@ from matplotlib.patches import Rectangle
 import seaborn as sn
 import cmasher as cmr
 
-from pickling import rockfall_values, load_all_pickles
+from pickling import load_all_pickles
 from constants import save_constants
 
 colorcycle, _ = save_constants()
@@ -99,10 +99,9 @@ def plot_table_mean_GST_aspect_slope(site, path_pickle, altitude, background=Tru
     """
     #pylint: disable=no-member
 
-    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
+    _, _, _, _, _, df_stats, rockfall_values = load_all_pickles(site, path_pickle)
     
-    rf_values = rockfall_values(site)
-    variables = ['aspect', 'slope','altitude']
+    variables = ['aspect', 'slope', 'altitude']
     dic_var = {}
     dic_var = {i: np.sort(np.unique(df_stats.loc[:, i], return_counts=False)) for i in variables}
     
@@ -135,9 +134,9 @@ def plot_table_mean_GST_aspect_slope(site, path_pickle, altitude, background=Tru
                         loc='center', cellLoc='center',
                         cellColours=colours)
     
-    if box:
-        if altitude == rockfall_values(site)['altitude']:
-            ax.add_patch(Rectangle(((rf_values['aspect'])/45*1/8, (70-rf_values['slope'])/10*1/6), 1/8, 1/6,
+    if box and rockfall_values['exact_topo']:
+        if altitude == rockfall_values['altitude']:
+            ax.add_patch(Rectangle(((rockfall_values['aspect'])/45*1/8, (70-rockfall_values['slope'])/10*1/6), 1/8, 1/6,
                         edgecolor = 'black', transform=ax.transAxes,
                         fill=False,
                         lw=4))
@@ -177,7 +176,7 @@ def plot_table_aspect_slope_all_altitudes(site, path_pickle, show_glacier=True, 
     (2 or 3)*(# altitudes) tables
     """
 
-    df, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
+    df, _, _, _, _, df_stats, rockfall_values = load_all_pickles(site, path_pickle)
     
     variables = ['aspect', 'slope','altitude']
     dic_var = {}
@@ -187,8 +186,8 @@ def plot_table_aspect_slope_all_altitudes(site, path_pickle, show_glacier=True, 
 
     alt_list = list(np.sort(np.unique(df_stats['altitude'])))
     for i,j in enumerate(alt_list):
-        if box:
-            if rockfall_values(site)['altitude'] == j:
+        if box and rockfall_values['exact_topo']:
+            if rockfall_values['altitude'] == j:
                 alt_index = i
 
     # setting the parameter values 
@@ -229,16 +228,16 @@ def plot_table_aspect_slope_all_altitudes(site, path_pickle, show_glacier=True, 
             sn.heatmap(data=data[nrows-1-j][0], annot=annot, center=center[nrows-1-j], cmap=cmap[nrows-1-j], ax=axs[j], vmin=vmin[nrows-1-j], vmax=vmax[nrows-1-j],
                     cbar=True, yticklabels=True, xticklabels=(j==nrows-1), cbar_kws={'label': labels_plot[nrows-1-j]})
             axs[0].figure.axes[-1].yaxis.label.set_size(13)
-            if box:
-                axs[j].add_patch(Rectangle(((rockfall_values(site)['aspect'])/45*1/8, (70-rockfall_values(site)['slope'])/10*1/5), 1/8, 1/5,
+            if box and rockfall_values['exact_topo']:
+                axs[j].add_patch(Rectangle(((rockfall_values['aspect'])/45*1/8, (70-rockfall_values['slope'])/10*1/5), 1/8, 1/5,
                                         edgecolor = 'black', transform=axs[j].transAxes, fill=False, lw=4))
         if ncols > 1:
             for i in range(ncols):
                 sn.heatmap(data=data[nrows-1-j][i], annot=annot, center=center[nrows-1-j], cmap=cmap[nrows-1-j], ax=axs[j,i], vmin=vmin[nrows-1-j], vmax=vmax[nrows-1-j],
                             cbar=(i==ncols-1), yticklabels=(i==0), xticklabels=(j==nrows-1), cbar_kws={'label': labels_plot[nrows-1-j]})
             axs[0,0].figure.axes[-1].yaxis.label.set_size(13)
-            if box:
-                axs[j,alt_index].add_patch(Rectangle(((rockfall_values(site)['aspect'])/45*1/8, (70-rockfall_values(site)['slope'])/10*1/5), 1/8, 1/5,
+            if box and rockfall_values['exact_topo']:
+                axs[j,alt_index].add_patch(Rectangle(((rockfall_values['aspect'])/45*1/8, (70-rockfall_values['slope'])/10*1/5), 1/8, 1/5,
                                                     edgecolor = 'black', transform=axs[j,alt_index].transAxes, fill=False, lw=4))
 
     if ncols == 1:
@@ -274,7 +273,7 @@ def plot_table_aspect_slope_all_altitudes_polar(site, path_pickle, box=True):
     2*3 polar plots
     """
 
-    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
+    _, _, _, _, _, df_stats, rockfall_values = load_all_pickles(site, path_pickle)
 
     variables = ['aspect', 'slope','altitude']
     dic_var = {}
@@ -282,8 +281,8 @@ def plot_table_aspect_slope_all_altitudes_polar(site, path_pickle, box=True):
 
     alt_list = list(np.sort(np.unique(df_stats['altitude'])))
     for i,j in enumerate(alt_list):
-        if box:
-            if rockfall_values(site)['altitude'] == j:
+        if box and rockfall_values['exact_topo']:
+            if rockfall_values['altitude'] == j:
                 alt_index = i
 
     list_mean = [table_background_evolution_mean_GST_aspect_slope(site, path_pickle)[1], table_background_evolution_mean_GST_aspect_slope(site, path_pickle)[3]]
@@ -336,8 +335,8 @@ def plot_table_aspect_slope_all_altitudes_polar(site, path_pickle, box=True):
             axs[j,i].bar(0, 1).remove()
             for k in range(30,80,10):
                 axs[j,i].text(np.pi/5, k, (f'{k}°'), horizontalalignment='center', verticalalignment='center')
-        if box:
-            axs[j,alt_index].add_patch(matplotlib.patches.Rectangle(((rockfall_values(site)['aspect']-45/2)/360*2*np.pi, rockfall_values(site)['slope']-5),
+        if box and rockfall_values['exact_topo']:
+            axs[j,alt_index].add_patch(matplotlib.patches.Rectangle(((rockfall_values['aspect']-45/2)/360*2*np.pi, rockfall_values['slope']-5),
                                                         width=np.pi/4, height=10, edgecolor = 'black', fill=False, lw=2))
         
     for j in range(nrows):
@@ -378,7 +377,7 @@ def plot_permafrost_all_altitudes_polar(site, path_pickle, depth_thaw, box=True)
     2*3 polar plots
     """
 
-    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
+    _, _, _, _, _, df_stats, rockfall_values = load_all_pickles(site, path_pickle)
 
     variables = ['aspect', 'slope','altitude']
     dic_var = {}
@@ -386,8 +385,8 @@ def plot_permafrost_all_altitudes_polar(site, path_pickle, depth_thaw, box=True)
 
     alt_list = list(np.sort(np.unique(df_stats['altitude'])))
     for i,j in enumerate(alt_list):
-        if box:
-            if rockfall_values(site)['altitude'] == j:
+        if box and rockfall_values['exact_topo']:
+            if rockfall_values['altitude'] == j:
                 alt_index = i
 
     list_valid_sim = list(df_stats.index.values)
@@ -436,8 +435,8 @@ def plot_permafrost_all_altitudes_polar(site, path_pickle, depth_thaw, box=True)
         axs[i].bar(0, 1).remove()
         for k in range(30,80,10):
             axs[i].text(np.pi/5, k, (f'{k}°'), horizontalalignment='center', verticalalignment='center')
-    if box:
-        axs[alt_index].add_patch(matplotlib.patches.Rectangle(((rockfall_values(site)['aspect']-45/2)/360*2*np.pi, rockfall_values(site)['slope']-5),
+    if box and rockfall_values['exact_topo']:
+        axs[alt_index].add_patch(matplotlib.patches.Rectangle(((rockfall_values['aspect']-45/2)/360*2*np.pi, rockfall_values['slope']-5),
                                                         width=np.pi/4, height=10, edgecolor = 'black', fill=False, lw=2))
 
     #pylint: disable=no-member

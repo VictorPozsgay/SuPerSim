@@ -10,7 +10,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from open import open_thaw_depth_nc
-from pickling import rockfall_values
 from constants import save_constants
 
 colorcycle, _ = save_constants()
@@ -34,21 +33,32 @@ def assign_weight_sim(site, path_pickle, no_weight=True):
         and an overall weight.
     """
 
-    file_name = f"df_stats{('' if site=='' else '_')}{site}.pkl"
-    my_path = path_pickle + file_name
-    with open(my_path, 'rb') as file: 
+    file_name_df_stats = f"df_stats{('' if site=='' else '_')}{site}.pkl"
+    my_path_df_stats = path_pickle + file_name_df_stats
+
+    with open(my_path_df_stats, 'rb') as file: 
         # Call load method to deserialize 
         df_stats = pickle.load(file)
+
+    file_name_rockfall_values = f"rockfall_values{('' if site=='' else '_')}{site}.pkl"
+    my_path_rockfall_values = path_pickle + file_name_rockfall_values
+
+    with open(my_path_rockfall_values, 'rb') as file: 
+        # Call load method to deserialize 
+        rockfall_values = pickle.load(file)
 
     dict_weight = {}
     if no_weight:
         dict_weight = {i: [1,1,1] for i in list(df_stats.index.values)}
     else:
-        alt_distance = np.max([np.abs(i-rockfall_values(site)['altitude']) for i in np.sort(np.unique(df_stats['altitude']))])
-        dict_weight = {i: [1 - np.abs(df_stats.loc[i]['altitude']-rockfall_values(site)['altitude'])/(2*alt_distance),
-                        np.cos((np.pi)/180*(df_stats.loc[i]['aspect']-rockfall_values(site)['aspect']))/4+3/4,
-                        np.cos((np.pi)/30*(df_stats.loc[i]['slope']-rockfall_values(site)['slope']))/4+3/4]
-                        for i in list(df_stats.index.values)}
+        if rockfall_values['exact_topo']:
+            alt_distance = np.max([np.abs(i-rockfall_values['altitude']) for i in np.sort(np.unique(df_stats['altitude']))])
+            dict_weight = {i: [1 - np.abs(df_stats.loc[i]['altitude']-rockfall_values['altitude'])/(2*alt_distance),
+                            np.cos((np.pi)/180*(df_stats.loc[i]['aspect']-rockfall_values['aspect']))/4+3/4,
+                            np.cos((np.pi)/30*(df_stats.loc[i]['slope']-rockfall_values['slope']))/4+3/4]
+                            for i in list(df_stats.index.values)}
+        else:
+            dict_weight = {i: [1,1,1] for i in list(df_stats.index.values)}
     
     pd_weight = pd.DataFrame.from_dict(dict_weight, orient='index',
                                        columns=['altitude', 'aspect', 'slope'])

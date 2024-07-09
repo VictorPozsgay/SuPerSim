@@ -50,7 +50,7 @@ def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, yea
     x['Year'] = a
 
     if name_series in ['Precipitation', 'Water production']:
-        x['name_series'] = x['name_series']*86400
+        x[name_series] = x[name_series]*86400
 
     mean = [np.mean(x[x['Year']<year_bkg_end][name_series]), np.mean(x[(x['Year']>=year_bkg_end) & (x['Year']<year_trans_end)][name_series])]
 

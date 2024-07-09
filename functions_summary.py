@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 from open import open_air_nc, open_ground_nc, open_snow_nc, open_swe_nc, open_thaw_depth_nc
 from mytime import list_tokens_year
-from pickling import rockfall_values, load_all_pickles
+from pickling import load_all_pickles
 from weights import assign_weight_sim, plot_hist_valid_sim_all_variables, plot_hist_stat_weights
 from runningstats import mean_all_reanalyses, assign_tot_water_prod, plot_aggregating_distance_temp_all
 from topoheatmap import plot_table_mean_GST_aspect_slope, plot_table_aspect_slope_all_altitudes, plot_table_aspect_slope_all_altitudes_polar, plot_permafrost_all_altitudes_polar
@@ -102,14 +102,14 @@ def plot_all(site, forcing_list,
     # OPEN THE VARIOUS FILES
     #####################################################################################
 
-    df, _, list_valid_sim, _, _, df_stats = load_all_pickles(site, path_pickle)
+    df, _, list_valid_sim, _, _, df_stats, rockfall_values = load_all_pickles(site, path_pickle)
 
     #####################################################################################
     # PLOTS
     #####################################################################################
 
     # assign a subjective weight to all simulations
-    pd_weight = assign_weight_sim(site, no_weight)
+    pd_weight = assign_weight_sim(site, path_pickle, no_weight)
     _, thaw_depth = open_thaw_depth_nc(path_thaw_depth)
 
     list_vars = ['time_air', 'temp_air', 'SW_flux', 'SW_direct_flux', 'SW_diffuse_flux', 'precipitation']
@@ -146,20 +146,21 @@ def plot_all(site, forcing_list,
     mean_air_temp = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in temp_air_all], year_bkg_end, year_trans_end)
 
     # finally we get the total water production, averaged over all reanalyses
-    tot_water_prod, _, mean_prec = assign_tot_water_prod(path_forcing_list, path_ground, path_swe, year_bkg_end, year_trans_end, site, no_weight)
+    tot_water_prod, _, mean_prec = assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle, year_bkg_end, year_trans_end, site, no_weight)
 
-    year_rockfall = rockfall_values(site)['year']
     print('Plots of the normalized distance of air and ground temperature, water production, and thaw_depth as a function of time')
-    print('Granularity: week and month side by side')
-    plot_aggregating_distance_temp_all(['Air temperature', 'Water production', 'Ground temperature'],
-                                       [time_air_all[0], time_ground, time_ground],
-                                       [mean_air_temp, tot_water_prod, temp_ground_mean],
-                                       ['week', 'month'], site, year_bkg_end, year_trans_end, year_rockfall, False)
+    if 'year' in rockfall_values.keys():
+        year_rockfall = rockfall_values['year']
+        print('Granularity: week and month side by side')
+        plot_aggregating_distance_temp_all(['Air temperature', 'Water production', 'Ground temperature'],
+                                        [time_air_all[0], time_ground, time_ground],
+                                        [mean_air_temp, tot_water_prod, temp_ground_mean],
+                                        ['week', 'month'], site, path_pickle, year_bkg_end, year_trans_end, year_rockfall, False)
     print('Granularity: year, plotted for all years')
     plot_aggregating_distance_temp_all(['Air temperature', 'Water production', 'Ground temperature'],
                                         [time_air_all[0], time_ground, time_ground],
                                         [mean_air_temp, tot_water_prod, temp_ground_mean],
-                                        ['year'], site, year_bkg_end, year_trans_end, 0, False)
+                                        ['year'], site, path_pickle, year_bkg_end, year_trans_end, 0, False)
 
     print('Yearly statistics for air and ground surface temperature, and also precipitation and water production')
     plot_box_yearly_stat('Air temperature', time_air_all[0], mean_air_temp, year_bkg_end, year_trans_end)
@@ -169,9 +170,9 @@ def plot_all(site, forcing_list,
 
     if individual_heatmap:
         print(f'Heatmap of the background mean GST as a function of aspect and slope at {alt_index_abs} m:')
-        plot_table_mean_GST_aspect_slope(site, alt_index_abs, True, False)
+        plot_table_mean_GST_aspect_slope(site, path_pickle, alt_index_abs, True, False)
         print(f'Heatmap of the evolution of the mean GST between the background and the transient periods as a function of aspect and slope at {alt_index_abs} m:')
-        plot_table_mean_GST_aspect_slope(site, alt_index_abs, False, False)
+        plot_table_mean_GST_aspect_slope(site, path_pickle, alt_index_abs, False, False)
 
     print('Heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitude')
     plot_table_aspect_slope_all_altitudes(site, path_pickle, show_glacier=False, box=False)

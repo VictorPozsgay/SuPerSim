@@ -67,7 +67,7 @@ def fit_stat_model_grd_temp(site, path_pickle, all_data=True, diff_forcings=True
     parity plot (predicted vs actual)
     """
 
-    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
+    _, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
     
     plt.figure(figsize=(6,6))
 

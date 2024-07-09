@@ -62,7 +62,7 @@ def plot_cdf_GST(site, path_pickle):
              right panel shows the CDF of background, transient, and evolution of mean SO
     """
 
-    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
+    _, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
     
     # sort the data:
     data_bkg_sorted = np.sort(df_stats['bkg_grd_temp'])
@@ -160,7 +160,7 @@ def plot_10_cold_warm(site, path_pickle):
     Plot of mean GST evolution vs background GST, with an emphasis on the 10% colder and warmer simulations
     """
 
-    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
+    _, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
 
     table_all = table_background_evolution_mean_GST_aspect_slope(site, path_pickle)
 

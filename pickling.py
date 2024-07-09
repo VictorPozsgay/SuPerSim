@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 from open import open_air_nc, open_ground_nc, open_snow_nc
-from mytime import list_tokens_year
+from mytime import list_tokens_year, specific_time_to_index
 
 def assign_value_global_dict(path_forcing_list, path_ground, path_snow, path_pickle, year_bkg_end, year_trans_end, site):
     """ Function returns a dictionary containing all the important timeseries and saves it to a pickle
@@ -607,47 +607,85 @@ def assign_value_df_stats(path_ground, path_snow, path_pickle, year_bkg_end, yea
 
     return var_name
 
-def rockfall_values(site):
-    """ Function returns a dictionary of the topography and other details of the rockfall event at 'site'
+def assign_rockfall_values(site, path_pickle, path_ground, path_forcing_list, date_event, topo_event):
+    """ Function returns a dictionary with date and topography information for the event
     
     Parameters
     ----------
+    path_ground : str
+        Path to the .nc file where the aggregated ground simulations are stored
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
+    path_forcing_list : list of str
+        List of paths to the .nc file where the atmospheric forcing data for the given reanalysis is stored
+    date_event : list
+        Date of the event in the form [yy, mm, dd]. If only partial information are available, [yy] works too.
+        If no information, set date_event = []
+    topo_event : list
+        Topography of the event in the form [aspect, slope, altitude].
+        If no information, set topo_event = []
     site : str
-        Location of the event, e.g. 'Joffre' or 'Fingerpost'
+        Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles   
 
     Returns
     -------
-    Dictionary
+    rockfall_values : dict
+        Dictionary with date and topography info for the event
     """
 
-    rockfall_values_dict = {'Joffre': {'aspect': 45, 'slope': 60, 'altitude': 2500, 'year': 2019,
-                                       'datetime': datetime(2019, 5, 13, 0, 0, 0, 0), 'time_index': [14376, 345043, 345048]},
-                            'Joffre_new': {'aspect': 45, 'slope': 60, 'altitude': 2500, 'year': 2019,
-                                           'datetime': datetime(2019, 5, 13, 0, 0, 0, 0), 'time_index': [14376, 345043, 345048]},
-                            'Fingerpost': {'aspect': 270, 'slope': 50, 'altitude': 2600, 'year': 2015,
-                                           'datetime': datetime(2015, 12, 16, 0, 0, 0, 0), 'time_index': [13132, 315187, 315192]},
-                            'Dawson': {'aspect': 90, 'slope': 40, 'altitude': 500, 'year': 2015,
-                                       'datetime': datetime(2015, 12, 16, 0, 0, 0, 0), 'time_index': [13132, 315187, 315192]},
-                            'Aksaut_North': {'year': 2021,
-                                             'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                            'Aksaut_North_test_no_SWEtop': {'year': 2021,
-                                                            'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                            'Aksaut_North_test_no_SnowSMIN': {'year': 2021,
-                                                              'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                            'Aksaut_North_slope_scf': {'year': 2021,
-                                                       'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                            'Aksaut_North_LWin': {'year': 2021,
-                                                  'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                            'Aksaut_North_spin_up': {'year': 2021,
-                                                     'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                            'Aksaut_Ridge': {'year': 2021,
-                                             'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                            'Aksaut_South': {'year': 2021,
-                                             'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]},
-                            'Aksaut_South_slope_scf': {'year': 2021,
-                                                       'datetime': datetime(2021, 12, 31, 0, 0, 0, 0), 'time_index': [8034, 192840]}}
+    file_name = f"rockfall_values{('' if site=='' else '_')}{site}.pkl"
+    my_path = path_pickle + file_name
 
-    return rockfall_values_dict[site]
+    # try to open the pickle file, if it exists
+    try:
+        # Open the file in binary mode
+        with open(my_path, 'rb') as file:
+            # Call load method to deserialze
+            rockfall_values = pickle.load(file) 
+        print('Succesfully opened the pre-existing pickle:', file_name)
+
+    # if the pickle file does not exist, we have to create it
+    except (OSError, IOError) as e:
+        _, time_ground, _ = open_ground_nc(path_ground)
+        time_air_all = [open_air_nc(i)[0] for i in path_forcing_list]
+
+        rockfall_values = {}
+        if [isinstance(i, int) for i in date_event] == [True, True, True]:
+            rockfall_values['exact_date'] = True
+            rockfall_values['year'] = date_event[0] if isinstance(date_event[0], int) else 0
+            rockfall_values['datetime'] = datetime(date_event[0], date_event[1], date_event[2], 0, 0, 0, 0)
+
+            time_index = []
+        
+            for i in [time_ground, *time_air_all]:
+                time_index.append(specific_time_to_index(i, rockfall_values['datetime']))
+
+            time_index = list(np.unique(time_index))
+
+            rockfall_values['time_index'] = time_index
+
+        else:
+            rockfall_values['exact_date'] = False
+            if len(date_event) > 0:
+                if isinstance(date_event[0], int):
+                    rockfall_values['year'] = date_event[0]
+        if [type(i) for i in topo_event] == [int, int, int]:
+            rockfall_values['exact_topo'] = True
+            rockfall_values['aspect'], rockfall_values['slope'], rockfall_values['altitude'] = topo_event
+        else:
+            rockfall_values['exact_topo'] = False
+        
+        # Open a file and use dump() 
+        with open(my_path, 'wb') as file: 
+            # A new file will be created 
+            pickle.dump(rockfall_values, file)
+        print('Created a new pickle:', file_name)
+
+        # useless line just to use the variable 'e' so that I don't get an error
+        if e == 0:
+            pass
+
+    return rockfall_values
 
 def load_all_pickles(site, path_pickle):
     """ Loads all pickles corresponding to the site name
@@ -676,6 +714,8 @@ def load_all_pickles(site, path_pickle):
         Background, transient and full mean of the melt-out date for each simulation
     df_stats : pandas.core.frame.DataFrame
         Large panda dataframe with information about the air, ground, snow, topography, etc. for all simulations
+    rockfall_values : dict
+        Dictionary with date and topography info for the event
 
     """
 
@@ -683,7 +723,8 @@ def load_all_pickles(site, path_pickle):
                        f"reanalysis_stats{('' if site=='' else '_')}{site}.pkl",
                        f"list_valid_sim{('' if site=='' else '_')}{site}.pkl",
                        f"melt_out{('' if site=='' else '_')}{site}.pkl",
-                       f"df_stats{('' if site=='' else '_')}{site}.pkl"]
+                       f"df_stats{('' if site=='' else '_')}{site}.pkl",
+                       f"rockfall_values{('' if site=='' else '_')}{site}.pkl"]
 
     output = [0 for _ in list_file_names]
 
@@ -695,12 +736,13 @@ def load_all_pickles(site, path_pickle):
             output[i] = pickle.load(file) 
         print('Succesfully opened the pre-existing pickle:', file_name)
 
-    [df, reanalysis_stats, list_valid_sim, [dict_melt_out, stats_melt_out_dic], df_stats] = output
+    [df, reanalysis_stats, list_valid_sim, [dict_melt_out, stats_melt_out_dic], df_stats, rockfall_values] = output
 
-    return df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats
+    return df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats, rockfall_values
 
 def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground, path_snow, path_pickle,
-                  year_bkg_end, year_trans_end, consecutive, site,
+                  year_bkg_end, year_trans_end, consecutive,
+                  site, date_event, topo_event,
                   glacier=False, min_glacier_depth=100, max_glacier_depth=20000):
     """ Creates a number of pickle files (if they don't exist yet)
     
@@ -726,6 +768,12 @@ def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground,
         number of consecutive snow-free days to consider that snow has melted for the season
     site : str
         Location of the event, e.g. 'Aksaut_Ridge' (not a list, 1 single location)
+    date_event : list
+        Date of the event in the form [yy, mm, dd]. If only partial information are available, [yy] works too.
+        If no information, set date_event = []
+    topo_event : list
+        Topography of the event in the form [aspect, slope, altitude].
+        If no information, set topo_event = []
     glacier : bool, optional
         By default only keeps non-glacier simulations but can be changed to True to select only glaciated simulations
     min_glacier_depth : float, optional
@@ -758,5 +806,6 @@ def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground,
     list_valid_sim = glacier_filter(site, path_snow, path_pickle, glacier, min_glacier_depth, max_glacier_depth)
     dict_melt_out, stats_melt_out_dic = melt_out_date(consecutive, path_ground, path_snow, path_pickle, year_bkg_end, year_trans_end, site)
     df_stats = assign_value_df_stats(path_ground, path_snow, path_pickle, year_bkg_end, year_trans_end, site)
-
-    return df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats
+    rockfall_values = assign_rockfall_values(site, path_pickle, path_ground, path_forcing_list, date_event, topo_event)
+    
+    return df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats, rockfall_values

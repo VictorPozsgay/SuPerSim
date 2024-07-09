@@ -150,3 +150,33 @@ def list_tokens_year(time_file, year_bkg_end, year_trans_end):
         raise ValueError('VictorCustomError: scaled JRA55 and MERRA2 have unidentified gaps in data, check script')
 
     return list_years, time_bkg, time_trans, time_pre_trans
+
+def specific_time_to_index(time_file, date):
+    """ Function returns the timeseries time index corresponding to a given date
+    
+    Parameters
+    ----------
+    time_file : netCDF4._netCDF4.Variable
+        File where the time index of each datapoint is stored (time_ground, not time_air)
+        Needs to have a .units attribute
+    date : datetime.datetime
+        Datetime of the event, e.g. datetime(2019, 5, 13, 0, 0)
+
+    Returns
+    -------
+    time_stamp : int
+        Time stamp of the particular date for the timeseries
+    """
+
+    delta_cons_time = int((num2date(time_file[1], time_file.units) - num2date(time_file[0], time_file.units)).total_seconds())
+    init_delta = int((date - num2date(time_file[0], time_file.units)).total_seconds())
+    time_stamp = int(init_delta/delta_cons_time)
+    refined_delta = int((date - num2date(time_file[time_stamp], time_file.units)).total_seconds())
+    while refined_delta < 0:
+        time_stamp -= 1
+        refined_delta = int((date - num2date(time_file[time_stamp], time_file.units)).total_seconds())
+    while refined_delta > 0:
+        time_stamp += 1
+        refined_delta = int((date - num2date(time_file[time_stamp], time_file.units)).total_seconds())
+
+    return time_stamp

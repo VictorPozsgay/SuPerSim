@@ -40,7 +40,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site, path_pickle):
     A linear regression is produced too.
     """
 
-    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
+    _, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
 
     df_stats_bis = pd.DataFrame(data=df_stats, columns=['bkg_grd_temp', 'evol_grd_temp'])
     df_stats_bis['bkg_grd_temp'] = pd.Categorical(df_stats_bis['bkg_grd_temp'], np.sort(df_stats['bkg_grd_temp']))
@@ -113,7 +113,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, path_pickle):
     A linear regression is produced for each site.
     """
 
-    df_stats = [load_all_pickles(i, path_pickle)[-1] for i in list_site]
+    df_stats = [load_all_pickles(i, path_pickle)[6] for i in list_site]
 
     num = len(df_stats)
 
@@ -223,7 +223,7 @@ def plot_mean_bkg_GST_vs_evolution(site, path_pickle):
     Scatter plot
     """
 
-    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
+    _, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
 
     xx = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(site, path_pickle)[1]]
     yy = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(site, path_pickle)[3]]
@@ -268,7 +268,7 @@ def plot_evolution_snow_cover_melt_out(site, path_pickle, variable=None, value=N
     -------
     Histogram
     """
-    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
+    _, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
 
     # creates a subset of df_stats given the value of the variable entered as input. e.g. 'slope'=50
     if variable is None:

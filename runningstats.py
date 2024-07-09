@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 
 from open import open_air_nc, open_ground_nc, open_swe_nc
 from mytime import list_tokens_year
-from pickling import rockfall_values
 from weights import assign_weight_sim
 from constants import save_constants
 
@@ -103,7 +102,7 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle,
     _, time_ground, _ = open_ground_nc(path_ground)
     _, _, _, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end)    
 
-    pd_weight = assign_weight_sim(site, no_weight)
+    pd_weight = assign_weight_sim(site, path_pickle, no_weight)
 
     time_air_all = [open_air_nc(i)[0] for i in path_forcing_list]
     precipitation_all = [open_air_nc(i)[-1] for i in path_forcing_list]
@@ -273,7 +272,7 @@ def aggregating_distance_temp(time_file, file_to_smooth, window, year_bkg_end, y
 
     return distance
 
-def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, year_bkg_end, year_trans_end, year, fill_before=False):
+def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_pickle, year_bkg_end, year_trans_end, year, fill_before=False):
     """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
         Vertical subplots for different variables
     
@@ -296,6 +295,8 @@ def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, year_b
         Can take the following arguments: 'day', 'week', 'year', 'climate'
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     year_bkg_end : int
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
@@ -310,6 +311,14 @@ def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, year_b
         plot containing len(yaxes) subplots sharing the x axis
 
     """
+
+    file_name_rockfall_values = f"rockfall_values{('' if site=='' else '_')}{site}.pkl"
+    my_path_rockfall_values = path_pickle + file_name_rockfall_values
+
+    with open(my_path_rockfall_values, 'rb') as file: 
+        # Call load method to deserialize 
+        rockfall_values = pickle.load(file)
+
     num_rows = len(xdata)
     num_cols = len(window)
 
@@ -342,14 +351,15 @@ def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, year_b
                         ax[i].plot(xdata[idx][list_dates[y][:][:len(distance[i][y].values())]], distance[i][y].values(), label=('Deviation' if y==year_bkg_end else ''), color= colorcycle[0])
                         ax[i].fill_between(xdata[idx][list_dates[y][:][:len(distance[i][y].values())]], -2, 2, alpha = 0.2, color = 'blue')
 
-        for indx in rockfall_values(site)['time_index']:
-            if indx in index_range:
-                if int((num2date(xdata[idx][indx], xdata[idx].units)-rockfall_values(site)['datetime']).total_seconds()) == 0:
-                    if num_cols == 1:
-                        ax.axvline(x = xdata[idx][indx], color = 'r', linestyle='--', label = 'Landslide')
-                    else:
-                        for i in range(num_cols):
-                            ax[i].axvline(x = xdata[idx][indx], color = 'r', linestyle='--', label = 'Landslide')
+        if rockfall_values['exact_date']:
+            for indx in rockfall_values['time_index']:
+                if indx in index_range:
+                    if int((num2date(xdata[idx][indx], xdata[idx].units)-rockfall_values['datetime']).total_seconds()) == 0:
+                        if num_cols == 1:
+                            ax.axvline(x = xdata[idx][indx], color = 'r', linestyle='--', label = 'Landslide')
+                        else:
+                            for i in range(num_cols):
+                                ax[i].axvline(x = xdata[idx][indx], color = 'r', linestyle='--', label = 'Landslide')
         if num_cols == 1:
             ax.axhline(y = 0, color = 'black', linestyle='--', linewidth=1)
         else:
