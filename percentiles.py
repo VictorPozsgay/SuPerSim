@@ -12,10 +12,9 @@ import seaborn as sn
 
 from pickling import load_all_pickles
 from topoheatmap import table_background_evolution_mean_GST_aspect_slope
+from constants import save_constants
 
-pickle_path = '/fs/yedoma/home/vpo001/VikScriptsTests/Python_Pickles/'
-colorcycle = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-             '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+colorcycle, _ = save_constants()
 
 def coordinates_percentile_cdf(data_sorted, proba_bins, percentile):
     """ Function returns coordinates of the point corresponing to the percentile of the 
@@ -46,7 +45,7 @@ def coordinates_percentile_cdf(data_sorted, proba_bins, percentile):
 
     return low_point
 
-def plot_cdf_GST(site):
+def plot_cdf_GST(site, path_pickle):
     """ Function returns coordinates of the point corresponing to the percentile of the 
         Cumulated Distribution Dunction (CDF)
     
@@ -54,6 +53,8 @@ def plot_cdf_GST(site):
     ----------
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
 
     Returns
     -------
@@ -61,7 +62,7 @@ def plot_cdf_GST(site):
              right panel shows the CDF of background, transient, and evolution of mean SO
     """
 
-    _, _, _, _, _, df_stats = load_all_pickles(site)
+    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
     
     # sort the data:
     data_bkg_sorted = np.sort(df_stats['bkg_grd_temp'])
@@ -144,22 +145,24 @@ def plot_cdf_GST(site):
     plt.close()
     plt.clf()
 
-def plot_10_cold_warm(site):
+def plot_10_cold_warm(site, path_pickle):
     """ Function returns a plot of mean GST evolution vs background GST, with an emphasis on the 10% colder and warmer simulations
     
     Parameters
     ----------
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
 
     Returns
     -------
     Plot of mean GST evolution vs background GST, with an emphasis on the 10% colder and warmer simulations
     """
 
-    _, _, _, _, _, df_stats = load_all_pickles(site)
+    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
 
-    table_all = table_background_evolution_mean_GST_aspect_slope(site)
+    table_all = table_background_evolution_mean_GST_aspect_slope(site, path_pickle)
 
     # create some randomly ddistributed data:
     data_bkg = [l for i in table_all[0] for j in i for k in j for l in k]
@@ -223,20 +226,22 @@ def plot_10_cold_warm(site):
     plt.close()
     plt.clf()
     
-def heatmap_percentile_GST(site):
+def heatmap_percentile_GST(site, path_pickle):
     """ Function returns a heatmap of 10th, 25th, 50th, 75th, and 90th percentile in background and transient GST, and the difference
     
     Parameters
     ----------
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
 
     Returns
     -------
     Heatmap of 10th, 25th, 50th, 75th, and 90th percentile in background and transient GST, and the difference
     """
 
-    table_all = table_background_evolution_mean_GST_aspect_slope(site)
+    table_all = table_background_evolution_mean_GST_aspect_slope(site, path_pickle)
 
     # create some randomly ddistributed data:
     data_bkg = [l for i in table_all[0] for j in i for k in j for l in k]

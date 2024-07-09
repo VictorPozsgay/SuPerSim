@@ -10,10 +10,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mpl_axes_aligner
 
-pickle_path = '/fs/yedoma/home/vpo001/VikScriptsTests/Python_Pickles/'
-colorcycle = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-             '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+from constants import save_constants
 
+colorcycle, units = save_constants()
 
 def stats_all_years_simulations_to_single_year(time_file, time_series, list_valid_sim, mask_period=None):
     """ Function returns daily mean and several quantiles of a multi-year timeseries over a 1-year period
@@ -156,11 +155,7 @@ def plot_sanity_one_year_quantiles_two_periods(time_file, time_series_list, list
     Both series have their own y axis if they have different units.
 
     """
-    
-    # fig, ax1 = plt.subplots()
-    units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm/day', 'SWE': 'mm', 'Water production': 'mm/day', 'Snow depth': 'mm',
-             'SW': 'W m-2', 'LW': 'W m-2'}
-    
+ 
     delta_hours = int((num2date(time_file[1], time_file.units)-num2date(time_file[0], time_file.units)).total_seconds()/3600)
 
     if delta_hours == 1:
@@ -231,8 +226,6 @@ def plot_sanity_two_variables_one_year_quantiles(time_file, time_series_list, li
     """
     
     fig, ax1 = plt.subplots()
-    units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm/day', 'SWE': 'mm', 'Water production': 'mm/day', 'Snow depth': 'mm',
-             'SW': 'W m-2', 'LW': 'W m-2'}
 
     quantiles, mean_end = stats_all_years_simulations_to_single_year(time_file, time_series_list[0], list_valid_sim_list[0])
     xdata = range(len(mean_end))
@@ -300,9 +293,6 @@ def plot_sanity_two_variables_one_year_quantiles_side_by_side(time_file, time_se
     Both series have their own y axis if they have different units.
 
     """
-    
-    units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm/day', 'SWE': 'mm', 'Water production': 'mm/day', 'Snow depth': 'mm',
-             'SW': 'W m-2', 'LW': 'W m-2'}
 
     _, a = plt.subplots(1, 2, figsize=(10, 5))
     for idx,ax in enumerate(a):

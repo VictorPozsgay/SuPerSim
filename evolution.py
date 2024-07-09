@@ -11,12 +11,11 @@ from scipy.stats import linregress
 
 from pickling import load_all_pickles
 from topoheatmap import table_background_evolution_mean_GST_aspect_slope
+from constants import save_constants
 
-pickle_path = '/fs/yedoma/home/vpo001/VikScriptsTests/Python_Pickles/'
-colorcycle = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-             '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+colorcycle, _ = save_constants()
 
-def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site):
+def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site, path_pickle):
     """ Function return scatter plot of background GST vs GST evolution for a single site.
     The site is binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
     A linear regression is produced too.
@@ -25,6 +24,8 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site):
     ----------
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     
     Returns
     -------
@@ -39,7 +40,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site):
     A linear regression is produced too.
     """
 
-    _, _, _, _, _, df_stats = load_all_pickles(site)
+    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
 
     df_stats_bis = pd.DataFrame(data=df_stats, columns=['bkg_grd_temp', 'evol_grd_temp'])
     df_stats_bis['bkg_grd_temp'] = pd.Categorical(df_stats_bis['bkg_grd_temp'], np.sort(df_stats['bkg_grd_temp']))
@@ -87,7 +88,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site):
 
     return slope, intercept, r
 
-def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site):
+def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, path_pickle):
     """ Function return scatter plot of background GST vs GST evolution for 2 sites.
     Both sites are binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
     A linear regression is produced for each site.
@@ -96,6 +97,8 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site):
     ----------
     list_site : list
         List of labels for the site of each entry
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     
     Returns
     -------
@@ -110,7 +113,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site):
     A linear regression is produced for each site.
     """
 
-    df_stats = [load_all_pickles(i)[-1] for i in list_site]
+    df_stats = [load_all_pickles(i, path_pickle)[-1] for i in list_site]
 
     num = len(df_stats)
 
@@ -202,7 +205,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site):
 
     return slope, intercept, r
 
-def plot_mean_bkg_GST_vs_evolution(site):
+def plot_mean_bkg_GST_vs_evolution(site, path_pickle):
     """ Function returns a scatter plot of mean background GST (ground-surface temperature)
         vs evolution of mean GST between the background and transient period.
         Note that each point is computed from an average over the 3 reanalyses to avoid bias.
@@ -211,6 +214,8 @@ def plot_mean_bkg_GST_vs_evolution(site):
     ----------
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
 
 
     Returns
@@ -218,10 +223,10 @@ def plot_mean_bkg_GST_vs_evolution(site):
     Scatter plot
     """
 
-    _, _, _, _, _, df_stats = load_all_pickles(site)
+    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
 
-    xx = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(site)[1]]
-    yy = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(site)[3]]
+    xx = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(site, path_pickle)[1]]
+    yy = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(site, path_pickle)[3]]
 
     alt_list = list(np.sort(np.unique(df_stats['altitude'])))
 
@@ -241,7 +246,7 @@ def plot_mean_bkg_GST_vs_evolution(site):
     plt.close()
     plt.clf() 
 
-def plot_evolution_snow_cover_melt_out(site, variable=None, value=None):
+def plot_evolution_snow_cover_melt_out(site, path_pickle, variable=None, value=None):
     """ Function returns a histogram of the evolution of snow cover (in days) and melt out date
         between background and transient periods
         For all simulations or for a given subset, for instance the ones with 'slope'=50
@@ -252,6 +257,8 @@ def plot_evolution_snow_cover_melt_out(site, variable=None, value=None):
     ----------
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     variable : str
         A parameter in df_stats such as slope, aspect, altitude, etc.
     value : float
@@ -261,7 +268,7 @@ def plot_evolution_snow_cover_melt_out(site, variable=None, value=None):
     -------
     Histogram
     """
-    _, _, _, _, _, df_stats = load_all_pickles(site)
+    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
 
     # creates a subset of df_stats given the value of the variable entered as input. e.g. 'slope'=50
     if variable is None:

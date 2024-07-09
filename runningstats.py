@@ -14,10 +14,9 @@ from open import open_air_nc, open_ground_nc, open_swe_nc
 from mytime import list_tokens_year
 from pickling import rockfall_values
 from weights import assign_weight_sim
+from constants import save_constants
 
-pickle_path = '/fs/yedoma/home/vpo001/VikScriptsTests/Python_Pickles/'
-colorcycle = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-             '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+colorcycle, _ = save_constants()
 
 def mean_all_reanalyses(time_files, files_to_smooth, year_bkg_end, year_trans_end):
     """ Function returns the mean time series over a number of reanalysis (has the length of a timeseries)
@@ -62,7 +61,7 @@ def mean_all_reanalyses(time_files, files_to_smooth, year_bkg_end, year_trans_en
 
     return mean
 
-def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, year_bkg_end, year_trans_end, site, no_weight=True):
+def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle, year_bkg_end, year_trans_end, site, no_weight=True):
     """ Function returns the total water production at daily intervals in [mm s-1] 
     
     Parameters
@@ -73,6 +72,8 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, year_bkg_end
         Path to the .nc file where the aggregated ground simulations are stored
     path_swe : str
         Path to the .nc file where the aggregated SWE simulations are stored
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     year_bkg_end : int
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
@@ -93,7 +94,7 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, year_bkg_end
     """
 
     file_name = f"df_stats{('' if site=='' else '_')}{site}.pkl"
-    my_path = pickle_path + file_name
+    my_path = path_pickle + file_name
     with open(my_path, 'rb') as file: 
         # Call load method to deserialize 
         df_stats = pickle.load(file)

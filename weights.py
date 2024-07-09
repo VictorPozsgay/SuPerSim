@@ -11,18 +11,19 @@ import matplotlib.pyplot as plt
 
 from open import open_thaw_depth_nc
 from pickling import rockfall_values
+from constants import save_constants
 
-pickle_path = '/fs/yedoma/home/vpo001/VikScriptsTests/Python_Pickles/'
-colorcycle = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-             '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+colorcycle, _ = save_constants()
 
-def assign_weight_sim(site, no_weight=True):
+def assign_weight_sim(site, path_pickle, no_weight=True):
     """ Function returns a statistical weight for each simulation according to the importance in rockfall starting zone 
     
     Parameters
     ----------
     site : str
         Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     no_weight : bool, optional
         If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
 
@@ -34,7 +35,7 @@ def assign_weight_sim(site, no_weight=True):
     """
 
     file_name = f"df_stats{('' if site=='' else '_')}{site}.pkl"
-    my_path = pickle_path + file_name
+    my_path = path_pickle + file_name
     with open(my_path, 'rb') as file: 
         # Call load method to deserialize 
         df_stats = pickle.load(file)
@@ -55,17 +56,19 @@ def assign_weight_sim(site, no_weight=True):
     
     return pd_weight
 
-def plot_hist_valid_sim_all_variables(path_thaw_depth, site): 
+def plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle): 
     """ Function returns a histogram of the number of valid/glacier simulations for each of the following variable
         ('altitude', 'aspect', 'slope', 'forcing') 
         It also shows the breakdown of valid simulations into permafrost and no-permafrost ones
 
     Parameters
     ----------
-    path_thaw_depth : str
-        Path to the .nc file where the aggregated thaw depth simulations are stored
     site : str
         Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
+    path_thaw_depth : str
+        Path to the .nc file where the aggregated thaw depth simulations are stored
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
 
     Returns
     -------
@@ -77,11 +80,11 @@ def plot_hist_valid_sim_all_variables(path_thaw_depth, site):
 
     _, thaw_depth = open_thaw_depth_nc(path_thaw_depth)
 
-    with open(pickle_path + file_name_df, 'rb') as file: 
+    with open(path_pickle + file_name_df, 'rb') as file: 
         # Call load method to deserialize 
         df = pickle.load(file)
 
-    with open(pickle_path + file_name_df_stats, 'rb') as file: 
+    with open(path_pickle + file_name_df_stats, 'rb') as file: 
         # Call load method to deserialize 
         df_stats = pickle.load(file)
 

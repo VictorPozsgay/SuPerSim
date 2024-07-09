@@ -1,4 +1,4 @@
-"""This module defines the functions that assign statistics to pickles"""
+"""This module defines the functions that create statistics for the timseries and pickle them"""
 
 #pylint: disable=line-too-long
 #pylint: disable=trailing-whitespace
@@ -13,9 +13,7 @@ import pandas as pd
 from open import open_air_nc, open_ground_nc, open_snow_nc
 from mytime import list_tokens_year
 
-pickle_path = '/fs/yedoma/home/vpo001/VikScriptsTests/Python_Pickles/'
-
-def assign_value_global_dict(path_forcing_list, path_ground, path_snow, year_bkg_end, year_trans_end, site):
+def assign_value_global_dict(path_forcing_list, path_ground, path_snow, path_pickle, year_bkg_end, year_trans_end, site):
     """ Function returns a dictionary containing all the important timeseries and saves it to a pickle
     
     Parameters
@@ -26,6 +24,8 @@ def assign_value_global_dict(path_forcing_list, path_ground, path_snow, year_bkg
         Path to the .nc file where the aggregated ground simulations are stored
     path_snow : str
         Path to the .nc file where the aggregated snow simulations are stored
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     year_bkg_end : int
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
@@ -43,7 +43,7 @@ def assign_value_global_dict(path_forcing_list, path_ground, path_snow, year_bkg
     """
 
     file_name = f"global_dict{('' if site=='' else '_')}{site}.pkl"
-    my_path = pickle_path + file_name
+    my_path = path_pickle + file_name
 
     # try to open the pickle file, if it exists
     try:
@@ -108,7 +108,7 @@ def assign_value_df_raw(path_repository):
 
     return df_raw
 
-def assign_value_df(path_repository, path_ground, site):
+def assign_value_df(path_repository, path_ground, path_pickle, site):
     """ Function returns the panda dataframe with all ensemble simulation parameters and saves it to a pickle
     
     Parameters
@@ -117,6 +117,8 @@ def assign_value_df(path_repository, path_ground, site):
         Path to the .csv file with all the simulation parameters
     path_ground : str
         Path to the .nc file where the aggregated ground simulations are stored
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     site : str
         Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles   
 
@@ -135,7 +137,7 @@ def assign_value_df(path_repository, path_ground, site):
     # time and then saved into a pickle.
 
     file_name = f"df{('' if site=='' else '_')}{site}.pkl"
-    my_path = pickle_path + file_name
+    my_path = path_pickle + file_name
 
     f_ground, _, _ = open_ground_nc(path_ground)
 
@@ -174,7 +176,7 @@ def assign_value_df(path_repository, path_ground, site):
 
     return df
 
-def assign_value_reanalysis_stat(forcing_list, path_forcing_list, year_bkg_end, year_trans_end, site):
+def assign_value_reanalysis_stat(forcing_list, path_forcing_list, path_pickle, year_bkg_end, year_trans_end, site):
     """ Creates a dictionary of mean quantities over the background and transient periods
     
     Parameters
@@ -183,6 +185,8 @@ def assign_value_reanalysis_stat(forcing_list, path_forcing_list, year_bkg_end, 
         List of forcings provided, with a number of entries between 1 and 3 in 'era5', 'merra2', and 'jra55'. E.g. ['era5', 'merra2']
     path_forcing_list : list of str
         List of paths to the .nc file where the atmospheric forcing data for the given reanalysis is stored
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     year_bkg_end : int
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
@@ -199,8 +203,8 @@ def assign_value_reanalysis_stat(forcing_list, path_forcing_list, year_bkg_end, 
 
     file_name = f"reanalysis_stats{('' if site=='' else '_')}{site}.pkl"
     file_name_df = f"df{('' if site=='' else '_')}{site}.pkl"
-    my_path = pickle_path + file_name
-    my_path_df = pickle_path + file_name_df
+    my_path = path_pickle + file_name
+    my_path_df = path_pickle + file_name_df
 
     # This saves a lot of time since it is not re-evaluated each time but just the first
     # time and then saved into a pickle.
@@ -270,15 +274,17 @@ def assign_value_reanalysis_stat(forcing_list, path_forcing_list, year_bkg_end, 
 
     return var_name
 
-def glacier_filter(path_snow, site, glacier=False, min_glacier_depth=100, max_glacier_depth=20000):
+def glacier_filter(site, path_snow, path_pickle, glacier=False, min_glacier_depth=100, max_glacier_depth=20000):
     """ Function returns a list of valid simulations regarding the glacier criteria
     
     Parameters
     ----------
-    path_snow : str
-        Path to the .nc file where the aggregated snow simulations are stored
     site : str
         Location of the event, e.g. 'Aksaut_Ridge'
+    path_snow : str
+        Path to the .nc file where the aggregated snow simulations are stored
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     glacier : bool, optional
         By default only keeps non-glacier simulations but can be changed to True to select only glaciated simulations
     min_glacier_depth : float, optional
@@ -298,7 +304,7 @@ def glacier_filter(path_snow, site, glacier=False, min_glacier_depth=100, max_gl
     _, snow_height = open_snow_nc(path_snow)
 
     file_name = f"list_valid_sim{('' if site=='' else '_')}{site}.pkl"
-    my_path = pickle_path + file_name
+    my_path = path_pickle + file_name
 
     # try to open the pickle file, if it exists
     try: 
@@ -337,7 +343,7 @@ def glacier_filter(path_snow, site, glacier=False, min_glacier_depth=100, max_gl
 
     return list_valid_sim
 
-def melt_out_date(consecutive, path_ground, path_snow, year_bkg_end, year_trans_end, site):
+def melt_out_date(consecutive, path_ground, path_snow, path_pickle, year_bkg_end, year_trans_end, site):
     """ Function returns a list of melt out dates given the criterion of a number of consecutive snow-free days
     
     Parameters
@@ -348,6 +354,8 @@ def melt_out_date(consecutive, path_ground, path_snow, year_bkg_end, year_trans_
         Path to the .nc file where the aggregated ground simulations are stored
     path_snow : str
         Path to the .nc file where the aggregated snow simulations are stored
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     year_bkg_end : int
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
@@ -370,11 +378,11 @@ def melt_out_date(consecutive, path_ground, path_snow, year_bkg_end, year_trans_
 
     file_name = f"melt_out{('' if site=='' else '_')}{site}.pkl"
     file_name_list_valid_sim = f"list_valid_sim{('' if site=='' else '_')}{site}.pkl"
-    my_path = pickle_path + file_name
+    my_path = path_pickle + file_name
 
     snow_height = open_snow_nc(path_snow)[1]
     time_ground = open_ground_nc(path_ground)[1]
-    with open(pickle_path + file_name_list_valid_sim, 'rb') as file: 
+    with open(path_pickle + file_name_list_valid_sim, 'rb') as file: 
         # Call load method to deserialize 
         list_valid_sim = pickle.load(file)
 
@@ -440,7 +448,7 @@ def melt_out_date(consecutive, path_ground, path_snow, year_bkg_end, year_trans_
 
     return dict_melt_out, stats_melt_out_dic
 
-def assign_value_df_stats(path_ground, path_snow, year_bkg_end, year_trans_end, site):
+def assign_value_df_stats(path_ground, path_snow, path_pickle, year_bkg_end, year_trans_end, site):
     """ Function returns a large panda dataframe with information about the air, ground, snow, topography, etc. for all simulations
     
     Parameters
@@ -449,6 +457,8 @@ def assign_value_df_stats(path_ground, path_snow, year_bkg_end, year_trans_end, 
         Path to the .nc file where the aggregated ground simulations are stored
     path_snow : str
         Path to the .nc file where the aggregated snow simulations are stored
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     year_bkg_end : int
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
@@ -468,25 +478,25 @@ def assign_value_df_stats(path_ground, path_snow, year_bkg_end, year_trans_end, 
     file_name_reanalysis_stats = f"reanalysis_stats{('' if site=='' else '_')}{site}.pkl"
     file_name_list_valid_sim = f"list_valid_sim{('' if site=='' else '_')}{site}.pkl"
     file_name_melt_out = f"melt_out{('' if site=='' else '_')}{site}.pkl"
-    my_path = pickle_path + file_name
+    my_path = path_pickle + file_name
 
     snow_height = open_snow_nc(path_snow)[1]
     _, time_ground, temp_ground = open_ground_nc(path_ground)
     _, time_bkg_ground, time_trans_ground, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end)
 
-    with open(pickle_path + file_name_df, 'rb') as file: 
+    with open(path_pickle + file_name_df, 'rb') as file: 
         # Call load method to deserialize 
         df = pickle.load(file)
 
-    with open(pickle_path + file_name_reanalysis_stats, 'rb') as file: 
+    with open(path_pickle + file_name_reanalysis_stats, 'rb') as file: 
         # Call load method to deserialize 
         reanalysis_stats = pickle.load(file)
 
-    with open(pickle_path + file_name_list_valid_sim, 'rb') as file: 
+    with open(path_pickle + file_name_list_valid_sim, 'rb') as file: 
         # Call load method to deserialize 
         list_valid_sim = pickle.load(file)
 
-    with open(pickle_path + file_name_melt_out, 'rb') as file: 
+    with open(path_pickle + file_name_melt_out, 'rb') as file: 
         # Call load method to deserialize 
         _, stats_melt_out_dic = pickle.load(file)
 
@@ -639,13 +649,15 @@ def rockfall_values(site):
 
     return rockfall_values_dict[site]
 
-def load_all_pickles(site):
+def load_all_pickles(site, path_pickle):
     """ Loads all pickles corresponding to the site name
     
     Parameters
     ----------
     site : str
         Location of the event, e.g. 'Aksaut_Ridge'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
 
     Returns
     -------
@@ -676,7 +688,7 @@ def load_all_pickles(site):
     output = [0 for _ in list_file_names]
 
     for i, file_name in enumerate(list_file_names):
-        my_path = pickle_path + file_name
+        my_path = path_pickle + file_name
         # Open the file in binary mode 
         with open(my_path, 'rb') as file: 
             # Call load method to deserialze 
@@ -687,7 +699,7 @@ def load_all_pickles(site):
 
     return df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats
 
-def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground, path_snow,
+def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground, path_snow, path_pickle,
                   year_bkg_end, year_trans_end, consecutive, site,
                   glacier=False, min_glacier_depth=100, max_glacier_depth=20000):
     """ Creates a number of pickle files (if they don't exist yet)
@@ -704,6 +716,8 @@ def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground,
         Path to the .nc file where the aggregated ground simulations are stored
     path_snow : str
         path to the snow data
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     year_bkg_end : int
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
@@ -739,10 +753,10 @@ def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground,
 
     """
 
-    df = assign_value_df(path_repository, path_ground, site)
-    reanalysis_stats = assign_value_reanalysis_stat(forcing_list, path_forcing_list, year_bkg_end, year_trans_end, site)
-    list_valid_sim = glacier_filter(path_snow, site, glacier, min_glacier_depth, max_glacier_depth)
-    dict_melt_out, stats_melt_out_dic = melt_out_date(consecutive, path_ground, path_snow, year_bkg_end, year_trans_end, site)
-    df_stats = assign_value_df_stats(path_ground, path_snow, year_bkg_end, year_trans_end, site)
+    df = assign_value_df(path_repository, path_ground, path_pickle, site)
+    reanalysis_stats = assign_value_reanalysis_stat(forcing_list, path_forcing_list, path_pickle, year_bkg_end, year_trans_end, site)
+    list_valid_sim = glacier_filter(site, path_snow, path_pickle, glacier, min_glacier_depth, max_glacier_depth)
+    dict_melt_out, stats_melt_out_dic = melt_out_date(consecutive, path_ground, path_snow, path_pickle, year_bkg_end, year_trans_end, site)
+    df_stats = assign_value_df_stats(path_ground, path_snow, path_pickle, year_bkg_end, year_trans_end, site)
 
     return df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats

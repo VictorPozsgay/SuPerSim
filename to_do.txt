@@ -1,5 +1,0 @@
-1. No more initiation of pickle_path at the beginning of each modules, define it dynamically
-2. Modify units from mm/s to mm/day for precipitation in yearlystats.plot_box_yearly_stat
-3. Create an overall 'units' dictionary, just like 'colorcycle'
-4. Do something with pickling.rockfall_values
-5. Maybe place the common definitions 'colorcycle', 'units' in their own module, maybe pickling.rockfall_values too, maybe pickling.assign_value_global_dict too

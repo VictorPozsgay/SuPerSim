@@ -14,12 +14,11 @@ import seaborn as sn
 import cmasher as cmr
 
 from pickling import rockfall_values, load_all_pickles
+from constants import save_constants
 
-pickle_path = '/fs/yedoma/home/vpo001/VikScriptsTests/Python_Pickles/'
-colorcycle = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-             '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+colorcycle, _ = save_constants()
 
-def table_background_evolution_mean_GST_aspect_slope(site):
+def table_background_evolution_mean_GST_aspect_slope(site, path_pickle):
     """ Function returns a table of mean background and evolution of GST (ground-surface temperature)
         as a function of slope, aspect, and altitude
     
@@ -27,6 +26,8 @@ def table_background_evolution_mean_GST_aspect_slope(site):
     ----------
     site : str
         Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     
     Returns
     -------
@@ -43,7 +44,7 @@ def table_background_evolution_mean_GST_aspect_slope(site):
     """
 
     file_name = f"df_stats{('' if site=='' else '_')}{site}.pkl"
-    my_path = pickle_path + file_name
+    my_path = path_pickle + file_name
     with open(my_path, 'rb') as file: 
         # Call load method to deserialize 
         df_stats = pickle.load(file)
@@ -72,7 +73,7 @@ def table_background_evolution_mean_GST_aspect_slope(site):
 
     return list_grd_temp, list_mean_grd_temp, list_diff_temp, list_mean_diff_temp, list_num_sim
 
-def plot_table_mean_GST_aspect_slope(site, altitude, background=True, box=True):
+def plot_table_mean_GST_aspect_slope(site, path_pickle, altitude, background=True, box=True):
     """ Function returns a plot of the table of either mean background GST (ground-surface temperature)
         or its evolution vetween the background and the transient periods,
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
@@ -82,6 +83,8 @@ def plot_table_mean_GST_aspect_slope(site, altitude, background=True, box=True):
     ----------
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     altitude : int
         Altitude at which we want the table
     background : bool, optional 
@@ -96,7 +99,7 @@ def plot_table_mean_GST_aspect_slope(site, altitude, background=True, box=True):
     """
     #pylint: disable=no-member
 
-    _, _, _, _, _, df_stats = load_all_pickles(site)
+    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
     
     rf_values = rockfall_values(site)
     variables = ['aspect', 'slope','altitude']
@@ -108,7 +111,7 @@ def plot_table_mean_GST_aspect_slope(site, altitude, background=True, box=True):
         if altitude == j:
             alt_index = i
 
-    list_mean = (table_background_evolution_mean_GST_aspect_slope(site)[1][alt_index] if background else table_background_evolution_mean_GST_aspect_slope(site)[3][alt_index])
+    list_mean = (table_background_evolution_mean_GST_aspect_slope(site, path_pickle)[1][alt_index] if background else table_background_evolution_mean_GST_aspect_slope(site, path_pickle)[3][alt_index])
     df_temp = pd.DataFrame(list_mean, index=list(dic_var['slope']), columns=list(dic_var['aspect']))
 
     vals = np.around(df_temp.values, 2)
@@ -152,7 +155,7 @@ def plot_table_mean_GST_aspect_slope(site, altitude, background=True, box=True):
     plt.close()
     plt.clf()
 
-def plot_table_aspect_slope_all_altitudes(site, show_glacier=True, box=True):
+def plot_table_aspect_slope_all_altitudes(site, path_pickle, show_glacier=True, box=True):
     """ Function returns 1 plot per altitude of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
@@ -162,6 +165,8 @@ def plot_table_aspect_slope_all_altitudes(site, show_glacier=True, box=True):
     ----------
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     show_glacier : bool, opional
         Whether or not to plot the glacier fraction
     box : bool, optional 
@@ -172,7 +177,7 @@ def plot_table_aspect_slope_all_altitudes(site, show_glacier=True, box=True):
     (2 or 3)*(# altitudes) tables
     """
 
-    df, _, _, _, _, df_stats = load_all_pickles(site)
+    df, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
     
     variables = ['aspect', 'slope','altitude']
     dic_var = {}
@@ -191,7 +196,7 @@ def plot_table_aspect_slope_all_altitudes(site, show_glacier=True, box=True):
     center = [0, 0]
     cmap = ['seismic', 'seismic']
 
-    table_all = table_background_evolution_mean_GST_aspect_slope(site)
+    table_all = table_background_evolution_mean_GST_aspect_slope(site, path_pickle)
 
     list_mean = [# evolution mean GST
                 table_all[3],
@@ -249,7 +254,7 @@ def plot_table_aspect_slope_all_altitudes(site, show_glacier=True, box=True):
     plt.close()
     plt.clf() 
  
-def plot_table_aspect_slope_all_altitudes_polar(site, box=True):
+def plot_table_aspect_slope_all_altitudes_polar(site, path_pickle, box=True):
     """ Function returns 3 polar plots (1 per altitude) of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
@@ -259,6 +264,8 @@ def plot_table_aspect_slope_all_altitudes_polar(site, box=True):
     ----------
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     box : bool, optional 
         If True, highlights the cell corresponding to the rockfall starting zone with a black box
 
@@ -267,7 +274,7 @@ def plot_table_aspect_slope_all_altitudes_polar(site, box=True):
     2*3 polar plots
     """
 
-    _, _, _, _, _, df_stats = load_all_pickles(site)
+    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
 
     variables = ['aspect', 'slope','altitude']
     dic_var = {}
@@ -279,7 +286,7 @@ def plot_table_aspect_slope_all_altitudes_polar(site, box=True):
             if rockfall_values(site)['altitude'] == j:
                 alt_index = i
 
-    list_mean = [table_background_evolution_mean_GST_aspect_slope(site)[1], table_background_evolution_mean_GST_aspect_slope(site)[3]]
+    list_mean = [table_background_evolution_mean_GST_aspect_slope(site, path_pickle)[1], table_background_evolution_mean_GST_aspect_slope(site, path_pickle)[3]]
     data = [[pd.DataFrame(i, index=list(dic_var['slope']), columns=list(dic_var['aspect'])) for i in j] for j in list_mean]
     no_nan = [[l for j in i for k in j.values for l in k if not np.isnan(l)] for i in data]
     vmin = [np.min(i) for i in no_nan]
@@ -350,7 +357,7 @@ def plot_table_aspect_slope_all_altitudes_polar(site, box=True):
     plt.close()
     plt.clf()
 
-def plot_permafrost_all_altitudes_polar(site, depth_thaw, box=True):
+def plot_permafrost_all_altitudes_polar(site, path_pickle, depth_thaw, box=True):
     """ Function returns 3 polar plots (1 per altitude) of the permafrost and glacier spatial distribution,
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
         rockfall starting zone
@@ -359,6 +366,8 @@ def plot_permafrost_all_altitudes_polar(site, depth_thaw, box=True):
     ----------
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     depth_thaw : netCDF4._netCDF4.Variable
         NetCDF variable encoding the thaw depth
     box : bool, optional 
@@ -369,7 +378,7 @@ def plot_permafrost_all_altitudes_polar(site, depth_thaw, box=True):
     2*3 polar plots
     """
 
-    _, _, _, _, _, df_stats = load_all_pickles(site)
+    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
 
     variables = ['aspect', 'slope','altitude']
     dic_var = {}

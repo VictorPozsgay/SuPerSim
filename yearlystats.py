@@ -11,10 +11,9 @@ import matplotlib.pyplot as plt
 import seaborn as sn
 
 from mytime import list_tokens_year
+from constants import save_constants
 
-pickle_path = '/fs/yedoma/home/vpo001/VikScriptsTests/Python_Pickles/'
-colorcycle = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-             '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+colorcycle, units = save_constants()
 
 def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, year_trans_end):
     """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
@@ -50,14 +49,15 @@ def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, yea
     x = pd.DataFrame(file_to_plot[:len(a)], columns=[name_series], index=a)
     x['Year'] = a
 
+    if name_series in ['Precipitation', 'Water production']:
+        x['name_series'] = x['name_series']*86400
+
     mean = [np.mean(x[x['Year']<year_bkg_end][name_series]), np.mean(x[(x['Year']>=year_bkg_end) & (x['Year']<year_trans_end)][name_series])]
 
     meanpointprops = dict(marker='D', markeredgecolor='black', markerfacecolor='firebrick')
     sn.boxplot(x='Year', y=name_series, data=x, showmeans=True, showfliers=False, meanprops=meanpointprops, color='grey', linecolor='black')
 
     formatted_mean = [f"{i:.2e}" for i in mean] if ((exponent < -1) | (exponent>2)) else [float(f"{i:.2f}") for i in mean]
-
-    units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm s-1', 'SWE': 'mm s-1', 'Water production': 'mm s-1'}
 
     ax.hlines(mean[0], 0, year_bkg_end - list(list_dates.keys())[0] - 1 + 1/2, linewidth=2, color=colorcycle[0],
               label=f'Background mean: {formatted_mean[0]}{units[name_series]}')
@@ -168,8 +168,6 @@ def plot_yearly_quantiles_air(list_time_file, list_time_series, label_plot, year
     mean_trans = np.mean(mean_end.loc[year_bkg_end:year_trans_end-1])
     formatted_mean = [f"{i:.2f}" for i in [mean_bkg, mean_trans]]
 
-    units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm/day', 'SWE': 'mm', 'Water production': 'mm/day', 'Snow depth': 'mm',
-             'SW': 'W m-2', 'LW': 'W m-2'}
     dict_points = {0: {'alpha': 0.2, 'width': 0.5},
                 1: {'alpha': 0.4, 'width': 1.0},
                 2: {'alpha': 1.0, 'width': 2.0},
@@ -239,9 +237,6 @@ def plot_yearly_quantiles_all_sims(time_file, time_series, list_valid_sim, label
     -------
     Plot of yearly statistics for 'ground' timeseries. Mean and several quantiles for each year.
     """
-
-    units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm/day', 'SWE': 'mm', 'Water production': 'mm/day', 'Snow depth': 'mm',
-             'SW': 'W m-2', 'LW': 'W m-2'}
     
     dict_points = {0: {'alpha': 0.2, 'width': 0.5},
                 1: {'alpha': 0.4, 'width': 1.0},
@@ -335,9 +330,6 @@ def plot_yearly_quantiles_all_sims_side_by_side(time_file, time_series, list_val
     Plots of yearly statistics for 'ground' timeseries over all simulations for 1 same metric
     at 2 different sites. 1 plot per site, both plots side by side.
     """
-
-    units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm/day', 'SWE': 'mm', 'Water production': 'mm/day', 'Snow depth': 'mm',
-             'SW': 'W m-2', 'LW': 'W m-2'}
     
     dict_points = {0: {'alpha': 0.2, 'width': 0.5},
                 1: {'alpha': 0.4, 'width': 1.0},

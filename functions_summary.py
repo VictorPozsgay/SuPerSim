@@ -19,10 +19,9 @@ from percentiles import plot_cdf_GST, plot_10_cold_warm, heatmap_percentile_GST
 from yearlystats import plot_box_yearly_stat, plot_yearly_quantiles_air, plot_yearly_quantiles_all_sims
 from seasonal import plot_sanity_one_year_quantiles_two_periods, plot_sanity_two_variables_one_year_quantiles
 from evolution import plot_GST_bkg_vs_evol_quantile_bins_fit_single_site, plot_mean_bkg_GST_vs_evolution, plot_evolution_snow_cover_melt_out
+from constants import save_constants
 
-pickle_path = '/fs/yedoma/home/vpo001/VikScriptsTests/Python_Pickles/'
-colorcycle = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-             '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+colorcycle, _ = save_constants()
 
 def plot_visible_skymap_from_horizon_file(hor_path):
     """ Function returns a fisheye view of the sky with the visible portion in blue and the blocked one in black.
@@ -57,7 +56,8 @@ def plot_visible_skymap_from_horizon_file(hor_path):
     # plt.title('Scatter Plot on Polar Axis', fontsize=15)
     plt.show()
 
-def plot_all(site, forcing_list, path_forcing_list, path_ground, path_snow, path_swe, path_thaw_depth,
+def plot_all(site, forcing_list,
+             path_forcing_list, path_ground, path_snow, path_swe, path_thaw_depth, path_pickle,
              year_bkg_end, year_trans_end, no_weight=True,
              individual_heatmap=False, polar_plots=False, parity_plot=False):
     """ Function returns a series of summary plots for a given site.
@@ -78,12 +78,12 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_snow, path
         Path to the .nc file where the aggregated SWE simulations are stored
     path_thaw_depth : str
         String path to the location of the thaw depth output file from GTPEM (.nc)
-    year_bkg_end : int, optional
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
+    year_bkg_end : int
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
-    year_trans_end : int, optional
+    year_trans_end : int
         Same for transient period
-    site : str
-        Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
     no_weight : bool, optional
         If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
     individual_heatmap : bool, optional
@@ -102,7 +102,7 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_snow, path
     # OPEN THE VARIOUS FILES
     #####################################################################################
 
-    df, _, list_valid_sim, _, _, df_stats = load_all_pickles(site)
+    df, _, list_valid_sim, _, _, df_stats = load_all_pickles(site, path_pickle)
 
     #####################################################################################
     # PLOTS
@@ -132,7 +132,7 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_snow, path
     print('The following plot is a histogram of the distribution of the statistical weights of all simulations:')
     plot_hist_stat_weights(pd_weight, df, zero=True)
     print('The following plot is a histogram of the distribution of glacier simulations wrt to altitude, aspect, slope, and forcing:')
-    plot_hist_valid_sim_all_variables(path_thaw_depth, site)
+    plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle)
 
     alt_list = sorted(set(df_stats['altitude']))
     alt_index = int(np.floor((len(alt_list)-1)/2))
@@ -174,31 +174,31 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_snow, path
         plot_table_mean_GST_aspect_slope(site, alt_index_abs, False, False)
 
     print('Heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitude')
-    plot_table_aspect_slope_all_altitudes(site, show_glacier=False, box=False)
+    plot_table_aspect_slope_all_altitudes(site, path_pickle, show_glacier=False, box=False)
 
 
     if polar_plots:
         print('Polar heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitude')
-        plot_table_aspect_slope_all_altitudes_polar(site, box=False)
+        plot_table_aspect_slope_all_altitudes_polar(site, path_pickle, box=False)
 
         print('Polar plot of the permafrost and glacier spatial distribution as a function of aspect and slope at all altitude')
-        plot_permafrost_all_altitudes_polar(site, thaw_depth, box=False)
+        plot_permafrost_all_altitudes_polar(site, path_pickle, thaw_depth, box=False)
 
     print('CDF of background, transient, and evolution GST:')
-    plot_cdf_GST(site)
+    plot_cdf_GST(site, path_pickle)
     print('Heatmap of 10th, 25th, 50th, 75th, and 90th percentile in background and transient GST, and the difference:')
-    heatmap_percentile_GST(site)
+    heatmap_percentile_GST(site, path_pickle)
     print('Plot of mean GST evolution vs background GST, with an emphasis on the 10% colder and warmer simulations')
-    plot_10_cold_warm(site)
+    plot_10_cold_warm(site, path_pickle)
     print('Plot of mean GST evolution vs background GST, fit, and binning per 10% quntiles')
-    plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site)
+    plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site, path_pickle)
 
     print('Scatter plot of mean background GST vs evolution of mean GST between the background and transient period')
-    plot_mean_bkg_GST_vs_evolution(site)
+    plot_mean_bkg_GST_vs_evolution(site, path_pickle)
 
     if parity_plot:
         print('Parity plot (statistically-modeled vs numerically-simulated) of background mean GST:')
-        _, _, optimizedParameters, _, _, _ = fit_stat_model_grd_temp(site, all_data=False, diff_forcings=True)
+        _, _, optimizedParameters, _, _, _ = fit_stat_model_grd_temp(site, path_pickle, all_data=False, diff_forcings=True)
         list_ceof = ['offset', 'c_alt', 'd_alt', 'c_asp', 'c_slope']
         pd_coef = pd.DataFrame(list_ceof, columns=['Coefficient'])
         # previously was columns=['all', 'era5', 'merra2', 'jra55'] when had all 3 forcings
@@ -216,7 +216,7 @@ def plot_all(site, forcing_list, path_forcing_list, path_ground, path_snow, path
     plot_yearly_quantiles_all_sims(time_ground, swe, list_valid_sim, 'SWE', year_bkg_end, year_trans_end)
 
     print('Histogram of the evolution of the snow cover (in days) and melt-out date:')
-    plot_evolution_snow_cover_melt_out(site)
+    plot_evolution_snow_cover_melt_out(site, path_pickle)
 
     print('Plot of 2 timeseries reduced to a 1-year window with mean and 1- and 2-sigma spread:')
     plot_sanity_two_variables_one_year_quantiles(time_ground, [temp_ground, snow_height], [list_valid_sim, list_valid_sim], ['GST', 'Snow depth'])

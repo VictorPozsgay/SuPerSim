@@ -9,10 +9,9 @@ import matplotlib.pyplot as plt
 import scipy.optimize as opt
 
 from pickling import load_all_pickles
+from constants import save_constants
 
-pickle_path = '/fs/yedoma/home/vpo001/VikScriptsTests/Python_Pickles/'
-colorcycle = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-             '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+colorcycle, _ = save_constants()
 
 def stat_model_aspect_slope_alt(X, offset, c_alt, d_alt, c_asp, c_slope):
     """ Function returns the value of the statistical model 
@@ -37,13 +36,15 @@ def stat_model_aspect_slope_alt(X, offset, c_alt, d_alt, c_asp, c_slope):
             + c_asp * (altitude - d_alt) * np.cos(aspect * 2 * np.pi / 360) 
             + c_slope * slope)
 
-def fit_stat_model_grd_temp(site, all_data=True, diff_forcings=True):
+def fit_stat_model_grd_temp(site, path_pickle, all_data=True, diff_forcings=True):
     """ Function returns the value of the statistical model 
     
     Parameters
     ----------
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
     all_data : bool, optional
         If True, considers all data at once
     diff_forcings : bool, optional
@@ -66,7 +67,7 @@ def fit_stat_model_grd_temp(site, all_data=True, diff_forcings=True):
     parity plot (predicted vs actual)
     """
 
-    _, _, _, _, _, df_stats = load_all_pickles(site)
+    _, _, _, _, _, df_stats = load_all_pickles(site, path_pickle)
     
     plt.figure(figsize=(6,6))
 
