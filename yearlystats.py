@@ -40,8 +40,9 @@ def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, yea
     _, ax = plt.subplots()
 
     list_dates = list_tokens_year(time_file, year_bkg_end, year_trans_end)[0]
-    overall_mean = np.mean(file_to_plot)
-    exponent = int(np.floor(np.log10(np.abs(overall_mean))))
+    # overall_mean = np.mean(file_to_plot)
+    # exponent = int(np.floor(np.log10(np.abs(overall_mean))))
+    
     a = []
     for i in list_dates.keys():
         if i < year_trans_end:
@@ -57,7 +58,8 @@ def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, yea
     meanpointprops = dict(marker='D', markeredgecolor='black', markerfacecolor='firebrick')
     sn.boxplot(x='Year', y=name_series, data=x, showmeans=True, showfliers=False, meanprops=meanpointprops, color='grey', linecolor='black')
 
-    formatted_mean = [f"{i:.2e}" for i in mean] if ((exponent < -1) | (exponent>2)) else [float(f"{i:.2f}") for i in mean]
+    # formatted_mean = [f"{i:.2e}" for i in mean] if ((exponent < -1) | (exponent>2)) else [float(f"{i:.2f}") for i in mean]
+    formatted_mean = [f"{i:.2f}" for i in mean]
 
     ax.hlines(mean[0], 0, year_bkg_end - list(list_dates.keys())[0] - 1 + 1/2, linewidth=2, color=colorcycle[0],
               label=f'Background mean: {formatted_mean[0]}{units[name_series]}')
@@ -77,7 +79,6 @@ def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, yea
     plt.legend()
     plt.show()
     plt.close()
-    plt.clf()
 
 def stats_yearly_quantiles_air(list_time_file, list_time_series, label_plot, year_trans_end):
     """ Function returns yearly statistics for 'air' timeseries, averaged over all reanalyses and altitudes
@@ -166,6 +167,10 @@ def plot_yearly_quantiles_air(list_time_file, list_time_series, label_plot, year
 
     mean_bkg = np.mean(mean_end.loc[xdata[0]:year_bkg_end-1])
     mean_trans = np.mean(mean_end.loc[year_bkg_end:year_trans_end-1])
+    # mean_list = [mean_bkg, mean_trans]
+
+    # exponent = [int(np.floor(np.log10(np.abs(i)))) for i in mean_list]
+    # formatted_mean = [f"{m:.2e}" for i, m in enumerate(mean_list) if ((exponent[i] < -1) | (exponent[i]>2)) else float(f"{m:.2f}")]
     formatted_mean = [f"{i:.2f}" for i in [mean_bkg, mean_trans]]
 
     dict_points = {0: {'alpha': 0.2, 'width': 0.5},
@@ -213,7 +218,6 @@ def plot_yearly_quantiles_air(list_time_file, list_time_series, label_plot, year
     plt.legend(loc='upper right')
     plt.show()
     plt.close()
-    plt.clf()
 
 def plot_yearly_quantiles_all_sims(time_file, time_series, list_valid_sim, label_plot, year_bkg_end, year_trans_end):
     """ Function plots yearly statistics for 'ground' timeseries over all simulations
@@ -302,7 +306,6 @@ def plot_yearly_quantiles_all_sims(time_file, time_series, list_valid_sim, label
     plt.legend(loc='upper right')
     plt.show()
     plt.close()
-    plt.clf()
 
 def plot_yearly_quantiles_all_sims_side_by_side(time_file, time_series, list_valid_sim, label_plot, list_site, year_bkg_end, year_trans_end):
     """ Function plots yearly statistics for 'ground' timeseries over all simulations for 1 same metric
@@ -405,4 +408,3 @@ def plot_yearly_quantiles_all_sims_side_by_side(time_file, time_series, list_val
     # Show the graph
     plt.show()
     plt.close()
-    plt.clf()

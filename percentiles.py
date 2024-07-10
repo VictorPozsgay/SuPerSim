@@ -143,7 +143,6 @@ def plot_cdf_GST(site, path_pickle):
     # Show the graph
     plt.show()
     plt.close()
-    plt.clf()
 
 def plot_10_cold_warm(site, path_pickle):
     """ Function returns a plot of mean GST evolution vs background GST, with an emphasis on the 10% colder and warmer simulations
@@ -185,10 +184,8 @@ def plot_10_cold_warm(site, path_pickle):
     df_stats_bis['bkg_grd_temp'] = pd.Categorical(df_stats_bis['bkg_grd_temp'], data_bkg_sorted)
     df_stats_bis = df_stats_bis.sort_values('bkg_grd_temp')
 
-    #pylint: disable=unsubscriptable-object
-    list_x = list(df_stats_bis['bkg_grd_temp']) 
-    #pylint: disable=unsubscriptable-object
-    list_y = [df_stats_bis['trans_grd_temp'].iloc[i] - df_stats_bis['bkg_grd_temp'].iloc[i] for i in range(len(df_stats_bis))]
+    list_x = list(df_stats_bis.loc[:, 'bkg_grd_temp']) 
+    list_y = [df_stats_bis.loc[:, 'trans_grd_temp'].iloc[i] - df_stats_bis.loc[:, 'bkg_grd_temp'].iloc[i] for i in range(len(df_stats_bis))]
 
     pos_10 = int(np.ceil(len(data_bkg)/10))
 
@@ -224,7 +221,6 @@ def plot_10_cold_warm(site, path_pickle):
     plt.legend()
     plt.show()
     plt.close()
-    plt.clf()
     
 def heatmap_percentile_GST(site, path_pickle):
     """ Function returns a heatmap of 10th, 25th, 50th, 75th, and 90th percentile in background and transient GST, and the difference
@@ -274,4 +270,3 @@ def heatmap_percentile_GST(site, path_pickle):
     # Show the graph
     plt.show()
     plt.close()
-    plt.clf()

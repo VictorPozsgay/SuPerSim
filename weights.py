@@ -4,13 +4,13 @@
 #pylint: disable=trailing-whitespace
 #pylint: disable=invalid-name
 
-import pickle
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
 from open import open_thaw_depth_nc
 from constants import save_constants
+from pickling import load_all_pickles
 
 colorcycle, _ = save_constants()
 
@@ -31,40 +31,38 @@ def assign_weight_sim(site, path_pickle, no_weight=True):
     pd_weight : pandas.core.frame.DataFrame
         Panda DataFrame assigning a statistical weight to each simulation for each of 'altitude', 'aspect', 'slope'
         and an overall weight.
+    pd_weight_long : pandas.core.frame.DataFrame
+        Panda DataFrame assigning a statistical weight to each simulation for each of 'altitude', 'aspect', 'slope'
+        and an overall weight, and has information about the topography of each simulations
     """
 
-    file_name_df_stats = f"df_stats{('' if site=='' else '_')}{site}.pkl"
-    my_path_df_stats = path_pickle + file_name_df_stats
-
-    with open(my_path_df_stats, 'rb') as file: 
-        # Call load method to deserialize 
-        df_stats = pickle.load(file)
-
-    file_name_rockfall_values = f"rockfall_values{('' if site=='' else '_')}{site}.pkl"
-    my_path_rockfall_values = path_pickle + file_name_rockfall_values
-
-    with open(my_path_rockfall_values, 'rb') as file: 
-        # Call load method to deserialize 
-        rockfall_values = pickle.load(file)
+    _, _, _, _, _, df_stats, rockfall_values  = load_all_pickles(site, path_pickle)
 
     dict_weight = {}
     if no_weight:
-        dict_weight = {i: [1,1,1] for i in list(df_stats.index.values)}
+        dict_weight = {i: [df_stats['altitude'].loc[i], 1, df_stats['aspect'].loc[i], 1, df_stats['slope'].loc[i], 1]
+                       for i in list(df_stats.index.values)}
     else:
         if rockfall_values['exact_topo']:
             alt_distance = np.max([np.abs(i-rockfall_values['altitude']) for i in np.sort(np.unique(df_stats['altitude']))])
-            dict_weight = {i: [1 - np.abs(df_stats.loc[i]['altitude']-rockfall_values['altitude'])/(2*alt_distance),
+            dict_weight = {i: [df_stats['altitude'].loc[i],
+                            1 - np.abs(df_stats.loc[i]['altitude']-rockfall_values['altitude'])/(2*alt_distance),
+                            df_stats['aspect'].loc[i],
                             np.cos((np.pi)/180*(df_stats.loc[i]['aspect']-rockfall_values['aspect']))/4+3/4,
+                            df_stats['slope'].loc[i],
                             np.cos((np.pi)/30*(df_stats.loc[i]['slope']-rockfall_values['slope']))/4+3/4]
                             for i in list(df_stats.index.values)}
         else:
-            dict_weight = {i: [1,1,1] for i in list(df_stats.index.values)}
+            dict_weight = {i: [df_stats['altitude'].loc[i], 1, df_stats['aspect'].loc[i], 1, df_stats['slope'].loc[i], 1]
+                        for i in list(df_stats.index.values)}
+
+    pd_weight_long = pd.DataFrame.from_dict(dict_weight, orient='index',
+                                        columns=['altitude', 'altitude_weight', 'aspect', 'aspect_weight', 'slope', 'slope_weight'])
     
-    pd_weight = pd.DataFrame.from_dict(dict_weight, orient='index',
-                                       columns=['altitude', 'aspect', 'slope'])
-    pd_weight['weight'] = pd_weight['altitude']*pd_weight['aspect']*pd_weight['slope']
-    
-    return pd_weight
+    pd_weight_long['weight'] = pd_weight_long['altitude_weight']*pd_weight_long['aspect_weight']*pd_weight_long['slope_weight']
+    pd_weight = pd_weight_long.drop(columns=['altitude', 'aspect', 'slope'])
+
+    return pd_weight, pd_weight_long
 
 def plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle): 
     """ Function returns a histogram of the number of valid/glacier simulations for each of the following variable
@@ -85,18 +83,8 @@ def plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle):
     Histogram (subplot(2,2))
     """
 
-    file_name_df = f"df{('' if site=='' else '_')}{site}.pkl"
-    file_name_df_stats = f"df_stats{('' if site=='' else '_')}{site}.pkl"
-
     _, thaw_depth = open_thaw_depth_nc(path_thaw_depth)
-
-    with open(path_pickle + file_name_df, 'rb') as file: 
-        # Call load method to deserialize 
-        df = pickle.load(file)
-
-    with open(path_pickle + file_name_df_stats, 'rb') as file: 
-        # Call load method to deserialize 
-        df_stats = pickle.load(file)
+    df, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
 
     data=np.random.random((4,10))
     variables = ['altitude','aspect','slope','forcing']
@@ -163,7 +151,6 @@ def plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle):
     plt.tight_layout()
     plt.show()
     plt.close()
-    plt.clf()
 
 def plot_hist_stat_weights(pd_weight, df, zero=True): 
     """ Function returns a histogram of the weight distribution over all (valid) simulations 
@@ -210,4 +197,3 @@ def plot_hist_stat_weights(pd_weight, df, zero=True):
     plt.ylabel('Frequency')
     plt.show()
     plt.close()
-    plt.clf()

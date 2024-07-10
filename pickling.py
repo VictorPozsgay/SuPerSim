@@ -734,7 +734,6 @@ def load_all_pickles(site, path_pickle):
         with open(my_path, 'rb') as file: 
             # Call load method to deserialze 
             output[i] = pickle.load(file) 
-        print('Succesfully opened the pre-existing pickle:', file_name)
 
     [df, reanalysis_stats, list_valid_sim, [dict_melt_out, stats_melt_out_dic], df_stats, rockfall_values] = output
 

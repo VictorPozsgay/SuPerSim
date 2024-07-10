@@ -134,6 +134,5 @@ def fit_stat_model_grd_temp(site, path_pickle, all_data=True, diff_forcings=True
     plt.legend()
     plt.show()
     plt.close()
-    plt.clf()
 
     return xdata, ydata, optimizedParameters, pcov, corr_matrix, R_sq

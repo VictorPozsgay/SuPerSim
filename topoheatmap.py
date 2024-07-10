@@ -4,7 +4,6 @@
 #pylint: disable=trailing-whitespace
 #pylint: disable=invalid-name
 
-import pickle
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -43,11 +42,7 @@ def table_background_evolution_mean_GST_aspect_slope(site, path_pickle):
         Number of valid simulation per cell, returns NaN if different number of simulation per forcing for that cell
     """
 
-    file_name = f"df_stats{('' if site=='' else '_')}{site}.pkl"
-    my_path = path_pickle + file_name
-    with open(my_path, 'rb') as file: 
-        # Call load method to deserialize 
-        df_stats = pickle.load(file)
+    _, _, _, _, _, df_stats, _  = load_all_pickles(site, path_pickle)
     
     variables = ['aspect', 'slope','altitude']
     dic_var = {}
@@ -75,7 +70,7 @@ def table_background_evolution_mean_GST_aspect_slope(site, path_pickle):
 
 def plot_table_mean_GST_aspect_slope(site, path_pickle, altitude, background=True, box=True):
     """ Function returns a plot of the table of either mean background GST (ground-surface temperature)
-        or its evolution vetween the background and the transient periods,
+        or its evolution between the background and the transient periods,
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
         rockfall starting zone
     
@@ -150,9 +145,7 @@ def plot_table_mean_GST_aspect_slope(site, path_pickle, altitude, background=Tru
 
     plt.tight_layout()
     plt.show()
-    plt.show()
     plt.close()
-    plt.clf()
 
 def plot_table_aspect_slope_all_altitudes(site, path_pickle, show_glacier=True, box=True):
     """ Function returns 1 plot per altitude of the table of either mean background GST (ground-surface temperature)
@@ -251,7 +244,6 @@ def plot_table_aspect_slope_all_altitudes(site, path_pickle, show_glacier=True, 
     # displaying the plotted heatmap 
     plt.show()
     plt.close()
-    plt.clf() 
  
 def plot_table_aspect_slope_all_altitudes_polar(site, path_pickle, box=True):
     """ Function returns 3 polar plots (1 per altitude) of the table of either mean background GST (ground-surface temperature)
@@ -354,7 +346,6 @@ def plot_table_aspect_slope_all_altitudes_polar(site, path_pickle, box=True):
 
     plt.show()
     plt.close()
-    plt.clf()
 
 def plot_permafrost_all_altitudes_polar(site, path_pickle, depth_thaw, box=True):
     """ Function returns 3 polar plots (1 per altitude) of the permafrost and glacier spatial distribution,
@@ -448,4 +439,3 @@ def plot_permafrost_all_altitudes_polar(site, path_pickle, depth_thaw, box=True)
 
     plt.show()
     plt.close()
-    plt.clf()

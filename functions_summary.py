@@ -12,7 +12,7 @@ from open import open_air_nc, open_ground_nc, open_snow_nc, open_swe_nc, open_th
 from mytime import list_tokens_year
 from pickling import load_all_pickles
 from weights import assign_weight_sim, plot_hist_valid_sim_all_variables, plot_hist_stat_weights
-from runningstats import mean_all_reanalyses, assign_tot_water_prod, plot_aggregating_distance_temp_all
+from runningstats import mean_all_altitudes, mean_all_reanalyses, assign_tot_water_prod, plot_aggregating_distance_temp_all
 from topoheatmap import plot_table_mean_GST_aspect_slope, plot_table_aspect_slope_all_altitudes, plot_table_aspect_slope_all_altitudes_polar, plot_permafrost_all_altitudes_polar
 from model import fit_stat_model_grd_temp
 from percentiles import plot_cdf_GST, plot_10_cold_warm, heatmap_percentile_GST
@@ -109,7 +109,7 @@ def plot_all(site, forcing_list,
     #####################################################################################
 
     # assign a subjective weight to all simulations
-    pd_weight = assign_weight_sim(site, path_pickle, no_weight)
+    pd_weight, _ = assign_weight_sim(site, path_pickle, no_weight)
     _, thaw_depth = open_thaw_depth_nc(path_thaw_depth)
 
     list_vars = ['time_air', 'temp_air', 'SW_flux', 'SW_direct_flux', 'SW_diffuse_flux', 'precipitation']
@@ -128,22 +128,17 @@ def plot_all(site, forcing_list,
     _, time_bkg_ground, time_trans_ground, _ = list_tokens_year(time_ground, year_bkg_end, year_trans_end)
 
     # weighted mean GST
-    temp_ground_mean = list(np.average([temp_ground[i,:,0] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight['weight']))
+    temp_ground_mean = list(np.average([temp_ground[i,:,0] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight.loc[:, 'weight']))
     print('The following plot is a histogram of the distribution of the statistical weights of all simulations:')
     plot_hist_stat_weights(pd_weight, df, zero=True)
     print('The following plot is a histogram of the distribution of glacier simulations wrt to altitude, aspect, slope, and forcing:')
     plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle)
 
-    alt_list = sorted(set(df_stats['altitude']))
-    alt_index = int(np.floor((len(alt_list)-1)/2))
-    alt_index_abs = alt_list[alt_index]
-    print('List of altitudes:', alt_list)
-    print('Altitude at which we plot the time series:', alt_index_abs)
-
-    # Note that this is selecting the elevation in the 'middle': index 2 in the list [0,1,2,3,4]
-    # and it returns the mean air temperature over all reanalyses
-    mean_air_temp = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in temp_air_all], year_bkg_end, year_trans_end)
-    mean_air_temp = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in temp_air_all], year_bkg_end, year_trans_end)
+    # Mean air temperature over all reanalyses and altitudes
+    mean_air_temp = mean_all_reanalyses(time_air_all,
+                                        [mean_all_altitudes(i, site, path_pickle, no_weight=True) for i in temp_air_all],
+                                        year_bkg_end, year_trans_end)
+    # mean_air_temp = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in temp_air_all], year_bkg_end, year_trans_end)
 
     # finally we get the total water production, averaged over all reanalyses
     tot_water_prod, _, mean_prec = assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle, year_bkg_end, year_trans_end, site, no_weight)
@@ -168,13 +163,18 @@ def plot_all(site, forcing_list,
     plot_box_yearly_stat('Precipitation', time_ground, mean_prec, year_bkg_end, year_trans_end)
     plot_box_yearly_stat('Water production', time_ground, tot_water_prod, year_bkg_end, year_trans_end)
 
-    if individual_heatmap:
-        print(f'Heatmap of the background mean GST as a function of aspect and slope at {alt_index_abs} m:')
-        plot_table_mean_GST_aspect_slope(site, path_pickle, alt_index_abs, True, False)
-        print(f'Heatmap of the evolution of the mean GST between the background and the transient periods as a function of aspect and slope at {alt_index_abs} m:')
-        plot_table_mean_GST_aspect_slope(site, path_pickle, alt_index_abs, False, False)
+    alt_list = sorted(set(df_stats['altitude']))
+    alt_index = int(np.floor((len(alt_list)-1)/2))
+    alt_index_abs = alt_list[alt_index]
 
-    print('Heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitude')
+    if individual_heatmap:
+        alt_show = rockfall_values['altitude'] if ((rockfall_values['exact_topo']) and (rockfall_values['altitude'] in alt_list)) else alt_index_abs
+        print(f'Heatmap of the background mean GST as a function of aspect and slope at {alt_show} m:')
+        plot_table_mean_GST_aspect_slope(site, path_pickle, alt_show, True, False)
+        print(f'Heatmap of the evolution of the mean GST between the background and the transient periods as a function of aspect and slope at {alt_index_abs} m:')
+        plot_table_mean_GST_aspect_slope(site, path_pickle, alt_show, False, False)
+
+    print('Heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitudes')
     plot_table_aspect_slope_all_altitudes(site, path_pickle, show_glacier=False, box=False)
 
 

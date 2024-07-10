@@ -45,9 +45,9 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site, path_pickle):
     df_stats_bis = pd.DataFrame(data=df_stats, columns=['bkg_grd_temp', 'evol_grd_temp'])
     df_stats_bis['bkg_grd_temp'] = pd.Categorical(df_stats_bis['bkg_grd_temp'], np.sort(df_stats['bkg_grd_temp']))
     df_stats_bis = df_stats_bis.sort_values('bkg_grd_temp')
-    
-    list_x = list(df_stats_bis['bkg_grd_temp']) #pylint: disable=unsubscriptable-object
-    list_y = list(df_stats_bis['evol_grd_temp']) #pylint: disable=unsubscriptable-object
+
+    list_x = list(df_stats_bis.loc[:, 'bkg_grd_temp'])
+    list_y = list(df_stats_bis.loc[:, 'evol_grd_temp'])
 
     quantiles = np.arange(0, 101, 10)
 
@@ -84,7 +84,6 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site, path_pickle):
     # plt.legend()
     plt.show()
     plt.close()
-    plt.clf()
 
     return slope, intercept, r
 
@@ -201,7 +200,6 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, path_pickle):
     plt.legend(handles=[line_j], loc='lower right')
     plt.show()
     plt.close()
-    plt.clf()
 
     return slope, intercept, r
 
@@ -241,10 +239,9 @@ def plot_mean_bkg_GST_vs_evolution(site, path_pickle):
     plt.xlabel('Mean background GST [°C]')
     plt.ylabel('Mean GST evolution [°C]')
 
-    # displaying the scatter plot 
+    # displaying the scatter plot
     plt.show()
     plt.close()
-    plt.clf() 
 
 def plot_evolution_snow_cover_melt_out(site, path_pickle, variable=None, value=None):
     """ Function returns a histogram of the evolution of snow cover (in days) and melt out date
@@ -306,4 +303,3 @@ def plot_evolution_snow_cover_melt_out(site, path_pickle, variable=None, value=N
     plt.legend(loc='upper left')
     plt.show()
     plt.close()
-    plt.clf()

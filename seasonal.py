@@ -198,7 +198,6 @@ def plot_sanity_one_year_quantiles_two_periods(time_file, time_series_list, list
     plt.legend(loc="upper right")
     plt.show()
     plt.close()
-    plt.clf()
 
 def plot_sanity_two_variables_one_year_quantiles(time_file, time_series_list, list_valid_sim_list, list_label, list_site=None):
     """ Function returns a plot of 2 timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread.
@@ -268,7 +267,6 @@ def plot_sanity_two_variables_one_year_quantiles(time_file, time_series_list, li
     fig.legend(loc="upper right", bbox_to_anchor=(1,1), bbox_transform=ax1.transAxes)
     plt.show()
     plt.close()
-    plt.clf()
 
 def plot_sanity_two_variables_one_year_quantiles_side_by_side(time_file, time_series_list, list_valid_sim_list, list_label, list_site):
     """ Function returns 2 plots side by side of 2 timeseries each reduced to a 1-year window with mean and 1 and 2-sigma spread.
@@ -330,4 +328,3 @@ def plot_sanity_two_variables_one_year_quantiles_side_by_side(time_file, time_se
     # Show the graph
     plt.show()
     plt.close()
-    plt.clf()

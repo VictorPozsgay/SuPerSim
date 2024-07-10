@@ -4,7 +4,6 @@
 #pylint: disable=trailing-whitespace
 #pylint: disable=invalid-name
 
-import pickle
 import pandas as pd
 from netCDF4 import num2date #pylint: disable=no-name-in-module
 import numpy as np
@@ -14,8 +13,42 @@ from open import open_air_nc, open_ground_nc, open_swe_nc
 from mytime import list_tokens_year
 from weights import assign_weight_sim
 from constants import save_constants
+from pickling import load_all_pickles
 
 colorcycle, _ = save_constants()
+
+def mean_all_altitudes(file_to_smooth, site, path_pickle, no_weight=True):
+    """ Function returns the mean time series over all altitudes
+    
+    Parameters
+    ----------
+    file_to_smooth : netCDF4._netCDF4.Variable
+        Atmospheric time series (could be air temperature, precipitation, etc.) that needs to be smoothed
+        Needs to have shape (#time, #altitude)
+    site : str
+        Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
+    no_weight : bool, optional
+        If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
+
+    Returns
+    -------
+    mean : dict
+        average time series over all altitudes
+    """
+
+    _, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
+    _, pd_weight_long = assign_weight_sim(site, path_pickle, no_weight)
+
+    # list of (altitude, altitude_weight) for all entries of df_stats
+    # set -> list of unique entries, then sorted by altitude
+    # the result is the weight for each altitude index of the timeseries
+    weights = [i[1] for i in sorted(set([(pd_weight_long['altitude'].loc[i], pd_weight_long['altitude_weight'].loc[i]) for i in list(df_stats.index.values)]))]
+    
+    mean_alt = np.average(file_to_smooth, axis=1, weights=weights)
+
+    return mean_alt
 
 def mean_all_reanalyses(time_files, files_to_smooth, year_bkg_end, year_trans_end):
     """ Function returns the mean time series over a number of reanalysis (has the length of a timeseries)
@@ -92,17 +125,13 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle,
         Mean precipitation time series over all reanalyses
     """
 
-    file_name = f"df_stats{('' if site=='' else '_')}{site}.pkl"
-    my_path = path_pickle + file_name
-    with open(my_path, 'rb') as file: 
-        # Call load method to deserialize 
-        df_stats = pickle.load(file)
+    _, _, _, _, _, df_stats, _  = load_all_pickles(site, path_pickle)
 
     _, swe = open_swe_nc(path_swe)
     _, time_ground, _ = open_ground_nc(path_ground)
     _, _, _, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end)    
 
-    pd_weight = assign_weight_sim(site, path_pickle, no_weight)
+    pd_weight, _ = assign_weight_sim(site, path_pickle, no_weight)
 
     time_air_all = [open_air_nc(i)[0] for i in path_forcing_list]
     precipitation_all = [open_air_nc(i)[-1] for i in path_forcing_list]
@@ -116,7 +145,7 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle,
     print('Altitude at which we plot the time series:', alt_index_abs)
 
     # here we get the mean precipitation and then water from snow melting 
-    mean_swe = list(np.average([swe[i,:] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight['weight']))
+    mean_swe = list(np.average([swe[i,:] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight.loc[:, 'weight']))
     mean_prec = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in precipitation_all], year_bkg_end, year_trans_end)
 
     # convert mean precipitation into a panda dataframe to facilitate grouping by 24.
@@ -312,12 +341,7 @@ def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_p
 
     """
 
-    file_name_rockfall_values = f"rockfall_values{('' if site=='' else '_')}{site}.pkl"
-    my_path_rockfall_values = path_pickle + file_name_rockfall_values
-
-    with open(my_path_rockfall_values, 'rb') as file: 
-        # Call load method to deserialize 
-        rockfall_values = pickle.load(file)
+    _, _, _, _, _, _, rockfall_values  = load_all_pickles(site, path_pickle)
 
     num_rows = len(xdata)
     num_cols = len(window)
@@ -404,4 +428,3 @@ def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_p
     plt.tight_layout()
     plt.show()
     plt.close()
-    plt.clf()
