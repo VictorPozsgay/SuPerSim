@@ -223,7 +223,7 @@ def plot_all(site, forcing_list,
     plot_sanity_two_variables_one_year_quantiles(time_ground, [temp_ground, snow_height], [list_valid_sim, list_valid_sim], ['GST', 'Snow depth'])
 
     print('Plot of a single timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread, for background and transient piods:')
-    plot_sanity_one_year_quantiles_two_periods(time_ground, [temp_ground, temp_ground], [list_valid_sim, list_valid_sim], 'Snow depth', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground])
+    plot_sanity_one_year_quantiles_two_periods(time_ground, [temp_ground, temp_ground], [list_valid_sim, list_valid_sim], 'GST', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground])
     plot_sanity_one_year_quantiles_two_periods(time_ground, [snow_height, snow_height], [list_valid_sim, list_valid_sim], 'Snow depth', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground])
 
     # print('')
