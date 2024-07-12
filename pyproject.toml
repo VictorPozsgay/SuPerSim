@@ -22,3 +22,6 @@ dynamic = ["version"]
 
 [tool.setuptools.dynamic]
 version = {attr = "SuPerSim.VERSION"}
+
+[project.urls]
+Homepage = "https://github.com/VictorPozsgay/SuPerSim"
