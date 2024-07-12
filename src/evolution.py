@@ -67,9 +67,9 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site, path_pickle):
         color = cmap((list_x_mean[i] + vmax)/(2*vmax))
         low = int(np.ceil(len(df_stats)*quantiles[i]/100))
         up = int(np.ceil(len(df_stats)*quantiles[i+1]/100))
-        plt.scatter(list_x[low:up], list_y[low:up], c=color,s=0.8)
-        plt.errorbar(np.mean(list_x[low:up]), np.mean(list_y[low:up]), np.std(list_y[low:up]), np.std(list_x[low:up]), c=color)
-        plt.scatter(np.mean(list_x[low:up]), np.mean(list_y[low:up]), c=color, s=50)
+        plt.scatter(list_x[low:up], list_y[low:up], color=color,s=0.8)
+        plt.errorbar(np.mean(list_x[low:up]), np.mean(list_y[low:up]), np.std(list_y[low:up]), np.std(list_x[low:up]), color=color)
+        plt.scatter(np.mean(list_x[low:up]), np.mean(list_y[low:up]), color=color, s=50)
         # plt.hlines(np.mean(list_y[low:up]),list_x[low],list_x[up-1], color=colorcycle[i], linewidth=2)
 
     slope, intercept, r, _, _ = linregress(list_x, list_y)
@@ -87,7 +87,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site, path_pickle):
 
     return slope, intercept, r
 
-def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, path_pickle):
+def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, list_path_pickle, list_label_site):
     """ Function return scatter plot of background GST vs GST evolution for 2 sites.
     Both sites are binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
     A linear regression is produced for each site.
@@ -96,8 +96,10 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, path_pickle):
     ----------
     list_site : list
         List of labels for the site of each entry
-    path_pickle : str
-        String path to the location of the folder where the pickles are saved
+    list_path_pickle : list of str
+        List of string path to the location of the folder where the pickles are saved
+    list_label_site : list of str
+        List of label for each site
     
     Returns
     -------
@@ -112,7 +114,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, path_pickle):
     A linear regression is produced for each site.
     """
 
-    df_stats = [load_all_pickles(i, path_pickle)[6] for i in list_site]
+    df_stats = [load_all_pickles(l, list_path_pickle[i])[5] for i, l in enumerate(list_site)]
 
     num = len(df_stats)
 
@@ -121,8 +123,8 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, path_pickle):
         df_stats_bis[i]['bkg_grd_temp'] = pd.Categorical(df_stats_bis[i]['bkg_grd_temp'], np.sort(df_stats[i]['bkg_grd_temp']))
         df_stats_bis[i] = df_stats_bis[i].sort_values('bkg_grd_temp')
 
-    list_x = [list(i['bkg_grd_temp']) for i in df_stats_bis]
-    list_y = [list(i['evol_grd_temp']) for i in df_stats_bis]
+    list_x = [list(i.loc[:, 'bkg_grd_temp']) for i in df_stats_bis]
+    list_y = [list(i.loc[:, 'evol_grd_temp']) for i in df_stats_bis]
 
     quantiles = np.arange(0, 101, 10)
 
@@ -154,9 +156,9 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, path_pickle):
             color = cmap((list_x_mean[j][i] + vmax)/(2*vmax))
             low = int(np.ceil(len(df_stats[j])*quantiles[i]/100))
             up = int(np.ceil(len(df_stats[j])*quantiles[i+1]/100))
-            plt.scatter(list_x[j][low:up], list_y[j][low:up], c=color,s=0.8)
-            plt.errorbar(np.mean(list_x[j][low:up]), np.mean(list_y[j][low:up]), np.std(list_y[j][low:up]), np.std(list_x[j][low:up]), c=color)
-            plt.scatter(np.mean(list_x[j][low:up]), np.mean(list_y[j][low:up]), c=color, s=50)
+            plt.scatter(list_x[j][low:up], list_y[j][low:up], color=color,s=0.8)
+            plt.errorbar(np.mean(list_x[j][low:up]), np.mean(list_y[j][low:up]), np.std(list_y[j][low:up]), np.std(list_x[j][low:up]), color=color)
+            plt.scatter(np.mean(list_x[j][low:up]), np.mean(list_y[j][low:up]), color=color, s=50)
             # plt.hlines(np.mean(list_y[low:up]),list_x[low],list_x[up-1], color=colorcycle[i], linewidth=2)
 
         slope_i, intercept_i, r_i, _, _ = linregress(list_x[j], list_y[j])
@@ -165,7 +167,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, path_pickle):
         r.append(r_i)
         u = np.arange(np.min(list_x[j])-0.05, np.max(list_x[j])+0.05, 0.01)
         print('R-square:', r_i**2, ', regression slope:', slope_i , ', regression intercept:', intercept_i)
-        line_j, = plt.plot(u, slope_i*u+intercept_i, c=colorcycle[j], label=list_site[j])
+        line_j, = plt.plot(u, slope_i*u+intercept_i, c=colorcycle[j], label=list_label_site[j])
         if j==0:
             first_legend = plt.legend(handles=[line_j], loc='upper left')
 

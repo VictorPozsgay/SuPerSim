@@ -12,6 +12,7 @@ import seaborn as sn
 
 from mytime import list_tokens_year
 from constants import save_constants
+from seasonal import stats_all_years_simulations_to_single_year
 
 colorcycle, units = save_constants()
 
@@ -402,6 +403,71 @@ def plot_yearly_quantiles_all_sims_side_by_side(time_file, time_series, list_val
         ax.vlines(year_bkg_end, ylim[0], ylim[1], color='grey', linestyle='dashed')
 
     plt.gca().set_ylim(ylim)
+
+    plt.tight_layout()  # otherwise the right y-label is slightly clipped
+
+    # Show the graph
+    plt.show()
+    plt.close()
+
+def plot_sanity_two_variables_one_year_quantiles_side_by_side(time_file, time_series_list, list_valid_sim_list, list_label, list_site):
+    """ Function returns 2 plots side by side of 2 timeseries each reduced to a 1-year window with mean and 1 and 2-sigma spread.
+        Each plot is a plot of two timeseries of the same variable at two different sites
+    
+    Parameters
+    ----------
+    time_file : netCDF4._netCDF4.Variable
+        File where the time index of each datapoint is stored (time_ground, not time_air)
+    time_series_list : list of netCDF4._netCDF4.Variable
+        List of time series (could be temperature, precipitation, snow depth, etc.). 1 per plot.
+    list_valid_sim_list : list of list
+        List of list of the indices of all valid simulations
+    list_label : list
+        List of the labels associated to each plot
+    list_site : list
+        List of labels for the site of each entry
+
+    Returns
+    -------
+    Plot of 2 (or more?) timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread.
+    Both series have their own y axis if they have different units.
+
+    """
+    
+    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c']
+    units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm/day', 'SWE': 'mm', 'Water production': 'mm/day', 'Snow depth': 'mm',
+             'SW': 'W m-2', 'LW': 'W m-2'}
+
+    f, a = plt.subplots(1, 2, figsize=(10, 5))
+    for idx,ax in enumerate(a):
+
+        quantiles, mean_end = stats_all_years_simulations_to_single_year(time_file, time_series_list[idx][0], list_valid_sim_list[0])
+        xdata = range(len(mean_end))
+
+        indx=0
+        ax.plot(xdata, mean_end, color=colorcycle[indx], linewidth=2, label=list_site[indx])
+        ax.fill_between(xdata, quantiles.iloc[1], quantiles.iloc[3], alpha = 0.4, color=colorcycle[indx], linewidth=1)
+        ax.fill_between(xdata, quantiles.iloc[0], quantiles.iloc[4], alpha = 0.2, color=colorcycle[indx], linewidth=0.5)
+        ax.set_ylabel(list_label[idx]+' ['+units[list_label[idx]]+']')
+
+        quantiles, mean_end = stats_all_years_simulations_to_single_year(time_file, time_series_list[idx][1], list_valid_sim_list[1])
+        indx=1
+
+        ax.plot(xdata, mean_end, color=colorcycle[indx], linewidth=2, label=list_site[indx])
+        ax.fill_between(xdata, quantiles.iloc[1], quantiles.iloc[3], alpha = 0.4, color=colorcycle[indx], linewidth=1)
+        ax.fill_between(xdata, quantiles.iloc[0], quantiles.iloc[4], alpha = 0.2, color=colorcycle[indx], linewidth=0.5)
+
+        if list_label[idx] in ['GST', 'Air temperature']:
+            ax.axhline(y=0, color='grey', linestyle='dashed')
+
+        locs = np.linspace(0, len(mean_end), num=13, endpoint=True)
+        labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan']
+        ax.set_xticks(locs)
+        ax.set_xticklabels(labels)
+
+        if idx == 1:
+            ax.legend(loc="upper right")
+
 
     plt.tight_layout()  # otherwise the right y-label is slightly clipped
 

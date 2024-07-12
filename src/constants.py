@@ -20,5 +20,6 @@ def save_constants():
     units = {'GST': '°C', 'Air temperature': '°C',
              'Precipitation': 'mm/day', 'Water production': 'mm/day',
              'SWE': 'mm', 'Snow depth': 'mm',
-             'SW': 'W m-2', 'LW': 'W m-2'}
+             'SW': 'W m-2', 'SW direct': 'W m-2', 'SW diffuse': 'W m-2',
+             'SW up': 'W m-2', 'SW down': 'W m-2', 'SW net': 'W m-2', 'LW net': 'W m-2'}
     return colorcycle, units
