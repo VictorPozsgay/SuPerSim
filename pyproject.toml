@@ -1,27 +1,24 @@
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "SuPerSim"
+version = "0.1.0"
 authors = [
     {name = "Victor Pozsgay", email = "victorpozsgay@cunet.carleton.ca"},
 ]
 description = "Summary statistics and plots for ensemble Permafrost Simulations"
 readme = "README.md"
 requires-python = ">=3.12"
-license = {text = "GPL-3.0-only"}
+license = {file = "LICENSE"}
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: POSIX :: Linux",
     "Topic :: Scientific/Engineering :: GIS",
     "Topic :: Scientific/Engineering :: Atmospheric Science"
-]
-dynamic = ["version"]
-
-[tool.setuptools.dynamic]
-version = {attr = "SuPerSim.VERSION"}
+]s
 
 [project.urls]
 Homepage = "https://github.com/VictorPozsgay/SuPerSim"
