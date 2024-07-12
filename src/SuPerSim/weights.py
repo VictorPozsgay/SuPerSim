@@ -8,9 +8,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from open import open_thaw_depth_nc
-from constants import save_constants
-from pickling import load_all_pickles
+from SuPerSim.open import open_thaw_depth_nc
+from SuPerSim.constants import save_constants
+from SuPerSim.pickling import load_all_pickles
 
 colorcycle, _ = save_constants()
 

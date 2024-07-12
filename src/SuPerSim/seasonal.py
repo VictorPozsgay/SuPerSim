@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mpl_axes_aligner
 
-from constants import save_constants
+from SuPerSim.constants import save_constants
 
 colorcycle, units = save_constants()
 

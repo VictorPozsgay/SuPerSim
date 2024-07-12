@@ -12,8 +12,8 @@ from matplotlib.patches import Rectangle
 import seaborn as sn
 import cmasher as cmr
 
-from pickling import load_all_pickles
-from constants import save_constants
+from SuPerSim.pickling import load_all_pickles
+from SuPerSim.constants import save_constants
 
 colorcycle, _ = save_constants()
 

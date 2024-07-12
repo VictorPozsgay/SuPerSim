@@ -10,9 +10,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sn
 
-from mytime import list_tokens_year
-from constants import save_constants
-from seasonal import stats_all_years_simulations_to_single_year
+from SuPerSim.mytime import list_tokens_year
+from SuPerSim.constants import save_constants
+from SuPerSim.seasonal import stats_all_years_simulations_to_single_year
 
 colorcycle, units = save_constants()
 

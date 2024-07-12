@@ -9,11 +9,11 @@ from netCDF4 import num2date #pylint: disable=no-name-in-module
 import numpy as np
 import matplotlib.pyplot as plt
 
-from open import open_air_nc, open_ground_nc, open_swe_nc
-from mytime import list_tokens_year
-from weights import assign_weight_sim
-from constants import save_constants
-from pickling import load_all_pickles
+from SuPerSim.open import open_air_nc, open_ground_nc, open_swe_nc
+from SuPerSim.mytime import list_tokens_year
+from SuPerSim.weights import assign_weight_sim
+from SuPerSim.constants import save_constants
+from SuPerSim.pickling import load_all_pickles
 
 colorcycle, _ = save_constants()
 

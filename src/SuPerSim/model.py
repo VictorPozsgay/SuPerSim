@@ -8,8 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
 
-from pickling import load_all_pickles
-from constants import save_constants
+from SuPerSim.pickling import load_all_pickles
+from SuPerSim.constants import save_constants
 
 colorcycle, _ = save_constants()
 

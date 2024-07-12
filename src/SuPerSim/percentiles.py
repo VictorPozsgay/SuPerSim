@@ -10,9 +10,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sn
 
-from pickling import load_all_pickles
-from topoheatmap import table_background_evolution_mean_GST_aspect_slope
-from constants import save_constants
+from SuPerSim.pickling import load_all_pickles
+from SuPerSim.topoheatmap import table_background_evolution_mean_GST_aspect_slope
+from SuPerSim.constants import save_constants
 
 colorcycle, _ = save_constants()
 

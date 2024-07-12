@@ -10,8 +10,8 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-from open import open_air_nc, open_ground_nc, open_snow_nc
-from mytime import list_tokens_year, specific_time_to_index
+from SuPerSim.open import open_air_nc, open_ground_nc, open_snow_nc
+from SuPerSim.mytime import list_tokens_year, specific_time_to_index
 
 def assign_value_global_dict(path_forcing_list, path_ground, path_snow, path_pickle, year_bkg_end, year_trans_end, site):
     """ Function returns a dictionary containing all the important timeseries and saves it to a pickle
