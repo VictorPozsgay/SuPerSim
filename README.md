@@ -19,6 +19,15 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install **SuPer
 pip install SuPerSim
 ```
 
+Install all the required packages (dependencies) from the *requirements.txt*  file.
+
+
+```bash
+pip install -r requirements.txt
+```
+
+Place *requirements.txt* in the directory where you plan to run the command. If the file is in a different directory, specify its path, for example, *path/to/requirements.txt*.
+
 ## Usage
 
 The package is better used in a *Python* script and is imported with
