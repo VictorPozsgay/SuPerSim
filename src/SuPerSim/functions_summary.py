@@ -20,20 +20,21 @@ from SuPerSim.yearlystats import plot_box_yearly_stat, plot_yearly_quantiles_air
 from SuPerSim.seasonal import plot_sanity_one_year_quantiles_two_periods, plot_sanity_two_variables_one_year_quantiles, plot_sanity_two_variables_one_year_quantiles_side_by_side
 from SuPerSim.evolution import plot_GST_bkg_vs_evol_quantile_bins_fit_single_site, plot_GST_bkg_vs_evol_quantile_bins_fit, plot_mean_bkg_GST_vs_evolution, plot_evolution_snow_cover_melt_out
 
-def plot_visible_skymap_from_horizon_file(hor_path):
+def plot_visible_skymap_from_horizon_file(path_horizon):
     """ Function returns a fisheye view of the sky with the visible portion in blue and the blocked one in black.
     
     Parameters
     ----------
-    hor_path : str
+    path_horizon : str
         Path to the .csv horizon file
 
     Returns
     -------
-    Plot of the sky view from the location
+    fig : figure
+        Plot of the sky view from the location
     """  
 
-    hor_file = pd.read_csv(hor_path, usecols=['azi', 'hang'])
+    hor_file = pd.read_csv(path_horizon, usecols=['azi', 'hang'])
 
     theta_pre = hor_file['azi']
     theta = [i/360*2*np.pi for i in theta_pre]
@@ -41,7 +42,7 @@ def plot_visible_skymap_from_horizon_file(hor_path):
     r = [90-i for i in r_pre]
     
     # Creating the polar scatter plot
-    plt.figure(figsize=(8, 8))
+    fig = plt.figure(figsize=(6,6))
     ax = plt.subplot(111, polar=True)
     ax.set_theta_direction(-1)
     ax.set_theta_offset(np.pi/2)
@@ -49,13 +50,17 @@ def plot_visible_skymap_from_horizon_file(hor_path):
     for i,j in enumerate(r):
         ax.fill_between( np.linspace(theta[i], (0 if i==len(r)-1 else theta[i+1]), 2), 0, j, color='deepskyblue', alpha=0.5)
         ax.fill_between( np.linspace(theta[i], (0 if i==len(r)-1 else theta[i+1]), 2), j, 90, color='black', alpha=1)
-    ax.scatter(theta, r, c='blue', s=10, cmap='hsv', alpha=0.75)
+    ax.scatter(theta, r, color='blue', s=10, alpha=0.75)
     # plt.title('Scatter Plot on Polar Axis', fontsize=15)
+
     plt.show()
+    plt.close()
+
+    return fig
 
 def plot_all(site, forcing_list,
              path_forcing_list, path_ground, path_snow, path_swe, path_thaw_depth, path_pickle,
-             year_bkg_end, year_trans_end, no_weight=True,
+             year_bkg_end, year_trans_end, path_horizon=None, no_weight=True,
              individual_heatmap=False, polar_plots=False, parity_plot=False):
     """ Function returns a series of summary plots for a given site.
     
@@ -81,6 +86,8 @@ def plot_all(site, forcing_list,
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
         Same for transient period
+    path_horizon : str, optional
+        If a path to a .csv horizon file is given, a horizon plot is produced, if None, nothing happens.
     no_weight : bool, optional
         If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
     individual_heatmap : bool, optional
@@ -127,6 +134,11 @@ def plot_all(site, forcing_list,
     _, swe = open_swe_nc(path_swe)
 
     _, time_bkg_ground, time_trans_ground, _ = list_tokens_year(time_ground, year_bkg_end, year_trans_end)
+
+    if path_horizon is not None:
+        print('\n---------------------------------------------------------------------------------------------\n')
+        print('Fisheye view of the sky with the visible portion in blue and the blocked one in black:')
+        plot_visible_skymap_from_horizon_file(path_horizon)
 
     print('\n---------------------------------------------------------------------------------------------\n')
 
