@@ -64,8 +64,115 @@ def assign_weight_sim(site, path_pickle, no_weight=True):
 
     return pd_weight, pd_weight_long
 
-def plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle): 
-    """ Function returns a histogram of the number of valid/glacier simulations for each of the following variable
+def count_stat_weights(site, path_pickle, no_weight=True): 
+    """ Function returns a binned count of the weight distribution over all (valid) simulations 
+    
+    Parameters
+    ----------
+    site : str
+        Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
+    no_weight : bool, optional
+        If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
+
+    Returns
+    -------
+    bins : numpy.ndarray
+        bins for histogram within the weight disctibution comprised between 0 and 1
+    counts : numpy.ndarray
+        number of simulations with a weight within each bin
+    number_glaciers : int
+        number of simulations yielding a 'glacier'
+    """
+
+    pd_weight, _ = assign_weight_sim(site, path_pickle, no_weight)
+
+    pkl = load_all_pickles(site, path_pickle)
+    df = pkl['df']
+
+    list_hist = pd_weight.loc[:,'weight']
+    counts, bins = np.histogram(list_hist, 10, (0, 1))
+    
+    number_glaciers = len(df)-len(pd_weight)
+    
+    return bins, counts, number_glaciers
+
+def plot_hist_stat_weights(bins, counts, number_glaciers, show_glaciers=True): 
+    """ Function returns a histogram of the weight distribution over all (valid) simulations 
+        given a binned count of simulation weights and a number of glaciers
+    
+    Parameters
+    ----------
+    bins : numpy.ndarray
+        bins for histogram within the weight disctibution comprised between 0 and 1
+    counts : numpy.ndarray
+        number of simulations with a weight within each bin
+    number_glaciers : int
+        number of simulations yielding a 'glacier'
+    show_glaciers : bool, optional
+        If True, shows the glacier simulations with a 0 weight, if False, those are ignored.
+
+    Returns
+    -------
+    fig : figure
+        Histogram
+    """
+
+    fig, _ = plt.subplots()
+
+    tot_count = np.sum(counts) + (number_glaciers if show_glaciers else 0)
+    counts_glaciers = [0 for _ in counts]
+    counts_glaciers[0] = number_glaciers
+    counts_all = counts + (counts_glaciers if show_glaciers else 0)
+    
+    plt.hist(bins[:-1], bins, weights=counts/tot_count, label='No glaciers', color=colorcycle[1])
+    if show_glaciers:
+        plt.hist(bins[:-1], bins, weights=counts_glaciers/tot_count, label='Glaciers', color=colorcycle[0])
+
+    max_count = np.ceil((np.max(counts_all)/tot_count)/0.05+1)*0.05
+    
+    ticks = list(np.arange(0, max_count, 0.05))
+    plt.yticks(ticks, [f"{i:0.2f}" for i in ticks])
+
+    # Show the graph
+    if show_glaciers:
+        plt.legend(loc='upper right')
+    plt.xlabel('Statistical weight')
+    plt.ylabel('Frequency')
+    plt.show()
+    plt.close()
+
+    return fig
+
+def plot_hist_stat_weights_from_input(site, path_pickle, no_weight=True, show_glaciers=True): 
+    """ Function returns a histogram of the weight distribution over all (valid) simulations 
+    
+    Parameters
+    ----------
+    site : str
+        Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
+    no_weight : bool, optional
+        If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
+    show_glaciers : bool, optional
+        If True, shows the glacier simulations with a 0 weight, if False, those are ignored.
+
+    Returns
+    -------
+    fig : figure
+        Histogram
+    """
+
+    bins, counts, number_glaciers = count_stat_weights(site, path_pickle, no_weight)
+    fig = plot_hist_stat_weights(bins, counts, number_glaciers, show_glaciers)
+
+    return fig
+
+def count_perma_sim_per_variable(site, path_thaw_depth, path_pickle): 
+    """ Function returns a binned count over all simulations
+        of the number of valid/glacier simulations for each of the following variable
         ('altitude', 'aspect', 'slope', 'forcing') 
         It also shows the breakdown of valid simulations into permafrost and no-permafrost ones
 
@@ -80,19 +187,21 @@ def plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle):
 
     Returns
     -------
-    Histogram (subplot(2,2))
+    dict_bins : dict
+        Dictionary giving the total number of simulation per variable
+        e.g. dict_bins = {'altitude': [2900, 3100, 3300], 'aspect': [22.5, 45.0, 67.5], 'slope': [55, 60, 65, 70, 75], 'forcing': ['merra2']}
+    dict_counts : dict
+        Dictionary giving the number of simulation per variable and per parmafrost state
+        e.g. dict_counts = {'altitude': {'Permafrost': [14, 37, 45], 'No permafrost, no glaciers': [31, 8, 0], 'Glaciers': [0, 0, 0]}, 'aspect': {}, ...}
     """
 
     _, thaw_depth = open_thaw_depth_nc(path_thaw_depth)
-    
+
     pkl = load_all_pickles(site, path_pickle)
     df = pkl['df']
     df_stats = pkl['df_stats']
 
-    data=np.random.random((4,10))
     variables = ['altitude','aspect','slope','forcing']
-    xaxes = ['Altitude [m]','Aspect [°]','Slope [°]','Forcing']
-    yaxes = ['Number of simulations','','Number of simulations','']
 
     list_valid_sim = list(df_stats.index.values)
 
@@ -103,34 +212,64 @@ def plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle):
 
     list_perma = list(set(list_valid_sim) - set(list_no_perma))
 
-    f, a = plt.subplots(2,2, figsize=(6,6))
-    for idx,ax in enumerate(a.ravel()):
-        # list_var_prev: lists values the variable can take, e.g. [0, 45, 90, 135, etc.] for 'aspect'
+    dict_counts = {var: [] for var in variables}
+    dict_bins = {var: [] for var in variables}
+
+    for var in variables:
         # number_no_glaciers: number of valid simulations (without glaciers) per value in list_var_prev
-        list_var_prev, number_no_glaciers = np.unique(df_stats.loc[:, variables[idx]], return_counts=True)
-        _, number_perma = np.unique((df_stats.loc[list_perma, :]).loc[:, variables[idx]], return_counts=True)
-        # print(number_perma)
+        _, number_no_glaciers = [list(i) for i in np.unique(df_stats.loc[:, var], return_counts=True)]
+        _, number_perma = [list(i) for i in np.unique((df_stats.loc[list_perma, :]).loc[:, var], return_counts=True)]
         
-        # translate into strings
-        list_var = [str(i) for i in list_var_prev]
-        # total number of simulations per value in list_var
-        tot = list(np.unique(df.loc[:, variables[idx]], return_counts=True)[1])
+        # total number of simulations per value per variable
+        dict_bins[var], tot = [list(i) for i in np.unique(df.loc[:, var], return_counts=True)]
 
         if len(number_perma) == 0:
             number_perma = [0 for _ in tot]
 
-        # number_glaciers: number of glaciers per value in list_var
+        # number_glaciers: number of glaciers per value per variable
         number_glaciers = [tot[i] - number_no_glaciers[i] for i in range(len(tot))]
-        # number_no_perma: number of simulation swith no glaciers and no permafrost per value in list_var
+        # number_no_perma: number of simulation swith no glaciers and no permafrost per value per variable
         number_no_perma = [number_no_glaciers[i] - number_perma[i] for i in range(len(tot))]
 
-
-        bottom = np.zeros(len(tot))
         counts = {
             'Permafrost': number_perma,
             'No permafrost, no glaciers': number_no_perma,
             'Glaciers': number_glaciers
         }
+
+        dict_counts[var] = counts
+
+    return dict_bins, dict_counts
+
+def plot_hist_valid_sim_all_variables(dict_bins, dict_counts): 
+    """ Function returns a histogram of the number of valid/glacier simulations for each of the following variable
+        ('altitude', 'aspect', 'slope', 'forcing') 
+        It also shows the breakdown of valid simulations into permafrost and no-permafrost ones
+
+    Parameters
+    ----------
+    dict_bins : dict
+        Dictionary giving the total number of simulation per variable
+        e.g. dict_bins = {'altitude': [2900, 3100, 3300], 'aspect': [22.5, 45.0, 67.5], 'slope': [55, 60, 65, 70, 75], 'forcing': ['merra2']}
+    dict_counts : dict
+        Dictionary giving the number of simulation per variable and per parmafrost state
+        e.g. dict_counts = {'altitude': {'Permafrost': [14, 37, 45], 'No permafrost, no glaciers': [31, 8, 0], 'Glaciers': [0, 0, 0]}, 'aspect': {}, ...}
+
+    Returns
+    -------
+    fig : figure
+        Histogram (subplot(2,2))
+    """
+
+    variables = ['altitude','aspect','slope','forcing']
+    xaxes = ['Altitude [m]','Aspect [°]','Slope [°]','Forcing']
+    yaxes = ['Number of simulations','','Number of simulations','']
+
+    tot_per_bin = {var: np.sum([i[0] for i in dict_counts[var].values()]) for var in variables}
+
+    fig, axs = plt.subplots(2,2, figsize=(6,6))
+    for idx,ax in enumerate(axs.ravel()):
+        bottom = np.zeros(len(dict_bins[variables[idx]]))
 
         colorbar = {
             'Permafrost': colorcycle[1],
@@ -138,71 +277,46 @@ def plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle):
             'Glaciers': colorcycle[0]
         }
 
-        for name, data in counts.items():
-            p = ax.bar(list_var, data, label=name, bottom=bottom, color=colorbar[name])
+        for name, data in dict_counts[variables[idx]].items():
+            p = ax.bar([str(i) for i in dict_bins[variables[idx]]], data, label=name, bottom=bottom, color=colorbar[name])
             bottom += data
             data_no_zero = [i if i>0 else "" for i in data]
             ax.bar_label(p, labels=data_no_zero, label_type='center')
 
         ax.set_xlabel(xaxes[idx])
-        ax.set_ylim(0, np.max(tot))
+        ax.set_ylim(0, tot_per_bin[variables[idx]])
         ax.set_ylabel(yaxes[idx])
 
-
-    f.align_ylabels(a[:,0])
+    fig.align_ylabels(axs[:,0])
     plt.legend(loc='lower right', reverse=True)
     plt.tight_layout()
     plt.show()
     plt.close()
 
-    return f
+    return fig
 
-def plot_hist_stat_weights(pd_weight, df, zero=True): 
-    """ Function returns a histogram of the weight distribution over all (valid) simulations 
-    
+def plot_hist_valid_sim_all_variables_from_input(site, path_thaw_depth, path_pickle): 
+    """ Function returns a binned count over all simulations
+        of the number of valid/glacier simulations for each of the following variable
+        ('altitude', 'aspect', 'slope', 'forcing') 
+        It also shows the breakdown of valid simulations into permafrost and no-permafrost ones
+
     Parameters
     ----------
-    pd_weight : pandas.core.frame.DataFrame
-        Panda DataFrame assigning a statistical weight to each simulation for each of 'altitude', 'aspect', 'slope'
-        and an overall weight.
-    df : pandas.core.frame.DataFrame
-        Panda DataFrame df, used to count the total number of simulations pre glacier filter and hence count total number of glaciers
-    df_stats : pandas.core.frame.DataFrame
-        Panda DataFrame df_stats, should at least include the following columns: 'altitude', 'aspect', 'slope'
-    zero : bool, optional
-        If True, shows the glacier simulations with a 0 weight, if False, those are ignored.
+    site : str
+        Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
+    path_thaw_depth : str
+        Path to the .nc file where the aggregated thaw depth simulations are stored
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved 
 
     Returns
     -------
-    Histogram
+    fig : figure
+        Histogram (subplot(2,2))
     """
 
-    list_hist = list(pd_weight['weight'])
-    list_hist_b = [0 for _ in range(len(df)-len(pd_weight))]
-
-    counts, bins = np.histogram(list_hist, 10, (0, 1))
-    counts_b = 0
-    if zero:
-        counts_b, bins_b = np.histogram(list_hist_b, 10, (0, 1))
-    tot_count = np.sum(counts) + (np.sum(counts_b) if zero else 0)
-
-    fig, _ = plt.subplots()
-    
-    plt.hist(bins[:-1], bins, weights=counts/tot_count, label='No glaciers', color=colorcycle[1])
-    if zero:
-        plt.hist(bins_b[:-1], bins_b, weights=counts_b/tot_count, label='Glaciers', color=colorcycle[0])
-
-    max_count = np.ceil((np.max([np.max(counts), np.max(counts_b)])/tot_count)/0.05+1)*0.05
-    
-    ticks = list(np.arange(0, max_count, 0.05))
-    plt.yticks(ticks, [f"{i:0.2f}" for i in ticks])
-
-    # Show the graph
-    if zero:
-        plt.legend(loc='upper right')
-    plt.xlabel('Statistical weight')
-    plt.ylabel('Frequency')
-    plt.show()
-    plt.close()
+    dict_bins, dict_counts = count_perma_sim_per_variable(site, path_thaw_depth, path_pickle)
+    fig = plot_hist_valid_sim_all_variables(dict_bins, dict_counts)
 
     return fig

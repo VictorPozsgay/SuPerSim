@@ -4,10 +4,12 @@
 #pylint: disable=trailing-whitespace
 #pylint: disable=invalid-name
 
+import numpy as np
+
 from SuPerSim.open import open_air_nc, open_ground_nc, open_snow_nc, open_swe_nc, open_thaw_depth_nc, open_SW_direct_nc, open_SW_diffuse_nc, open_SW_up_nc, open_SW_down_nc, open_SW_net_nc, open_LW_net_nc
 from SuPerSim.mytime import list_tokens_year
 from SuPerSim.pickling import load_all_pickles
-from SuPerSim.weights import assign_weight_sim, plot_hist_valid_sim_all_variables, plot_hist_stat_weights
+from SuPerSim.weights import assign_weight_sim, plot_hist_stat_weights_from_input, plot_hist_valid_sim_all_variables_from_input
 from SuPerSim.runningstats import mean_all_altitudes, mean_all_reanalyses, assign_tot_water_prod, plot_aggregating_distance_temp_all
 from SuPerSim.topoheatmap import plot_table_mean_GST_aspect_slope, plot_table_aspect_slope_all_altitudes, plot_table_aspect_slope_all_altitudes_polar, plot_permafrost_all_altitudes_polar
 from SuPerSim.model import fit_stat_model_grd_temp
@@ -19,7 +21,7 @@ from SuPerSim.horizon import plot_visible_skymap_from_horizon_file
 
 def plot_all(site, forcing_list,
              path_forcing_list, path_ground, path_snow, path_swe, path_thaw_depth, path_pickle,
-             year_bkg_end, year_trans_end, path_horizon=None, no_weight=True,
+             year_bkg_end, year_trans_end, path_horizon=None, no_weight=True, show_glaciers=True,
              individual_heatmap=False, polar_plots=False, parity_plot=False):
     """ Function returns a series of summary plots for a given site.
     
@@ -49,6 +51,8 @@ def plot_all(site, forcing_list,
         If a path to a .csv horizon file is given, a horizon plot is produced, if None, nothing happens.
     no_weight : bool, optional
         If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
+    show_glaciers : bool, optional
+        If True, shows the glacier simulations with a 0 weight, if False, those are ignored.
     individual_heatmap : bool, optional
         Show or not heatmaps for unique altitude
     polar_plots : bool, optional
@@ -99,28 +103,28 @@ def plot_all(site, forcing_list,
         print('Fisheye view of the sky with the visible portion in blue and the blocked one in black:')
         plot_visible_skymap_from_horizon_file(path_horizon)
 
-    # print('\n---------------------------------------------------------------------------------------------\n')
+    print('\n---------------------------------------------------------------------------------------------\n')
 
-    # # weighted mean GST
-    # temp_ground_mean = list(np.average([temp_ground[i,:,0] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight.loc[:, 'weight']))
-    # print('The following plot is a histogram of the distribution of the statistical weights of all simulations:')
-    # plot_hist_stat_weights(pd_weight, df, zero=True)
+    # weighted mean GST
+    temp_ground_mean = list(np.average([temp_ground[i,:,0] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight.loc[:, 'weight']))
+    print('The following plot is a histogram of the distribution of the statistical weights of all simulations:')
+    plot_hist_stat_weights_from_input(site, path_pickle, no_weight, show_glaciers)
 
-    # print('\n---------------------------------------------------------------------------------------------\n')
+    print('\n---------------------------------------------------------------------------------------------\n')
 
-    # print('The following plot is a histogram of the distribution of glacier simulations wrt to altitude, aspect, slope, and forcing:')
-    # plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle)
+    print('The following plot is a histogram of the distribution of glacier simulations wrt to altitude, aspect, slope, and forcing:')
+    plot_hist_valid_sim_all_variables_from_input(site, path_thaw_depth, path_pickle)
 
-    # # Mean air temperature over all reanalyses and altitudes
-    # mean_air_temp = mean_all_reanalyses(time_air_all,
-    #                                     [mean_all_altitudes(i, site, path_pickle, no_weight) for i in temp_air_all],
-    #                                     year_bkg_end, year_trans_end)
-    # # mean_air_temp = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in temp_air_all], year_bkg_end, year_trans_end)
+    # Mean air temperature over all reanalyses and altitudes
+    mean_air_temp = mean_all_reanalyses(time_air_all,
+                                        [mean_all_altitudes(i, site, path_pickle, no_weight) for i in temp_air_all],
+                                        year_bkg_end, year_trans_end)
+    # mean_air_temp = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in temp_air_all], year_bkg_end, year_trans_end)
 
-    # # finally we get the total water production, averaged over all reanalyses
-    # tot_water_prod, _, mean_prec = assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle, year_bkg_end, year_trans_end, site, no_weight)
+    # finally we get the total water production, averaged over all reanalyses
+    tot_water_prod, _, mean_prec = assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle, year_bkg_end, year_trans_end, site, no_weight)
 
-    # print('\n---------------------------------------------------------------------------------------------\n')
+    print('\n---------------------------------------------------------------------------------------------\n')
 
     # print('Plots of the normalized distance of air and ground temperature, water production, and thaw_depth as a function of time')
     # if 'year' in rockfall_values.keys():
