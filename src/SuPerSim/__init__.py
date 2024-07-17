@@ -7,4 +7,4 @@ from SuPerSim.pickling import load_all_pickles, get_all_stats
 from SuPerSim.functions_summary import plot_camparison_two_sites, plot_all
 
 # all the individual plotting functions
-from SuPerSim.functions_summary import plot_visible_skymap_from_horizon_file
+from SuPerSim.horizon import plot_visible_skymap_from_horizon_file
