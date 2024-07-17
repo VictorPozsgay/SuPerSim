@@ -12,10 +12,8 @@ import matplotlib.pyplot as plt
 from SuPerSim.open import open_air_nc, open_ground_nc, open_swe_nc
 from SuPerSim.mytime import list_tokens_year
 from SuPerSim.weights import assign_weight_sim
-from SuPerSim.constants import save_constants
+from SuPerSim.constants import colorcycle
 from SuPerSim.pickling import load_all_pickles
-
-colorcycle, _ = save_constants()
 
 def mean_all_altitudes(file_to_smooth, site, path_pickle, no_weight=True):
     """ Function returns the mean time series over all altitudes
@@ -38,7 +36,9 @@ def mean_all_altitudes(file_to_smooth, site, path_pickle, no_weight=True):
         average time series over all altitudes
     """
 
-    _, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle)
+    df_stats = pkl['df_stats']
+
     _, pd_weight_long = assign_weight_sim(site, path_pickle, no_weight)
 
     # list of (altitude, altitude_weight) for all entries of df_stats
@@ -125,8 +125,6 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle,
         Mean precipitation time series over all reanalyses
     """
 
-    _, _, _, _, _, df_stats, _  = load_all_pickles(site, path_pickle)
-
     _, swe = open_swe_nc(path_swe)
     _, time_ground, _ = open_ground_nc(path_ground)
     _, _, _, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end)    
@@ -136,17 +134,11 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle,
     time_air_all = [open_air_nc(i)[0] for i in path_forcing_list]
     precipitation_all = [open_air_nc(i)[-1] for i in path_forcing_list]
 
-    # Note that this is selecting the elevation in the 'middle': index 2 in the list [0,1,2,3,4]
-    # and it returns the mean air temperature over all reanalyses
-    alt_list = sorted(set(df_stats['altitude']))
-    alt_index = int(np.floor((len(alt_list)-1)/2))
-    alt_index_abs = alt_list[alt_index]
-    print('List of altitudes:', alt_list)
-    print('Altitude at which we plot the time series:', alt_index_abs)
-
     # here we get the mean precipitation and then water from snow melting 
     mean_swe = list(np.average([swe[i,:] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight.loc[:, 'weight']))
-    mean_prec = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in precipitation_all], year_bkg_end, year_trans_end)
+    mean_prec = mean_all_reanalyses(time_air_all,
+                                    [mean_all_altitudes(i, site, path_pickle, no_weight) for i in precipitation_all],
+                                    year_bkg_end, year_trans_end)
 
     # convert mean precipitation into a panda dataframe to facilitate grouping by 24.
     # This way the data is reported daily (as it is for the swe) rather than hourly
@@ -341,7 +333,8 @@ def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_p
 
     """
 
-    _, _, _, _, _, _, rockfall_values  = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle)
+    rockfall_values = pkl['rockfall_values']
 
     num_rows = len(xdata)
     num_cols = len(window)
@@ -407,7 +400,7 @@ def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_p
             labels = labels[::int(len(labels)/10)]
 
         if idx < num_rows-1:
-            labels_end = ['']*len(labels)
+            labels_end = ['' for _ in labels]
         else:
             labels_end = labels
         if num_cols == 1:
@@ -428,3 +421,5 @@ def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_p
     plt.tight_layout()
     plt.show()
     plt.close()
+
+    return f

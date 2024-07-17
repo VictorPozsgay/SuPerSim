@@ -11,9 +11,7 @@ from scipy.stats import linregress
 
 from SuPerSim.pickling import load_all_pickles
 from SuPerSim.topoheatmap import table_background_evolution_mean_GST_aspect_slope
-from SuPerSim.constants import save_constants
-
-colorcycle, _ = save_constants()
+from SuPerSim.constants import colorcycle
 
 def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site, path_pickle):
     """ Function return scatter plot of background GST vs GST evolution for a single site.
@@ -29,18 +27,14 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site, path_pickle):
     
     Returns
     -------
-    slope : float
-        Linear regression slope
-    intercept : float
-        Linear regression intercept
-    r : float
-        Linear regression r-value. Need to square it to get R^2.
-    Scatter plot of background GST vs GST evolution for the single site.
-    The single site is binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
-    A linear regression is produced too.
+    fig : figure
+        Scatter plot of background GST vs GST evolution for the single site.
+        The single site is binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
+        A linear regression is produced too.
     """
 
-    _, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle)
+    df_stats = pkl['df_stats']
 
     df_stats_bis = pd.DataFrame(data=df_stats, columns=['bkg_grd_temp', 'evol_grd_temp'])
     df_stats_bis['bkg_grd_temp'] = pd.Categorical(df_stats_bis['bkg_grd_temp'], np.sort(df_stats['bkg_grd_temp']))
@@ -50,6 +44,8 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site, path_pickle):
     list_y = list(df_stats_bis.loc[:, 'evol_grd_temp'])
 
     quantiles = np.arange(0, 101, 10)
+
+    fig, _ = plt.subplots()
 
     cmap = plt.cm.seismic #pylint: disable=no-member
 
@@ -85,7 +81,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site, path_pickle):
     plt.show()
     plt.close()
 
-    return slope, intercept, r
+    return fig
 
 def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, list_path_pickle, list_label_site):
     """ Function return scatter plot of background GST vs GST evolution for 2 sites.
@@ -103,18 +99,14 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, list_path_pickle, list_lab
     
     Returns
     -------
-    slope : list
-        List of linear regression slope (1 for each site)
-    intercept : list
-        List of linear regression intercept (1 for each site)
-    r : list
+    fig : figure
         List of linear regression r-value (1 for each site). Need to square it to get R^2.
-    Scatter plot of background GST vs GST evolution for 2 sites.
-    Both sites are binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
-    A linear regression is produced for each site.
+        Scatter plot of background GST vs GST evolution for 2 sites.
+        Both sites are binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
+        A linear regression is produced for each site.
     """
 
-    df_stats = [load_all_pickles(l, list_path_pickle[i])[5] for i, l in enumerate(list_site)]
+    df_stats = [load_all_pickles(l, list_path_pickle[i])['df_stats'] for i, l in enumerate(list_site)]
 
     num = len(df_stats)
 
@@ -127,6 +119,8 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, list_path_pickle, list_lab
     list_y = [list(i.loc[:, 'evol_grd_temp']) for i in df_stats_bis]
 
     quantiles = np.arange(0, 101, 10)
+
+    fig, _ = plt.subplots()
 
     cmap = plt.cm.seismic #pylint: disable=no-member
     # colors = cmap(np.linspace(0, 1, len(quantiles)+(1 if len(quantiles)%2 else 0)))
@@ -203,7 +197,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, list_path_pickle, list_lab
     plt.show()
     plt.close()
 
-    return slope, intercept, r
+    return fig
 
 def plot_mean_bkg_GST_vs_evolution(site, path_pickle):
     """ Function returns a scatter plot of mean background GST (ground-surface temperature)
@@ -220,15 +214,19 @@ def plot_mean_bkg_GST_vs_evolution(site, path_pickle):
 
     Returns
     -------
-    Scatter plot
+    fig : figure
+        Scatter plot
     """
 
-    _, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle)
+    df_stats = pkl['df_stats']
 
     xx = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(site, path_pickle)[1]]
     yy = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(site, path_pickle)[3]]
 
     alt_list = list(np.sort(np.unique(df_stats['altitude'])))
+
+    fig, _ = plt.subplots()
 
     for i,x in enumerate(xx):
         slope, intercept, r, _, _ = linregress(x,yy[i])
@@ -244,6 +242,8 @@ def plot_mean_bkg_GST_vs_evolution(site, path_pickle):
     # displaying the scatter plot
     plt.show()
     plt.close()
+
+    return fig
 
 def plot_evolution_snow_cover_melt_out(site, path_pickle, variable=None, value=None):
     """ Function returns a histogram of the evolution of snow cover (in days) and melt out date
@@ -265,9 +265,12 @@ def plot_evolution_snow_cover_melt_out(site, path_pickle, variable=None, value=N
 
     Returns
     -------
-    Histogram
+    fig : figure
+        Histogram
     """
-    _, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
+    
+    pkl = load_all_pickles(site, path_pickle)
+    df_stats = pkl['df_stats']
 
     # creates a subset of df_stats given the value of the variable entered as input. e.g. 'slope'=50
     if variable is None:
@@ -279,6 +282,8 @@ def plot_evolution_snow_cover_melt_out(site, path_pickle, variable=None, value=N
     # makes sure to only keep the simulations that have shown at least 1 day of snow over the whole study period
     evol_melt_out = [data.iloc[k].melt_out_trans - data.iloc[k].melt_out_bkg for k in range(len(data)) if (data.iloc[k].frac_snow_bkg != 0) | (data.iloc[k].frac_snow_trans != 0)]
     evol_snow_cover = [(data.iloc[k].frac_snow_trans - data.iloc[k].frac_snow_bkg)*365.25 for k in range(len(data)) if (data.iloc[k].frac_snow_bkg != 0) | (data.iloc[k].frac_snow_trans != 0)]
+
+    fig, _ = plt.subplots()
 
     # plots both histograms
     plt.hist(evol_snow_cover, bins=20, alpha=0.75, weights=np.ones_like(evol_snow_cover) / len(evol_snow_cover), label='Snow cover')
@@ -305,3 +310,5 @@ def plot_evolution_snow_cover_melt_out(site, path_pickle, variable=None, value=N
     plt.legend(loc='upper left')
     plt.show()
     plt.close()
+
+    return fig

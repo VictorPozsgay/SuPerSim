@@ -699,23 +699,27 @@ def load_all_pickles(site, path_pickle):
 
     Returns
     -------
-    df : pandas.core.frame.DataFrame
-        A panda dataframe version of the .csv file where the simulation paramaters have been unpacked into readable columns,
-        saved to a pickle file
-        The 'directory' column is ordered by the simulation index provided in 'path_ground'
-    reanalysis_stats : dict
-        dictionary of mean quntities over the background and transient periods
-    list_valid_sim : list
-        list of simulation number for all valid simulations
-    dict_melt_out : dict
-        Dictionary that assings a melt-out date to each simulation and each year
-        Note that if snow does NOT melt at all, we assign the maximal value corresponding to the end of the year 
-    stats_melt_out_dic : dict
-        Background, transient and full mean of the melt-out date for each simulation
-    df_stats : pandas.core.frame.DataFrame
-        Large panda dataframe with information about the air, ground, snow, topography, etc. for all simulations
-    rockfall_values : dict
-        Dictionary with date and topography info for the event
+    pkl : dict
+        Dictionary containing all the pickles with keys:
+        {df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats, rockfall_values}
+        Each pickle is defined by
+        df : pandas.core.frame.DataFrame
+            A panda dataframe version of the .csv file where the simulation paramaters have been unpacked into readable columns,
+            saved to a pickle file
+            The 'directory' column is ordered by the simulation index provided in 'path_ground'
+        reanalysis_stats : dict
+            dictionary of mean quntities over the background and transient periods
+        list_valid_sim : list
+            list of simulation number for all valid simulations
+        dict_melt_out : dict
+            Dictionary that assings a melt-out date to each simulation and each year
+            Note that if snow does NOT melt at all, we assign the maximal value corresponding to the end of the year 
+        stats_melt_out_dic : dict
+            Background, transient and full mean of the melt-out date for each simulation
+        df_stats : pandas.core.frame.DataFrame
+            Large panda dataframe with information about the air, ground, snow, topography, etc. for all simulations
+        rockfall_values : dict
+            Dictionary with date and topography info for the event
 
     """
 
@@ -737,7 +741,15 @@ def load_all_pickles(site, path_pickle):
 
     [df, reanalysis_stats, list_valid_sim, [dict_melt_out, stats_melt_out_dic], df_stats, rockfall_values] = output
 
-    return df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats, rockfall_values
+    pkl = {'df': df,
+           'reanalysis_stats': reanalysis_stats,
+           'list_valid_sim': list_valid_sim,
+           'dict_melt_out': dict_melt_out,
+           'stats_melt_out_dic': stats_melt_out_dic,
+           'df_stats': df_stats,
+           'rockfall_values': rockfall_values}
+
+    return pkl
 
 def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground, path_snow, path_pickle,
                   year_bkg_end, year_trans_end, consecutive,
@@ -782,21 +794,27 @@ def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground,
 
     Returns
     -------
-    df : pandas.core.frame.DataFrame
-        A panda dataframe version of the .csv file where the simulation paramaters have been unpacked into readable columns,
-        saved to a pickle file
-        The 'directory' column is ordered by the simulation index provided in 'path_ground'
-    reanalysis_stats : dict
-        dictionary of mean quntities over the background and transient periods
-    list_valid_sim : list
-        list of simulation number for all valid simulations
-    dict_melt_out : dict
-        Dictionary that assings a melt-out date to each simulation and each year
-        Note that if snow does NOT melt at all, we assign the maximal value corresponding to the end of the year 
-    stats_melt_out_dic : dict
-        Background, transient and full mean of the melt-out date for each simulation
-    df_stats : pandas.core.frame.DataFrame
-        Large panda dataframe with information about the air, ground, snow, topography, etc. for all simulations
+    pkl : dict
+        Dictionary containing all the pickles with keys:
+        {df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats, rockfall_values}
+        Each pickle is defined by
+        df : pandas.core.frame.DataFrame
+            A panda dataframe version of the .csv file where the simulation paramaters have been unpacked into readable columns,
+            saved to a pickle file
+            The 'directory' column is ordered by the simulation index provided in 'path_ground'
+        reanalysis_stats : dict
+            dictionary of mean quntities over the background and transient periods
+        list_valid_sim : list
+            list of simulation number for all valid simulations
+        dict_melt_out : dict
+            Dictionary that assings a melt-out date to each simulation and each year
+            Note that if snow does NOT melt at all, we assign the maximal value corresponding to the end of the year 
+        stats_melt_out_dic : dict
+            Background, transient and full mean of the melt-out date for each simulation
+        df_stats : pandas.core.frame.DataFrame
+            Large panda dataframe with information about the air, ground, snow, topography, etc. for all simulations
+        rockfall_values : dict
+            Dictionary with date and topography info for the event
 
     """
 
@@ -806,5 +824,13 @@ def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground,
     dict_melt_out, stats_melt_out_dic = melt_out_date(consecutive, path_ground, path_snow, path_pickle, year_bkg_end, year_trans_end, site)
     df_stats = assign_value_df_stats(path_ground, path_snow, path_pickle, year_bkg_end, year_trans_end, site)
     rockfall_values = assign_rockfall_values(site, path_pickle, path_ground, path_forcing_list, date_event, topo_event)
-    
-    return df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats, rockfall_values
+
+    pkl = {'df': df,
+           'reanalysis_stats': reanalysis_stats,
+           'list_valid_sim': list_valid_sim,
+           'dict_melt_out': dict_melt_out,
+           'stats_melt_out_dic': stats_melt_out_dic,
+           'df_stats': df_stats,
+           'rockfall_values': rockfall_values}
+
+    return pkl

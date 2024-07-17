@@ -4,7 +4,7 @@
 
 from datetime import datetime
 import re
-import numpy.ma as ma
+from numpy import ma
 import numpy as np
 from netCDF4 import num2date #pylint: disable=no-name-in-module
 

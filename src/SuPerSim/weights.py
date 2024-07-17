@@ -9,10 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from SuPerSim.open import open_thaw_depth_nc
-from SuPerSim.constants import save_constants
+from SuPerSim.constants import colorcycle
 from SuPerSim.pickling import load_all_pickles
-
-colorcycle, _ = save_constants()
 
 def assign_weight_sim(site, path_pickle, no_weight=True):
     """ Function returns a statistical weight for each simulation according to the importance in rockfall starting zone 
@@ -36,7 +34,9 @@ def assign_weight_sim(site, path_pickle, no_weight=True):
         and an overall weight, and has information about the topography of each simulations
     """
 
-    _, _, _, _, _, df_stats, rockfall_values  = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle)
+    df_stats = pkl['df_stats']
+    rockfall_values = pkl['rockfall_values']
 
     dict_weight = {}
     if no_weight:
@@ -84,7 +84,10 @@ def plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle):
     """
 
     _, thaw_depth = open_thaw_depth_nc(path_thaw_depth)
-    df, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
+    
+    pkl = load_all_pickles(site, path_pickle)
+    df = pkl['df']
+    df_stats = pkl['df_stats']
 
     data=np.random.random((4,10))
     variables = ['altitude','aspect','slope','forcing']
@@ -106,7 +109,7 @@ def plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle):
         # number_no_glaciers: number of valid simulations (without glaciers) per value in list_var_prev
         list_var_prev, number_no_glaciers = np.unique(df_stats.loc[:, variables[idx]], return_counts=True)
         _, number_perma = np.unique((df_stats.loc[list_perma, :]).loc[:, variables[idx]], return_counts=True)
-        print(number_perma)
+        # print(number_perma)
         
         # translate into strings
         list_var = [str(i) for i in list_var_prev]
@@ -114,7 +117,7 @@ def plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle):
         tot = list(np.unique(df.loc[:, variables[idx]], return_counts=True)[1])
 
         if len(number_perma) == 0:
-            number_perma = [0]*len(tot)
+            number_perma = [0 for _ in tot]
 
         # number_glaciers: number of glaciers per value in list_var
         number_glaciers = [tot[i] - number_no_glaciers[i] for i in range(len(tot))]
@@ -152,6 +155,8 @@ def plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle):
     plt.show()
     plt.close()
 
+    return f
+
 def plot_hist_stat_weights(pd_weight, df, zero=True): 
     """ Function returns a histogram of the weight distribution over all (valid) simulations 
     
@@ -180,6 +185,8 @@ def plot_hist_stat_weights(pd_weight, df, zero=True):
     if zero:
         counts_b, bins_b = np.histogram(list_hist_b, 10, (0, 1))
     tot_count = np.sum(counts) + (np.sum(counts_b) if zero else 0)
+
+    fig, _ = plt.subplots()
     
     plt.hist(bins[:-1], bins, weights=counts/tot_count, label='No glaciers', color=colorcycle[1])
     if zero:
@@ -197,3 +204,5 @@ def plot_hist_stat_weights(pd_weight, df, zero=True):
     plt.ylabel('Frequency')
     plt.show()
     plt.close()
+
+    return fig

@@ -13,9 +13,7 @@ import seaborn as sn
 import cmasher as cmr
 
 from SuPerSim.pickling import load_all_pickles
-from SuPerSim.constants import save_constants
-
-colorcycle, _ = save_constants()
+from SuPerSim.constants import colorcycle
 
 def table_background_evolution_mean_GST_aspect_slope(site, path_pickle):
     """ Function returns a table of mean background and evolution of GST (ground-surface temperature)
@@ -42,8 +40,9 @@ def table_background_evolution_mean_GST_aspect_slope(site, path_pickle):
         Number of valid simulation per cell, returns NaN if different number of simulation per forcing for that cell
     """
 
-    _, _, _, _, _, df_stats, _  = load_all_pickles(site, path_pickle)
-    
+    pkl = load_all_pickles(site, path_pickle)
+    df_stats = pkl['df_stats']
+
     variables = ['aspect', 'slope','altitude']
     dic_var = {}
     dic_var = {i: np.sort(np.unique(df_stats.loc[:, i], return_counts=False)) for i in variables}
@@ -94,7 +93,9 @@ def plot_table_mean_GST_aspect_slope(site, path_pickle, altitude, background=Tru
     """
     #pylint: disable=no-member
 
-    _, _, _, _, _, df_stats, rockfall_values = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle)
+    df_stats = pkl['df_stats']
+    rockfall_values = pkl['rockfall_values']
     
     variables = ['aspect', 'slope', 'altitude']
     dic_var = {}
@@ -147,6 +148,8 @@ def plot_table_mean_GST_aspect_slope(site, path_pickle, altitude, background=Tru
     plt.show()
     plt.close()
 
+    return fig
+
 def plot_table_aspect_slope_all_altitudes(site, path_pickle, show_glacier=True, box=True):
     """ Function returns 1 plot per altitude of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
@@ -169,7 +172,10 @@ def plot_table_aspect_slope_all_altitudes(site, path_pickle, show_glacier=True, 
     (2 or 3)*(# altitudes) tables
     """
 
-    df, _, _, _, _, df_stats, rockfall_values = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle)
+    df = pkl['df']
+    df_stats = pkl['df_stats']
+    rockfall_values = pkl['rockfall_values']
     
     variables = ['aspect', 'slope','altitude']
     dic_var = {}
@@ -244,6 +250,8 @@ def plot_table_aspect_slope_all_altitudes(site, path_pickle, show_glacier=True, 
     # displaying the plotted heatmap 
     plt.show()
     plt.close()
+
+    return fig
  
 def plot_table_aspect_slope_all_altitudes_polar(site, path_pickle, box=True):
     """ Function returns 3 polar plots (1 per altitude) of the table of either mean background GST (ground-surface temperature)
@@ -265,7 +273,9 @@ def plot_table_aspect_slope_all_altitudes_polar(site, path_pickle, box=True):
     2*3 polar plots
     """
 
-    _, _, _, _, _, df_stats, rockfall_values = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle)
+    df_stats = pkl['df_stats']
+    rockfall_values = pkl['rockfall_values']
 
     variables = ['aspect', 'slope','altitude']
     dic_var = {}
@@ -347,6 +357,8 @@ def plot_table_aspect_slope_all_altitudes_polar(site, path_pickle, box=True):
     plt.show()
     plt.close()
 
+    return fig
+
 def plot_permafrost_all_altitudes_polar(site, path_pickle, depth_thaw, box=True):
     """ Function returns 3 polar plots (1 per altitude) of the permafrost and glacier spatial distribution,
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
@@ -368,7 +380,9 @@ def plot_permafrost_all_altitudes_polar(site, path_pickle, depth_thaw, box=True)
     2*3 polar plots
     """
 
-    _, _, _, _, _, df_stats, rockfall_values = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle)
+    df_stats = pkl['df_stats']
+    rockfall_values = pkl['rockfall_values']
 
     variables = ['aspect', 'slope','altitude']
     dic_var = {}
@@ -439,3 +453,5 @@ def plot_permafrost_all_altitudes_polar(site, path_pickle, depth_thaw, box=True)
 
     plt.show()
     plt.close()
+
+    return fig

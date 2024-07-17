@@ -10,9 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mpl_axes_aligner
 
-from SuPerSim.constants import save_constants
-
-colorcycle, units = save_constants()
+from SuPerSim.constants import colorcycle, units
 
 def stats_all_years_simulations_to_single_year(time_file, time_series, list_valid_sim, mask_period=None):
     """ Function returns daily mean and several quantiles of a multi-year timeseries over a 1-year period

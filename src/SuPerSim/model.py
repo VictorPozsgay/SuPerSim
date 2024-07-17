@@ -9,9 +9,7 @@ import matplotlib.pyplot as plt
 import scipy.optimize as opt
 
 from SuPerSim.pickling import load_all_pickles
-from SuPerSim.constants import save_constants
-
-colorcycle, _ = save_constants()
+from SuPerSim.constants import colorcycle
 
 def stat_model_aspect_slope_alt(X, offset, c_alt, d_alt, c_asp, c_slope):
     """ Function returns the value of the statistical model 
@@ -67,7 +65,8 @@ def fit_stat_model_grd_temp(site, path_pickle, all_data=True, diff_forcings=True
     parity plot (predicted vs actual)
     """
 
-    _, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle)
+    df_stats = pkl['df_stats']
     
     plt.figure(figsize=(6,6))
 

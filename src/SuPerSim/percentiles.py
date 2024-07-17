@@ -12,9 +12,7 @@ import seaborn as sn
 
 from SuPerSim.pickling import load_all_pickles
 from SuPerSim.topoheatmap import table_background_evolution_mean_GST_aspect_slope
-from SuPerSim.constants import save_constants
-
-colorcycle, _ = save_constants()
+from SuPerSim.constants import colorcycle
 
 def coordinates_percentile_cdf(data_sorted, proba_bins, percentile):
     """ Function returns coordinates of the point corresponing to the percentile of the 
@@ -62,7 +60,8 @@ def plot_cdf_GST(site, path_pickle):
              right panel shows the CDF of background, transient, and evolution of mean SO
     """
 
-    _, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle)
+    df_stats = pkl['df_stats']
     
     # sort the data:
     data_bkg_sorted = np.sort(df_stats['bkg_grd_temp'])
@@ -87,8 +86,7 @@ def plot_cdf_GST(site, path_pickle):
             point[indx_i][indx_j] = coordinates_percentile_cdf(i, p, j)
 
     # plot the sorted data:
-    _ = plt.figure()
-    _, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
+    fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
 
     ax1.plot(data_bkg_sorted, p, label='Background', color=colorcycle[0], linewidth=2)
     ax1.plot(data_trans_sorted, p, label='Transient', color=colorcycle[1], linewidth=2)
@@ -144,6 +142,8 @@ def plot_cdf_GST(site, path_pickle):
     plt.show()
     plt.close()
 
+    return fig
+
 def plot_10_cold_warm(site, path_pickle):
     """ Function returns a plot of mean GST evolution vs background GST, with an emphasis on the 10% colder and warmer simulations
     
@@ -159,7 +159,8 @@ def plot_10_cold_warm(site, path_pickle):
     Plot of mean GST evolution vs background GST, with an emphasis on the 10% colder and warmer simulations
     """
 
-    _, _, _, _, _, df_stats, _ = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle)
+    df_stats = pkl['df_stats']
 
     table_all = table_background_evolution_mean_GST_aspect_slope(site, path_pickle)
 
@@ -188,6 +189,8 @@ def plot_10_cold_warm(site, path_pickle):
     list_y = [df_stats_bis.loc[:, 'trans_grd_temp'].iloc[i] - df_stats_bis.loc[:, 'bkg_grd_temp'].iloc[i] for i in range(len(df_stats_bis))]
 
     pos_10 = int(np.ceil(len(data_bkg)/10))
+
+    fig, _ = plt.subplots()
 
     plt.scatter(list_x[:pos_10], list_y[:pos_10], c=colorcycle[0])
     plt.scatter(list_x[pos_10:-pos_10], list_y[pos_10:-pos_10], c=colorcycle[1])
@@ -221,6 +224,8 @@ def plot_10_cold_warm(site, path_pickle):
     plt.legend()
     plt.show()
     plt.close()
+
+    return fig
     
 def heatmap_percentile_GST(site, path_pickle):
     """ Function returns a heatmap of 10th, 25th, 50th, 75th, and 90th percentile in background and transient GST, and the difference
@@ -262,6 +267,8 @@ def heatmap_percentile_GST(site, path_pickle):
     pd_data['Background'] = pd.Categorical(pd_data['Background'], np.sort(pd_data['Background']))
     pd_data = pd_data.sort_values('Background')
 
+    fig, _ = plt.subplots()
+
     sn.heatmap(data=pd_data, annot=True, fmt=".2f", cmap='seismic',
                 cbar=True, yticklabels=True, xticklabels=True, cbar_kws={'label': 'Mean GST [°C]'},
                 norm=matplotlib.colors.TwoSlopeNorm(vmin=np.min([np.min(pd_data),-0.05]), vcenter=0, vmax=np.max([np.max(pd_data),0.05])))
@@ -270,3 +277,5 @@ def heatmap_percentile_GST(site, path_pickle):
     # Show the graph
     plt.show()
     plt.close()
+
+    return fig

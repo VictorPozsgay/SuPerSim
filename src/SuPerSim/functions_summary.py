@@ -19,9 +19,6 @@ from SuPerSim.percentiles import plot_cdf_GST, plot_10_cold_warm, heatmap_percen
 from SuPerSim.yearlystats import plot_box_yearly_stat, plot_yearly_quantiles_air, plot_yearly_quantiles_all_sims, plot_yearly_quantiles_all_sims_side_by_side
 from SuPerSim.seasonal import plot_sanity_one_year_quantiles_two_periods, plot_sanity_two_variables_one_year_quantiles, plot_sanity_two_variables_one_year_quantiles_side_by_side
 from SuPerSim.evolution import plot_GST_bkg_vs_evol_quantile_bins_fit_single_site, plot_GST_bkg_vs_evol_quantile_bins_fit, plot_mean_bkg_GST_vs_evolution, plot_evolution_snow_cover_melt_out
-from SuPerSim.constants import save_constants
-
-colorcycle, _ = save_constants()
 
 def plot_visible_skymap_from_horizon_file(hor_path):
     """ Function returns a fisheye view of the sky with the visible portion in blue and the blocked one in black.
@@ -102,7 +99,11 @@ def plot_all(site, forcing_list,
     # OPEN THE VARIOUS FILES
     #####################################################################################
 
-    df, _, list_valid_sim, _, _, df_stats, rockfall_values = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle)
+    df = pkl['df']
+    list_valid_sim = pkl['list_valid_sim']
+    df_stats = pkl['df_stats']
+    rockfall_values = pkl['rockfall_values']
 
     #####################################################################################
     # PLOTS
@@ -127,36 +128,47 @@ def plot_all(site, forcing_list,
 
     _, time_bkg_ground, time_trans_ground, _ = list_tokens_year(time_ground, year_bkg_end, year_trans_end)
 
+    print('\n---------------------------------------------------------------------------------------------\n')
+
     # weighted mean GST
     temp_ground_mean = list(np.average([temp_ground[i,:,0] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight.loc[:, 'weight']))
     print('The following plot is a histogram of the distribution of the statistical weights of all simulations:')
     plot_hist_stat_weights(pd_weight, df, zero=True)
+
+    print('\n---------------------------------------------------------------------------------------------\n')
+
     print('The following plot is a histogram of the distribution of glacier simulations wrt to altitude, aspect, slope, and forcing:')
     plot_hist_valid_sim_all_variables(site, path_thaw_depth, path_pickle)
 
     # Mean air temperature over all reanalyses and altitudes
     mean_air_temp = mean_all_reanalyses(time_air_all,
-                                        [mean_all_altitudes(i, site, path_pickle, no_weight=True) for i in temp_air_all],
+                                        [mean_all_altitudes(i, site, path_pickle, no_weight) for i in temp_air_all],
                                         year_bkg_end, year_trans_end)
     # mean_air_temp = mean_all_reanalyses(time_air_all, [i[:,alt_index] for i in temp_air_all], year_bkg_end, year_trans_end)
 
     # finally we get the total water production, averaged over all reanalyses
     tot_water_prod, _, mean_prec = assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle, year_bkg_end, year_trans_end, site, no_weight)
 
+    print('\n---------------------------------------------------------------------------------------------\n')
+
     print('Plots of the normalized distance of air and ground temperature, water production, and thaw_depth as a function of time')
     if 'year' in rockfall_values.keys():
         year_rockfall = rockfall_values['year']
+        print('\n---------------------------------------------------------------------------------------------\n')
         print('Granularity: week and month side by side')
         plot_aggregating_distance_temp_all(['Air temperature', 'Water production', 'Ground temperature'],
                                         [time_air_all[0], time_ground, time_ground],
                                         [mean_air_temp, tot_water_prod, temp_ground_mean],
                                         ['week', 'month'], site, path_pickle, year_bkg_end, year_trans_end, year_rockfall, False)
+    
+    print('\n---------------------------------------------------------------------------------------------\n')
     print('Granularity: year, plotted for all years')
     plot_aggregating_distance_temp_all(['Air temperature', 'Water production', 'Ground temperature'],
                                         [time_air_all[0], time_ground, time_ground],
                                         [mean_air_temp, tot_water_prod, temp_ground_mean],
                                         ['year'], site, path_pickle, year_bkg_end, year_trans_end, 0, False)
 
+    print('\n---------------------------------------------------------------------------------------------\n')
     print('Yearly statistics for air and ground surface temperature, and also precipitation and water production')
     plot_box_yearly_stat('Air temperature', time_air_all[0], mean_air_temp, year_bkg_end, year_trans_end)
     plot_box_yearly_stat('GST', time_ground, temp_ground_mean, year_bkg_end, year_trans_end)
@@ -169,35 +181,49 @@ def plot_all(site, forcing_list,
 
     if individual_heatmap:
         alt_show = rockfall_values['altitude'] if ((rockfall_values['exact_topo']) and (rockfall_values['altitude'] in alt_list)) else alt_index_abs
+        print('\n---------------------------------------------------------------------------------------------\n')
         print(f'Heatmap of the background mean GST as a function of aspect and slope at {alt_show} m:')
         plot_table_mean_GST_aspect_slope(site, path_pickle, alt_show, True, False)
+        print('\n---------------------------------------------------------------------------------------------\n')
         print(f'Heatmap of the evolution of the mean GST between the background and the transient periods as a function of aspect and slope at {alt_index_abs} m:')
         plot_table_mean_GST_aspect_slope(site, path_pickle, alt_show, False, False)
 
+    print('\n---------------------------------------------------------------------------------------------\n')
     print('Heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitudes')
     plot_table_aspect_slope_all_altitudes(site, path_pickle, show_glacier=False, box=False)
 
 
     if polar_plots:
+        print('\n---------------------------------------------------------------------------------------------\n')
         print('Polar heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitude')
         plot_table_aspect_slope_all_altitudes_polar(site, path_pickle, box=False)
 
+        print('\n---------------------------------------------------------------------------------------------\n')
         print('Polar plot of the permafrost and glacier spatial distribution as a function of aspect and slope at all altitude')
         plot_permafrost_all_altitudes_polar(site, path_pickle, thaw_depth, box=False)
 
+    print('\n---------------------------------------------------------------------------------------------\n')
     print('CDF of background, transient, and evolution GST:')
     plot_cdf_GST(site, path_pickle)
+
+    print('\n---------------------------------------------------------------------------------------------\n')
     print('Heatmap of 10th, 25th, 50th, 75th, and 90th percentile in background and transient GST, and the difference:')
     heatmap_percentile_GST(site, path_pickle)
+
+    print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of mean GST evolution vs background GST, with an emphasis on the 10% colder and warmer simulations')
     plot_10_cold_warm(site, path_pickle)
+
+    print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of mean GST evolution vs background GST, fit, and binning per 10% quantiles')
     plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site, path_pickle)
 
+    print('\n---------------------------------------------------------------------------------------------\n')
     print('Scatter plot of mean background GST vs evolution of mean GST between the background and transient period')
     plot_mean_bkg_GST_vs_evolution(site, path_pickle)
 
     if parity_plot:
+        print('\n---------------------------------------------------------------------------------------------\n')
         print('Parity plot (statistically-modeled vs numerically-simulated) of background mean GST:')
         _, _, optimizedParameters, _, _, _ = fit_stat_model_grd_temp(site, path_pickle, all_data=False, diff_forcings=True)
         list_ceof = ['offset', 'c_alt', 'd_alt', 'c_asp', 'c_slope']
@@ -207,28 +233,34 @@ def plot_all(site, forcing_list,
         print('The coefficients of the statistical model for the mean background GST are given by:')
         print(pd_coef)
 
+    print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of yearly statistics for atmospheric timeseries. Mean and several quantiles for each year:')
     plot_yearly_quantiles_air(time_air_all, temp_air_all, 'Air temperature', year_bkg_end, year_trans_end)
     plot_yearly_quantiles_air(time_air_all, precipitation_all, 'Precipitation', year_bkg_end, year_trans_end)
 
+    print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of yearly statistics for simulated timeseries. Mean and several quantiles for each year:')
     plot_yearly_quantiles_all_sims(time_ground, temp_ground, list_valid_sim, 'GST', year_bkg_end, year_trans_end)
     plot_yearly_quantiles_all_sims(time_ground, snow_height, list_valid_sim, 'Snow depth', year_bkg_end, year_trans_end)
     plot_yearly_quantiles_all_sims(time_ground, swe, list_valid_sim, 'SWE', year_bkg_end, year_trans_end)
 
+    print('\n---------------------------------------------------------------------------------------------\n')
     print('Histogram of the evolution of the snow cover (in days) and melt-out date:')
     plot_evolution_snow_cover_melt_out(site, path_pickle)
 
+    print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of 2 timeseries reduced to a 1-year window with mean and 1- and 2-sigma spread:')
     plot_sanity_two_variables_one_year_quantiles(time_ground, [temp_ground, snow_height], [list_valid_sim, list_valid_sim], ['GST', 'Snow depth'])
 
+    print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of a single timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread, for background and transient periods:')
     plot_sanity_one_year_quantiles_two_periods(time_ground, [temp_ground, temp_ground], [list_valid_sim, list_valid_sim], 'GST', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground])
     plot_sanity_one_year_quantiles_two_periods(time_ground, [snow_height, snow_height], [list_valid_sim, list_valid_sim], 'Snow depth', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground])
 
     # print('')
     # plot_sanity_one_year_quantiles_two_periods(time_air_merra2, [temp_air_merra2, temp_air_merra2], [None, None], 'Air temperature', ['Background', 'Transient'], [time_bkg_air_merra2, time_trans_air_merra2])
-    
+
+    print('\n---------------------------------------------------------------------------------------------\n')
     print('All done!')
 
 def plot_camparison_two_sites(list_site, list_label_site,
@@ -287,7 +319,11 @@ def plot_camparison_two_sites(list_site, list_label_site,
     #####################################################################################
 
     for i in range(2):
-        df[i], _, list_valid_sim[i], _, _, df_stats[i], rockfall_values[i] = load_all_pickles(list_site[i], list_path_pickle[i])
+        pkl = load_all_pickles(list_site[i], list_path_pickle[i])
+        df[i] = pkl['df']
+        list_valid_sim[i] = pkl['list_valid_sim']
+        df_stats[i] = pkl['df_stats']
+        rockfall_values[i] = pkl['rockfall_values']
 
         list_vars = ['time_air', 'temp_air', 'precipitation']
         list_series = [open_air_nc(j) for j in list_path_forcing_list[i]]
@@ -308,7 +344,12 @@ def plot_camparison_two_sites(list_site, list_label_site,
         _, SW_net[i] = open_SW_net_nc(list_path_SW_net[i])
         _, LW_net[i] = open_LW_net_nc(list_path_LW_net[i])
 
+    print('\n---------------------------------------------------------------------------------------------\n')
+
     print('Series of plots comparing both sites.')
+
+    print('\n---------------------------------------------------------------------------------------------\n')
+
     print('Plot of a single timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread, for both sites:')
     plot_sanity_two_variables_one_year_quantiles(time_ground[0], [temp_ground[0], temp_ground[1]], [list_valid_sim[0], list_valid_sim[1]], ['GST'], list_label_site)
     plot_sanity_two_variables_one_year_quantiles(time_ground[0], [SW_direct[0], SW_direct[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW direct'], list_label_site)
@@ -318,13 +359,21 @@ def plot_camparison_two_sites(list_site, list_label_site,
     plot_sanity_two_variables_one_year_quantiles(time_ground[0], [SW_net[0], SW_net[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW net'], list_label_site)
     plot_sanity_two_variables_one_year_quantiles(time_ground[0], [LW_net[0], LW_net[1]], [list_valid_sim[0], list_valid_sim[1]], ['LW net'], list_label_site)
 
+    print('\n---------------------------------------------------------------------------------------------\n')
+
     print('Plot of seasonal statistics for GST and SW net for both sites side by side:')
     plot_sanity_two_variables_one_year_quantiles_side_by_side(time_ground[0], [[temp_ground[0], temp_ground[1]], [SW_net[0], SW_net[1]]], [list_valid_sim[0], list_valid_sim[1]], ['GST', 'SW net'], list_label_site)
     
+    print('\n---------------------------------------------------------------------------------------------\n')
+
     print('Plot of yearly, background, and transient statistics for GST for both sites side by side:')
     plot_yearly_quantiles_all_sims_side_by_side(time_ground[0], [temp_ground[0], temp_ground[1]], [list_valid_sim[0], list_valid_sim[1]], 'GST', list_label_site, year_bkg_end, year_trans_end)
     
+    print('\n---------------------------------------------------------------------------------------------\n')
+
     print('Plot of mean GST evolution vs background GST, fit, and binning per 10% quantiles for both sites:')
     plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, list_path_pickle, list_label_site)
+
+    print('\n---------------------------------------------------------------------------------------------\n')
 
     print('All done!')

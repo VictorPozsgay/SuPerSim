@@ -11,10 +11,8 @@ import matplotlib.pyplot as plt
 import seaborn as sn
 
 from SuPerSim.mytime import list_tokens_year
-from SuPerSim.constants import save_constants
+from SuPerSim.constants import colorcycle, units
 from SuPerSim.seasonal import stats_all_years_simulations_to_single_year
-
-colorcycle, units = save_constants()
 
 def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, year_trans_end):
     """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
@@ -433,12 +431,8 @@ def plot_sanity_two_variables_one_year_quantiles_side_by_side(time_file, time_se
     Both series have their own y axis if they have different units.
 
     """
-    
-    colorcycle = [u'#1f77b4', u'#ff7f0e', u'#2ca02c']
-    units = {'GST': '°C', 'Air temperature': '°C', 'Precipitation': 'mm/day', 'SWE': 'mm', 'Water production': 'mm/day', 'Snow depth': 'mm',
-             'SW': 'W m-2', 'LW': 'W m-2'}
 
-    f, a = plt.subplots(1, 2, figsize=(10, 5))
+    _, a = plt.subplots(1, 2, figsize=(10, 5))
     for idx,ax in enumerate(a):
 
         quantiles, mean_end = stats_all_years_simulations_to_single_year(time_file, time_series_list[idx][0], list_valid_sim_list[0])
