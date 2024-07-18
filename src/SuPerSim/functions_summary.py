@@ -10,7 +10,7 @@ from SuPerSim.open import open_air_nc, open_ground_nc, open_snow_nc, open_swe_nc
 from SuPerSim.mytime import list_tokens_year
 from SuPerSim.pickling import load_all_pickles
 from SuPerSim.weights import assign_weight_sim, plot_hist_stat_weights_from_input, plot_hist_valid_sim_all_variables_from_input
-from SuPerSim.runningstats import mean_all_altitudes, mean_all_reanalyses, assign_tot_water_prod, plot_aggregating_distance_temp_all
+from SuPerSim.runningstats import mean_all_altitudes, mean_all_reanalyses, assign_tot_water_prod, plot_aggregating_distance_temp_all_from_input
 from SuPerSim.topoheatmap import plot_table_mean_GST_aspect_slope, plot_table_aspect_slope_all_altitudes, plot_table_aspect_slope_all_altitudes_polar, plot_permafrost_all_altitudes_polar
 from SuPerSim.model import fit_stat_model_grd_temp
 from SuPerSim.percentiles import plot_cdf_GST, plot_10_cold_warm, heatmap_percentile_GST
@@ -126,24 +126,24 @@ def plot_all(site, forcing_list,
 
     print('\n---------------------------------------------------------------------------------------------\n')
 
-    # print('Plots of the normalized distance of air and ground temperature, water production, and thaw_depth as a function of time')
-    # if 'year' in rockfall_values.keys():
-    #     year_rockfall = rockfall_values['year']
-    #     print('\n---------------------------------------------------------------------------------------------\n')
-    #     print('Granularity: week and month side by side')
-    #     plot_aggregating_distance_temp_all(['Air temperature', 'Water production', 'Ground temperature'],
-    #                                     [time_air_all[0], time_ground, time_ground],
-    #                                     [mean_air_temp, tot_water_prod, temp_ground_mean],
-    #                                     ['week', 'month'], site, path_pickle, year_bkg_end, year_trans_end, year_rockfall, False)
+    print('Plots of the normalized distance of air and ground temperature, water production, and thaw_depth as a function of time')
+    if 'year' in rockfall_values.keys():
+        year_rockfall = rockfall_values['year']
+        print('\n---------------------------------------------------------------------------------------------\n')
+        print('Granularity: week and month side by side')
+        plot_aggregating_distance_temp_all_from_input(['Air temperature', 'Water production', 'Ground temperature'],
+                                        [time_air_all[0], time_ground, time_ground],
+                                        [mean_air_temp, tot_water_prod, temp_ground_mean],
+                                        ['week', 'month'], site, path_pickle, year_bkg_end, year_trans_end, year_rockfall, False)
     
-    # print('\n---------------------------------------------------------------------------------------------\n')
-    # print('Granularity: year, plotted for all years')
-    # plot_aggregating_distance_temp_all(['Air temperature', 'Water production', 'Ground temperature'],
-    #                                     [time_air_all[0], time_ground, time_ground],
-    #                                     [mean_air_temp, tot_water_prod, temp_ground_mean],
-    #                                     ['year'], site, path_pickle, year_bkg_end, year_trans_end, 0, False)
+    print('\n---------------------------------------------------------------------------------------------\n')
+    print('Granularity: year, plotted for all years')
+    plot_aggregating_distance_temp_all_from_input(['Air temperature', 'Water production', 'Ground temperature'],
+                                        [time_air_all[0], time_ground, time_ground],
+                                        [mean_air_temp, tot_water_prod, temp_ground_mean],
+                                        ['year'], site, path_pickle, year_bkg_end, year_trans_end, 0, False)
 
-    # print('\n---------------------------------------------------------------------------------------------\n')
+    print('\n---------------------------------------------------------------------------------------------\n')
     # print('Yearly statistics for air and ground surface temperature, and also precipitation and water production')
     # plot_box_yearly_stat('Air temperature', time_air_all[0], mean_air_temp, year_bkg_end, year_trans_end)
     # plot_box_yearly_stat('GST', time_ground, temp_ground_mean, year_bkg_end, year_trans_end)

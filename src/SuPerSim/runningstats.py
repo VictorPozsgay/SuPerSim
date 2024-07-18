@@ -4,6 +4,7 @@
 #pylint: disable=trailing-whitespace
 #pylint: disable=invalid-name
 
+import itertools
 import pandas as pd
 from netCDF4 import num2date #pylint: disable=no-name-in-module
 import numpy as np
@@ -12,7 +13,6 @@ import matplotlib.pyplot as plt
 from SuPerSim.open import open_air_nc, open_ground_nc, open_swe_nc
 from SuPerSim.mytime import list_tokens_year
 from SuPerSim.weights import assign_weight_sim
-from SuPerSim.constants import colorcycle
 from SuPerSim.pickling import load_all_pickles
 
 def mean_all_altitudes(file_to_smooth, site, path_pickle, no_weight=True):
@@ -226,7 +226,7 @@ def running_mean_std(time_file, file_to_smooth, window, fill_before=False):
 
 def aggregating_distance_temp(time_file, file_to_smooth, window, year_bkg_end, year_trans_end, year=0, fill_before=False):
     """ Function returns the distance to the mean in units of standard deviation for a given date yy-mm-dd
-        relative to the sensemble of same date for previous years: {year-mm-dd for year<=yy}
+        relative to the ensemble of same date for previous years: {year-mm-dd for year<=yy}
         Should only be applied to a previously 'smoothed' function through a running average
     
     Parameters
@@ -293,9 +293,9 @@ def aggregating_distance_temp(time_file, file_to_smooth, window, year_bkg_end, y
 
     return distance
 
-def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_pickle, year_bkg_end, year_trans_end, year, fill_before=False):
-    """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
-        Vertical subplots for different variables
+def aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_pickle, year_bkg_end, year_trans_end, year, fill_before=False):
+    """ Returns the distance to the mean in units of standard deviation for a specific year or for the whole length
+        and for a list of windows
     
     Parameters
     ----------
@@ -329,75 +329,106 @@ def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_p
 
     Returns
     -------
-        plot containing len(yaxes) subplots sharing the x axis
-
+    dict_distances : dict
+        Dictionary containing the normalized distances, in the form e.g.
+        {'Air temperature': {'week': [...], 'month': [...], ...}, 'Water production': {'week': [...], 'month': [...], ...}, ...}
+    rockfall_time_index : dict
+        Dictionary listing the time index of the rockfall (if the rockfall happened within the plotting wiwndow), in the form e.g.
+        {'Air temperature': 8736, 'Water production': 364, 'Ground temperature': 364}
     """
 
     pkl = load_all_pickles(site, path_pickle)
     rockfall_values = pkl['rockfall_values']
 
-    num_rows = len(xdata)
-    num_cols = len(window)
+    dict_distances = {var: {win: [] for win in window} for var in yaxes}
+    dict_index_range = {var: [] for var in yaxes}
+    dict_list_dates = {var: [] for var in yaxes}
+    rockfall_time_index = {var: [] for var in yaxes}
 
-    f, a = plt.subplots(num_rows, num_cols, figsize=(8, 2*num_rows), sharey='row')
-    for idx,ax in enumerate(a):
-        distance = [aggregating_distance_temp(xdata[idx], ydata[idx], i, year_bkg_end, year_trans_end, year, fill_before) for i in window]
+    for idx, win in itertools.product(range(len(yaxes)), window):
+        distance = aggregating_distance_temp(xdata[idx], ydata[idx], win, year_bkg_end, year_trans_end, year, fill_before)
         list_dates = list_tokens_year(xdata[idx], year_bkg_end, year_trans_end)[0]
+        min_range = list_dates[np.min(list(distance.keys()))][0]
+        max_range = list_dates[np.max(list(distance.keys()))][-1]
+        #pylint: disable=consider-iterating-dictionary
+        index_range = list_dates[year] if year in distance.keys() else list(range(min_range, max_range+1))
 
-        if year in list(list_dates.keys()):
-            index_range = list_dates[year]
-        else:
-            index_range = list(range(len(ydata[idx])))[list_dates[np.min(list(distance[0].keys()))][0]:]
-
-        if year in list(list_dates.keys()):
-            if num_cols == 1:
-                ax.plot(xdata[idx][list_dates[year][:][:len(distance[0][year].values())]], distance[0][year].values(), label='Deviation')
-                ax.fill_between(xdata[idx][list_dates[year][:][:len(distance[0][year].values())]], -2, 2, alpha = 0.2, color = 'blue')
-            else:
-                for i in range(num_cols):
-                    ax[i].plot(xdata[idx][list_dates[year][:][:len(distance[i][year].values())]], distance[i][year].values(), label='Deviation')
-                    ax[i].fill_between(xdata[idx][list_dates[year][:][:len(distance[i][year].values())]], -2, 2, alpha = 0.2, color = 'blue')
-        else:
-            if num_cols == 1:
-                for y in list(distance[0].keys()):
-                    ax.plot(xdata[idx][list_dates[y][:][:len(distance[0][y].values())]], distance[0][y].values(), label=('Deviation' if y==year_bkg_end else ''), color= colorcycle[0])
-                    ax.fill_between(xdata[idx][list_dates[y][:][:len(distance[0][y].values())]], -2, 2, alpha = 0.2, color = 'blue')
-            else:
-                for i in range(num_cols):
-                    for y in list(distance[i].keys()):
-                        ax[i].plot(xdata[idx][list_dates[y][:][:len(distance[i][y].values())]], distance[i][y].values(), label=('Deviation' if y==year_bkg_end else ''), color= colorcycle[0])
-                        ax[i].fill_between(xdata[idx][list_dates[y][:][:len(distance[i][y].values())]], -2, 2, alpha = 0.2, color = 'blue')
+        # either we get 1 year of data or the whole dataset (flatten the list)
+        #pylint: disable=consider-iterating-dictionary
+        dict_distances[yaxes[idx]][win] = list(distance[year].values()) if year in distance.keys() else [i for j in distance.values() for i in j.values()]
+        dict_index_range[yaxes[idx]] = list(range(len(ydata[idx])))[list_dates[np.min(list(distance.keys()))][0]:]
+        dict_list_dates[yaxes[idx]] = list_dates
 
         if rockfall_values['exact_date']:
-            for indx in rockfall_values['time_index']:
-                if indx in index_range:
-                    if int((num2date(xdata[idx][indx], xdata[idx].units)-rockfall_values['datetime']).total_seconds()) == 0:
-                        if num_cols == 1:
-                            ax.axvline(x = xdata[idx][indx], color = 'r', linestyle='--', label = 'Landslide')
-                        else:
-                            for i in range(num_cols):
-                                ax[i].axvline(x = xdata[idx][indx], color = 'r', linestyle='--', label = 'Landslide')
+            for time_idx in rockfall_values['time_index']:
+                if time_idx in index_range:
+                    if int((num2date(xdata[idx][time_idx], xdata[idx].units)-rockfall_values['datetime']).total_seconds()) == 0:
+                        rockfall_time_index[yaxes[idx]] = time_idx - index_range[0]
+
+    return dict_distances, rockfall_time_index
+
+def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year_bkg_end, year_trans_end, year):
+    """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
+        Vertical subplots for different variables
+        Plots from user-given dictionaries
+    
+    Parameters
+    ----------
+    dict_distances : dict
+        Dictionary containing the normalized distances, in the form e.g.
+        {'Air temperature': {'week': [...], 'month': [...], ...}, 'Water production': {'week': [...], 'month': [...], ...}, ...}
+    rockfall_time_index : dict
+        Dictionary listing the time index of the rockfall (if the rockfall happened within the plotting wiwndow), in the form e.g.
+        {'Air temperature': 8736, 'Water production': 364, 'Ground temperature': 364}
+    year_bkg_end : int
+        Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
+    year_trans_end : int
+        Same for transient period
+    year : int
+        One can choose to display a specific year or the whole set by choosing an integer not in the study sample, e.g. 0.
+
+    Returns
+    -------
+    fig : Figure
+        normalized distance plot containing subplots sharing the x and y axis
+    """
+
+    yaxes = list(dict_distances.keys())
+    window = list(list(dict_distances.values())[0].keys())
+
+    num_rows = len(yaxes)
+    num_cols = len(window)
+
+    fig, a = plt.subplots(num_rows, num_cols, figsize=(8, 2*num_rows), sharey='row')
+    for idx,ax in enumerate(a):
+        # idx is the row index, hence it labels yaxes and ydata
+        # ax labels the xdata and window
         if num_cols == 1:
+            ax.plot(dict_distances[yaxes[idx]][window[0]], label='Deviation')
+            ax.fill_between(range(len(dict_distances[yaxes[idx]][window[0]])), -2, 2, alpha = 0.2, color = 'blue')
             ax.axhline(y = 0, color = 'black', linestyle='--', linewidth=1)
+            if not isinstance(rockfall_time_index[yaxes[idx]], list):
+                ax.axvline(x = rockfall_time_index[yaxes[idx]], color = 'r', linestyle='--', label = 'Landslide')
         else:
             for i in range(num_cols):
+                ax[i].plot(dict_distances[yaxes[idx]][window[i]], label='Deviation')
+                ax[i].fill_between(range(len(dict_distances[yaxes[idx]][window[i]])), -2, 2, alpha = 0.2, color = 'blue')
                 ax[i].axhline(y = 0, color = 'black', linestyle='--', linewidth=1)
+                if not isinstance(rockfall_time_index[yaxes[idx]], list):
+                    ax[i].axvline(x = rockfall_time_index[yaxes[idx]], color = 'r', linestyle='--', label = 'Landslide')
 
-        if year in list(list_dates.keys()):
-            locs = np.linspace(xdata[idx][index_range[0]], xdata[idx][index_range[-1]], num=12, endpoint=False)
+        if year in np.arange(year_bkg_end, year_trans_end):
+            locs = np.linspace(0, len(dict_distances[yaxes[idx]][window[0]]), num=12, endpoint=False)
             if num_cols == 1:
                 labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
             else:
                 labels = ['Jan','','Mar','','May','','Jul','','Sep','','Nov','']
         else:
-            # locs = np.linspace(xdata[idx][index_range[0]], xdata[idx][index_range[-1]], num=14, endpoint=True)
-            loc_init = xdata[idx][list_dates[year_bkg_end][0]]
-            len_year = xdata[idx][list_dates[year_bkg_end+1][0]] - loc_init
-            num_year = year_trans_end - year_bkg_end
-            locs = np.linspace(loc_init, loc_init + num_year * len_year, num=num_year+1, endpoint=True)
-            locs = locs[::int(len(locs)/10)]
+            locs = np.linspace(0, len(dict_distances[yaxes[idx]][window[0]]), num= year_trans_end - year_bkg_end + 1, endpoint=True)
+            dloc = int(len(locs)/10*num_cols)
+            locs = locs[::dloc]
             labels = list(range(year_bkg_end,year_trans_end+1,1))
-            labels = labels[::int(len(labels)/10)]
+            labels = labels[::dloc]
 
         if idx < num_rows-1:
             labels_end = ['' for _ in labels]
@@ -415,11 +446,57 @@ def plot_aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_p
                     ax[i].set_title(window[i].capitalize())
             ax[0].set_ylabel(yaxes[idx])
             ax[1].yaxis.set_tick_params(labelleft=False)
-
-    f.supylabel(r'Normalized deviation $d_{norm}$ [$\sigma$]')
+        
+    fig.supylabel(r'Normalized deviation $d_{norm}$ [$\sigma$]')
     plt.legend(loc='lower right')
     plt.tight_layout()
     plt.show()
     plt.close()
 
-    return f
+    return fig
+
+def plot_aggregating_distance_temp_all_from_input(yaxes, xdata, ydata, window, site, path_pickle, year_bkg_end, year_trans_end, year, fill_before=False):
+    """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
+        Vertical subplots for different variables
+        Plots directly from intended inputs
+    
+    Parameters
+    ----------
+    yaxes : list of str
+        List of names of quantities to plot, e.g. ['Air temperature', 'Water production', 'Ground temperature', 'Depth of thaw']
+        Will be used for labels
+    xdata : list of netCDF4._netCDF4.Variable
+        List of files where the time index of each datapoint is stored, e.g. [time_air_era5, time_air_era5, time_ground, time_ground]
+        len(xdata) should be equal to len(yaxes) 
+    ydata : list of list
+        List of time series (could be temperature, precipitation, snow depth, etc.) that needs to be smoothed
+        Note that each individual time series needs to be in the shape (n,) and not (n,3) for instance, hence the altitude has
+        to be pre-selected. E.g. accepts temp_air_era5[:,0] but not temp_air_era5
+        example: [mean_air_temp, mean_air_temp, temp_ground_mean, temp_ground_mean]
+        len(ydata) should be equal to len(yaxes)
+    window : list of str
+        Time window of datapoints to average over.
+        Can take the following arguments: 'day', 'week', 'year', 'climate'
+    site : str
+        Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
+    year_bkg_end : int
+        Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
+    year_trans_end : int
+        Same for transient period
+    year : int
+        One can choose to display a specific year or the whole set by choosing an integer not in the study sample, e.g. 0.
+    fill_before : bool, optional
+        Option to fill the first empty values of the smoothed data with the first running average value if True
+
+    Returns
+    -------
+    fig : Figure
+        normalized distance plot containing subplots sharing the x and y axis
+    """
+
+    dict_distances, rockfall_time_index = aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_pickle, year_bkg_end, year_trans_end, year, fill_before)
+    fig = plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year_bkg_end, year_trans_end, year)
+
+    return fig
