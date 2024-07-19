@@ -15,7 +15,7 @@ from SuPerSim.topoheatmap import plot_table_mean_GST_aspect_slope_single_altitud
 from SuPerSim.model import fit_stat_model_GST_from_inputs
 from SuPerSim.percentiles import plot_cdf_GST_from_inputs, plot_heatmap_percentile_GST_from_inputs
 from SuPerSim.yearlystats import plot_box_yearly_stat, plot_yearly_quantiles_atmospheric_from_inputs, plot_yearly_quantiles_sim_from_inputs
-from SuPerSim.seasonal import plot_sanity_one_year_quantiles_two_periods, plot_sanity_two_variables_one_year_quantiles, plot_sanity_two_variables_one_year_quantiles_side_by_side
+from SuPerSim.seasonal import plot_sanity_one_year_quantiles_two_periods_from_inputs, plot_sanity_two_variables_one_year_quantiles_from_inputs, plot_sanity_two_variables_one_year_quantiles_side_by_side
 from SuPerSim.evolution import plot_evolution_snow_cover_melt_out_from_inputs, plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs, plot_mean_bkg_GST_vs_evolution_from_inputs
 from SuPerSim.horizon import plot_visible_skymap_from_horizon_file
 
@@ -213,18 +213,18 @@ def plot_all(site, forcing_list,
     print('Histogram of the evolution of the snow cover (in days) and melt-out date:')
     plot_evolution_snow_cover_melt_out_from_inputs(site, path_pickle)
 
-    # print('\n---------------------------------------------------------------------------------------------\n')
-    # print('Plot of 2 timeseries reduced to a 1-year window with mean and 1- and 2-sigma spread:')
-    # plot_sanity_two_variables_one_year_quantiles(time_ground, [temp_ground, snow_height], [list_valid_sim, list_valid_sim], ['GST', 'Snow depth'])
+    print('\n---------------------------------------------------------------------------------------------\n')
+    print('Plot of 2 timeseries reduced to a 1-year window with mean and 1- and 2-sigma spread:')
+    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground, [temp_ground, snow_height], [list_valid_sim, list_valid_sim], ['GST', 'Snow depth'])
 
-    # print('\n---------------------------------------------------------------------------------------------\n')
-    # print('Plot of a single timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread, for background and transient periods:')
-    # plot_sanity_one_year_quantiles_two_periods(time_ground, [temp_ground, temp_ground], [list_valid_sim, list_valid_sim], 'GST', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground])
-    # plot_sanity_one_year_quantiles_two_periods(time_ground, [snow_height, snow_height], [list_valid_sim, list_valid_sim], 'Snow depth', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground])
+    print('\n---------------------------------------------------------------------------------------------\n')
+    print('Plot of a single timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread, for background and transient periods:')
+    plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [temp_ground, temp_ground], [list_valid_sim, list_valid_sim], 'GST', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground])
+    plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [snow_height, snow_height], [list_valid_sim, list_valid_sim], 'Snow depth', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground])
 
     # # print('')
-    # # plot_sanity_one_year_quantiles_two_periods(time_air_merra2, [temp_air_merra2, temp_air_merra2], [None, None], 'Air temperature', ['Background', 'Transient'], [time_bkg_air_merra2, time_trans_air_merra2])
-
+    # This works well but it would be better to smooth the data
+    # plot_sanity_one_year_quantiles_two_periods_from_inputs(time_air_all[0], [temp_air_all[0], temp_air_all[0]], [None, None], 'Air temperature', ['Background', 'Transient'], [time_bkg_air, time_trans_air])
     # print('\n---------------------------------------------------------------------------------------------\n')
     # print('All done!')
 
