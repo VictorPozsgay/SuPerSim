@@ -12,7 +12,7 @@ from SuPerSim.pickling import load_all_pickles
 from SuPerSim.weights import assign_weight_sim, plot_hist_stat_weights_from_input, plot_hist_valid_sim_all_variables_from_input
 from SuPerSim.runningstats import mean_all_altitudes, mean_all_reanalyses, assign_tot_water_prod, plot_aggregating_distance_temp_all_from_input
 from SuPerSim.topoheatmap import plot_table_mean_GST_aspect_slope_single_altitude_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs, plot_permafrost_all_altitudes_polar_from_inputs
-from SuPerSim.model import fit_stat_model_grd_temp
+from SuPerSim.model import fit_stat_model_GST_from_inputs
 from SuPerSim.percentiles import plot_cdf_GST, plot_10_cold_warm, heatmap_percentile_GST
 from SuPerSim.yearlystats import plot_box_yearly_stat, plot_yearly_quantiles_atmospheric_from_inputs, plot_yearly_quantiles_sim_from_inputs
 from SuPerSim.seasonal import plot_sanity_one_year_quantiles_two_periods, plot_sanity_two_variables_one_year_quantiles, plot_sanity_two_variables_one_year_quantiles_side_by_side
@@ -197,16 +197,10 @@ def plot_all(site, forcing_list,
     # print('Scatter plot of mean background GST vs evolution of mean GST between the background and transient period')
     # plot_mean_bkg_GST_vs_evolution(site, path_pickle)
 
-    # if parity_plot:
-    #     print('\n---------------------------------------------------------------------------------------------\n')
-    #     print('Parity plot (statistically-modeled vs numerically-simulated) of background mean GST:')
-    #     _, _, optimizedParameters, _, _, _ = fit_stat_model_grd_temp(site, path_pickle, all_data=False, diff_forcings=True)
-    #     list_ceof = ['offset', 'c_alt', 'd_alt', 'c_asp', 'c_slope']
-    #     pd_coef = pd.DataFrame(list_ceof, columns=['Coefficient'])
-    #     # previously was columns=['all', 'era5', 'merra2', 'jra55'] when had all 3 forcings
-    #     pd_coef = pd.concat([pd_coef, pd.DataFrame((np.array([list(i) for i in optimizedParameters]).transpose()), columns=forcing_list)], axis=1)
-    #     print('The coefficients of the statistical model for the mean background GST are given by:')
-    #     print(pd_coef)
+    if parity_plot:
+        print('\n---------------------------------------------------------------------------------------------\n')
+        print('Parity plot (statistically-modeled vs numerically-simulated) of background mean GST:')
+        fit_stat_model_GST_from_inputs(site, path_pickle, all_data=False, diff_forcings=True)
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of yearly statistics for atmospheric timeseries. Mean and several quantiles for each year:')
