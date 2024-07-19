@@ -16,7 +16,7 @@ from SuPerSim.pickling import load_all_pickles
 from SuPerSim.constants import colorcycle
 from SuPerSim.open import open_thaw_depth_nc
 
-def table_background_evolution_mean_GST_aspect_slope(site, path_pickle, path_thaw_depth):
+def table_background_evolution_mean_GST_aspect_slope(site, path_pickle, path_thaw_depth=None):
     """ Function returns dataframes of mean background and evolution of GST (ground-surface temperature)
         as a function of slope, aspect, and altitude
         same for number of simulations per cell and permafrost state
@@ -53,18 +53,19 @@ def table_background_evolution_mean_GST_aspect_slope(site, path_pickle, path_tha
     df_stats = pkl['df_stats']
     list_valid_sim = pkl['list_valid_sim']
 
-    _, thaw_depth = open_thaw_depth_nc(path_thaw_depth)
 
     variables = ['aspect', 'slope','altitude', 'forcing']
     dic_var = {}
     dic_var = {i: np.sort(np.unique(df_stats.loc[:, i], return_counts=False)) for i in variables}
 
-    list_valid_sim = list(df_stats.index.values)
-    list_no_perma = []
-    for sim in list_valid_sim:
-        if np.std(thaw_depth[sim,:]) < 1 and np.max(thaw_depth[sim,:])> 19:
-            list_no_perma.append(sim)
-    list_perma = list(set(list_valid_sim) - set(list_no_perma))
+    if path_thaw_depth is not None:
+        _, thaw_depth = open_thaw_depth_nc(path_thaw_depth)
+        list_valid_sim = list(df_stats.index.values)
+        list_no_perma = []
+        for sim in list_valid_sim:
+            if np.std(thaw_depth[sim,:]) < 1 and np.max(thaw_depth[sim,:])> 19:
+                list_no_perma.append(sim)
+        list_perma = list(set(list_valid_sim) - set(list_no_perma))
 
     list_grd_temp = {altitude: {slope: {aspect: [] for aspect in dic_var['aspect']} for slope in dic_var['slope']} for altitude in dic_var['altitude']}
     list_mean_grd_temp = {altitude: {slope: {aspect: [] for aspect in dic_var['aspect']} for slope in dic_var['slope']} for altitude in dic_var['altitude']}
@@ -83,9 +84,11 @@ def table_background_evolution_mean_GST_aspect_slope(site, path_pickle, path_tha
                 list_mean_grd_temp[altitude][slope][aspect] = round(np.mean((list_grd_temp[altitude][slope][aspect])),3)
                 list_diff_temp[altitude][slope][aspect] = list(df_this_sim['trans_grd_temp'] - df_this_sim['bkg_grd_temp'])
                 list_mean_diff_temp[altitude][slope][aspect] = round(np.mean((list_diff_temp[altitude][slope][aspect])),3)
-                temp_list = [i in list_perma for i in list(df_stats[(df_stats['altitude']==altitude) & (df_stats['aspect']==aspect) & (df_stats['slope']==slope)].index.values)]
-                check_perma_list[altitude][slope][aspect] = ('no permafrost' if len(temp_list)<3 else ('glacier' if all(temp_list) else 'permafrost'))
-
+                if path_thaw_depth is not None:
+                    temp_list = [i in list_perma for i in list(df_stats[(df_stats['altitude']==altitude) & (df_stats['aspect']==aspect) & (df_stats['slope']==slope)].index.values)]
+                    check_perma_list[altitude][slope][aspect] = ('no permafrost' if len(temp_list)<3 else ('glacier' if all(temp_list) else 'permafrost'))
+                else:
+                    check_perma_list[altitude][slope][aspect] = np.nan
 
     df_bkg = {altitude: pd.DataFrame(list_mean_grd_temp[altitude]).T for altitude in dic_var['altitude']}
     df_evol = {altitude: pd.DataFrame(list_mean_diff_temp[altitude]).T for altitude in dic_var['altitude']}
@@ -96,7 +99,7 @@ def table_background_evolution_mean_GST_aspect_slope(site, path_pickle, path_tha
 
     return table_all
 
-def prepare_data_table_GST(site, path_pickle, path_thaw_depth):
+def prepare_data_table_GST(site, path_pickle, path_thaw_depth=None):
     """ Function returns all data needed to produce topographic heatmaps
     
     Parameters
@@ -225,7 +228,7 @@ def plot_table_mean_GST_aspect_slope_single_altitude(table_all, rockfall_values,
 
     return fig
 
-def plot_table_mean_GST_aspect_slope_single_altitude_from_inputs(site, path_pickle, path_thaw_depth, altitude, background=True, box=True):
+def plot_table_mean_GST_aspect_slope_single_altitude_from_inputs(site, path_pickle, altitude, background=True, box=True):
     """ Function returns a plot of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope and aspect, for a given altitude and higlights the cell corresponding to the 
@@ -237,8 +240,6 @@ def plot_table_mean_GST_aspect_slope_single_altitude_from_inputs(site, path_pick
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
     path_pickle : str
         String path to the location of the folder where the pickles are saved
-    path_thaw_depth : str
-        Path to the .nc file where the aggregated thaw depth simulations are stored
     altitude :
         desired altitude for the plot
     background : bool, optional 
@@ -252,7 +253,7 @@ def plot_table_mean_GST_aspect_slope_single_altitude_from_inputs(site, path_pick
         heatmap of background or evolution of GST
     """
 
-    table_all, rockfall_values, _ = prepare_data_table_GST(site, path_pickle, path_thaw_depth)
+    table_all, rockfall_values, _ = prepare_data_table_GST(site, path_pickle)
     fig = plot_table_mean_GST_aspect_slope_single_altitude(table_all, rockfall_values, altitude, background, box)
 
     return fig
@@ -367,7 +368,7 @@ def plot_table_mean_GST_aspect_slope_all_altitudes(table_all, rockfall_values, s
 
     return fig
 
-def plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs(site, path_pickle, path_thaw_depth, show_glaciers=True, box=True):
+def plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs(site, path_pickle, show_glaciers=True, box=True):
     """ Function returns a plot of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope, aspect, and altitude and higlights the cell corresponding to the 
@@ -379,8 +380,6 @@ def plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs(site, path_pickle
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
     path_pickle : str
         String path to the location of the folder where the pickles are saved
-    path_thaw_depth : str
-        Path to the .nc file where the aggregated thaw depth simulations are stored
     altitude :
         desired altitude for the plot
     show_glaciers : bool, opional
@@ -394,7 +393,7 @@ def plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs(site, path_pickle
         (2 or 3)*(# altitudes) heatmaps of background GST, evolution of GST, and possibly number of glaciers
     """
 
-    table_all, rockfall_values, sim_per_cell = prepare_data_table_GST(site, path_pickle, path_thaw_depth)
+    table_all, rockfall_values, sim_per_cell = prepare_data_table_GST(site, path_pickle)
     fig = plot_table_mean_GST_aspect_slope_all_altitudes(table_all, rockfall_values, sim_per_cell, show_glaciers, box)
 
     return fig
@@ -522,7 +521,7 @@ def plot_table_mean_GST_aspect_slope_all_altitudes_polar(table_all, rockfall_val
 
     return fig
 
-def plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs(site, path_pickle, path_thaw_depth, box=True):
+def plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs(site, path_pickle, box=True):
     """ Function returns a polar plot per altitude of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
@@ -534,8 +533,6 @@ def plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs(site, path_
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
     path_pickle : str
         String path to the location of the folder where the pickles are saved
-    path_thaw_depth : str
-        Path to the .nc file where the aggregated thaw depth simulations are stored
     box : bool, optional 
         If True, highlights the cell corresponding to the rockfall starting zone with a black box
 
@@ -545,7 +542,7 @@ def plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs(site, path_
         2*(# altitudes) polar heatmaps of background GST and evolution of GST
     """
 
-    table_all, rockfall_values, _ = prepare_data_table_GST(site, path_pickle, path_thaw_depth)
+    table_all, rockfall_values, _ = prepare_data_table_GST(site, path_pickle)
     fig = plot_table_mean_GST_aspect_slope_all_altitudes_polar(table_all, rockfall_values, box)
 
     return fig
