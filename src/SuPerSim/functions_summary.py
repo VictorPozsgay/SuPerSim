@@ -16,7 +16,7 @@ from SuPerSim.model import fit_stat_model_GST_from_inputs
 from SuPerSim.percentiles import plot_cdf_GST_from_inputs, plot_heatmap_percentile_GST_from_inputs
 from SuPerSim.yearlystats import plot_box_yearly_stat, plot_yearly_quantiles_atmospheric_from_inputs, plot_yearly_quantiles_sim_from_inputs
 from SuPerSim.seasonal import plot_sanity_one_year_quantiles_two_periods, plot_sanity_two_variables_one_year_quantiles, plot_sanity_two_variables_one_year_quantiles_side_by_side
-from SuPerSim.evolution import plot_GST_bkg_vs_evol_quantile_bins_fit_single_site, plot_GST_bkg_vs_evol_quantile_bins_fit, plot_mean_bkg_GST_vs_evolution, plot_evolution_snow_cover_melt_out
+from SuPerSim.evolution import plot_evolution_snow_cover_melt_out_from_inputs, plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs, plot_mean_bkg_GST_vs_evolution_from_inputs
 from SuPerSim.horizon import plot_visible_skymap_from_horizon_file
 
 def plot_all(site, forcing_list,
@@ -185,17 +185,13 @@ def plot_all(site, forcing_list,
     print('Heatmap of 10th, 25th, 50th, 75th, and 90th percentile in background and transient GST, and the difference:')
     plot_heatmap_percentile_GST_from_inputs(site, path_pickle)
 
-    # print('\n---------------------------------------------------------------------------------------------\n')
-    # print('Plot of mean GST evolution vs background GST, with an emphasis on the 10% colder and warmer simulations')
-    # plot_10_cold_warm(site, path_pickle)
+    print('\n---------------------------------------------------------------------------------------------\n')
+    print('Plot of mean GST evolution vs background GST, fit, and binning per 10% quantiles')
+    plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs(site, path_pickle)
 
-    # print('\n---------------------------------------------------------------------------------------------\n')
-    # print('Plot of mean GST evolution vs background GST, fit, and binning per 10% quantiles')
-    # plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site, path_pickle)
-
-    # print('\n---------------------------------------------------------------------------------------------\n')
-    # print('Scatter plot of mean background GST vs evolution of mean GST between the background and transient period')
-    # plot_mean_bkg_GST_vs_evolution(site, path_pickle)
+    print('\n---------------------------------------------------------------------------------------------\n')
+    print('Scatter plot of mean background GST vs evolution of mean GST between the background and transient period')
+    plot_mean_bkg_GST_vs_evolution_from_inputs(site, path_pickle)
 
     if parity_plot:
         print('\n---------------------------------------------------------------------------------------------\n')
@@ -213,9 +209,9 @@ def plot_all(site, forcing_list,
     plot_yearly_quantiles_sim_from_inputs(time_ground, snow_height, list_valid_sim, 'Snow depth', year_bkg_end, year_trans_end)
     plot_yearly_quantiles_sim_from_inputs(time_ground, swe, list_valid_sim, 'SWE', year_bkg_end, year_trans_end)
 
-    # print('\n---------------------------------------------------------------------------------------------\n')
-    # print('Histogram of the evolution of the snow cover (in days) and melt-out date:')
-    # plot_evolution_snow_cover_melt_out(site, path_pickle)
+    print('\n---------------------------------------------------------------------------------------------\n')
+    print('Histogram of the evolution of the snow cover (in days) and melt-out date:')
+    plot_evolution_snow_cover_melt_out_from_inputs(site, path_pickle)
 
     # print('\n---------------------------------------------------------------------------------------------\n')
     # print('Plot of 2 timeseries reduced to a 1-year window with mean and 1- and 2-sigma spread:')

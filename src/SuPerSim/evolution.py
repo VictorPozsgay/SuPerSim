@@ -13,7 +13,99 @@ from SuPerSim.pickling import load_all_pickles
 from SuPerSim.topoheatmap import table_background_evolution_mean_GST_aspect_slope
 from SuPerSim.constants import colorcycle
 
-def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site, path_pickle):
+def sorted_bkg_GST_data(site, path_pickle):
+    """ Function returns background GST and GST evolution for a single site.
+    The two lists have the same order and are ordered in background GST increasing order
+    
+    Parameters
+    ----------
+    site : str
+        Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
+    
+    Returns
+    -------
+    list_xy : list
+        List of lists of background GST and GST evolution for a single site.
+        The nth element of each list corresponds to the same simulation
+        The background GST is in increasing order
+    """
+    
+    pkl = load_all_pickles(site, path_pickle)
+    df_stats = pkl['df_stats']
+
+    df_stats_bis = pd.DataFrame(data=df_stats, columns=['bkg_grd_temp', 'evol_grd_temp'])
+    df_stats_bis['bkg_grd_temp'] = pd.Categorical(df_stats_bis['bkg_grd_temp'], np.sort(df_stats['bkg_grd_temp']))
+    df_stats_bis = df_stats_bis.sort_values('bkg_grd_temp')
+
+    list_xy = [list(df_stats_bis.loc[:, 'bkg_grd_temp']), list(df_stats_bis.loc[:, 'evol_grd_temp'])]
+
+    return list_xy
+
+def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(list_xy):
+    """ Function return scatter plot of background GST vs GST evolution for a single site.
+    The site is binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
+    A linear regression is produced too.
+    
+    Parameters
+    ----------
+    list_xy : list
+        List of lists of background GST and GST evolution for a single site.
+        The nth element of each list corresponds to the same simulation
+        The background GST is in increasing order
+    
+    Returns
+    -------
+    fig : figure
+        Scatter plot of background GST vs GST evolution for the single site.
+        The single site is binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
+        A linear regression is produced too.
+    """
+
+    quantiles = np.arange(0, 101, 10)
+
+    fig, _ = plt.subplots()
+
+    cmap = plt.cm.seismic #pylint: disable=no-member
+
+    list_x, list_y = list_xy
+
+    list_x_mean = []
+
+    for i in range(len(quantiles)-1):
+        low = int(np.ceil(len(list_x)*quantiles[i]/100))
+        up = int(np.ceil(len(list_x)*quantiles[i+1]/100))
+        list_x_mean.append(np.mean(list_x[low:up]))
+        # plt.hlines(np.mean(list_y[low:up]),list_x[low],list_x[up-1], color=colorcycle[i], linewidth=2)
+
+    vmax = np.max(np.abs(list_x_mean))
+
+    for i in range(len(quantiles)-1):
+        color = cmap((list_x_mean[i] + vmax)/(2*vmax))
+        low = int(np.ceil(len(list_x)*quantiles[i]/100))
+        up = int(np.ceil(len(list_x)*quantiles[i+1]/100))
+        plt.scatter(list_x[low:up], list_y[low:up], color=color,s=0.8)
+        plt.errorbar(np.mean(list_x[low:up]), np.mean(list_y[low:up]), np.std(list_y[low:up]), np.std(list_x[low:up]), color=color)
+        plt.scatter(np.mean(list_x[low:up]), np.mean(list_y[low:up]), color=color, s=50)
+        # plt.hlines(np.mean(list_y[low:up]),list_x[low],list_x[up-1], color=colorcycle[i], linewidth=2)
+
+    slope, intercept, r, _, _ = linregress(list_x, list_y)
+    u = np.arange(np.min(list_x)-0.1, np.max(list_x)+0.1, 0.01)
+    print('R-square:', f"{r**2:.4f}", ', regression slope:', f"{slope:.4f}" , ', regression intercept:', f"{intercept:.4f}")
+    plt.plot(u, slope*u+intercept, c='grey', label=f'slope: {round(slope,3)}')
+
+    plt.xlabel('Mean background GST [°C]')
+    plt.ylabel('Mean GST evolution [°C]')
+
+    # Show the graph
+    # plt.legend()
+    plt.show()
+    plt.close()
+
+    return fig
+
+def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs(site, path_pickle):
     """ Function return scatter plot of background GST vs GST evolution for a single site.
     The site is binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
     A linear regression is produced too.
@@ -33,53 +125,8 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(site, path_pickle):
         A linear regression is produced too.
     """
 
-    pkl = load_all_pickles(site, path_pickle)
-    df_stats = pkl['df_stats']
-
-    df_stats_bis = pd.DataFrame(data=df_stats, columns=['bkg_grd_temp', 'evol_grd_temp'])
-    df_stats_bis['bkg_grd_temp'] = pd.Categorical(df_stats_bis['bkg_grd_temp'], np.sort(df_stats['bkg_grd_temp']))
-    df_stats_bis = df_stats_bis.sort_values('bkg_grd_temp')
-
-    list_x = list(df_stats_bis.loc[:, 'bkg_grd_temp'])
-    list_y = list(df_stats_bis.loc[:, 'evol_grd_temp'])
-
-    quantiles = np.arange(0, 101, 10)
-
-    fig, _ = plt.subplots()
-
-    cmap = plt.cm.seismic #pylint: disable=no-member
-
-    list_x_mean = []
-
-    for i in range(len(quantiles)-1):
-        low = int(np.ceil(len(df_stats)*quantiles[i]/100))
-        up = int(np.ceil(len(df_stats)*quantiles[i+1]/100))
-        list_x_mean.append(np.mean(list_x[low:up]))
-        # plt.hlines(np.mean(list_y[low:up]),list_x[low],list_x[up-1], color=colorcycle[i], linewidth=2)
-
-    vmax = np.max(np.abs(list_x_mean))
-
-    for i in range(len(quantiles)-1):
-        color = cmap((list_x_mean[i] + vmax)/(2*vmax))
-        low = int(np.ceil(len(df_stats)*quantiles[i]/100))
-        up = int(np.ceil(len(df_stats)*quantiles[i+1]/100))
-        plt.scatter(list_x[low:up], list_y[low:up], color=color,s=0.8)
-        plt.errorbar(np.mean(list_x[low:up]), np.mean(list_y[low:up]), np.std(list_y[low:up]), np.std(list_x[low:up]), color=color)
-        plt.scatter(np.mean(list_x[low:up]), np.mean(list_y[low:up]), color=color, s=50)
-        # plt.hlines(np.mean(list_y[low:up]),list_x[low],list_x[up-1], color=colorcycle[i], linewidth=2)
-
-    slope, intercept, r, _, _ = linregress(list_x, list_y)
-    u = np.arange(np.min(list_x)-0.1, np.max(list_x)+0.1, 0.01)
-    print('R-square:', r**2, ', regression slope:', slope , ', regression intercept:', intercept)
-    plt.plot(u, slope*u+intercept, c='grey', label=f'slope: {round(slope,3)}')
-
-    plt.xlabel('Mean background GST [°C]')
-    plt.ylabel('Mean GST evolution [°C]')
-
-    # Show the graph
-    # plt.legend()
-    plt.show()
-    plt.close()
+    list_xy = sorted_bkg_GST_data(site, path_pickle)
+    fig =plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(list_xy)
 
     return fig
 
@@ -199,10 +246,35 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, list_path_pickle, list_lab
 
     return fig
 
-def plot_mean_bkg_GST_vs_evolution(site, path_pickle):
+def data_bkg_GST_evol_altitudes(site, path_pickle):
+    """ Function returns background GST and GST evolution for a single site for each altitude
+    
+    Parameters
+    ----------
+    site : str
+        Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
+
+
+    Returns
+    -------
+    dic_data : dict
+        Dictionary with background GST and GST evolution for each altitude with keys ['bkg', 'evol']
+        in the form e.g.
+        {'bkg': {2900: [...], 3100: [...], ...}, 'evol': {2900: [...], 3100: [...], ...}}
+    """
+
+    table_all = table_background_evolution_mean_GST_aspect_slope(site, path_pickle)
+    dic_data = {period: {k: [i for j in v.columns for i in v[j]] for k, v in table_all[period].items()}
+                for period in ['bkg', 'evol']}
+    
+    return dic_data
+    
+def plot_mean_bkg_GST_vs_evolution(dic_data):
     """ Function returns a scatter plot of mean background GST (ground-surface temperature)
         vs evolution of mean GST between the background and transient period.
-        Note that each point is computed from an average over the 3 reanalyses to avoid bias.
+        Note that each point is computed from an average over all reanalyses to avoid bias.
     
     Parameters
     ----------
@@ -218,19 +290,16 @@ def plot_mean_bkg_GST_vs_evolution(site, path_pickle):
         Scatter plot
     """
 
-    pkl = load_all_pickles(site, path_pickle)
-    df_stats = pkl['df_stats']
+    xx = [i for i in dic_data['bkg'].values()]
+    yy = [i for i in dic_data['evol'].values()]
 
-    xx = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(site, path_pickle)[1]]
-    yy = [[b for a in i for b in a if not np.isnan(b)] for i in table_background_evolution_mean_GST_aspect_slope(site, path_pickle)[3]]
-
-    alt_list = list(np.sort(np.unique(df_stats['altitude'])))
+    alt_list = list(dic_data['bkg'].keys())
 
     fig, _ = plt.subplots()
 
     for i,x in enumerate(xx):
         slope, intercept, r, _, _ = linregress(x,yy[i])
-        print('altitude:', alt_list[i],', R-square:', r**2, ', regression slope:', slope , ', regression intercept:', intercept)
+        print('altitude:', alt_list[i], ', R-square:', f"{r**2:.4f}", ', regression slope:', f"{slope:.4f}", ', regression intercept:', f"{intercept:.4f}")
         u = np.arange(np.min(x)-0.1, np.max(x)+0.1, 0.01)
         plt.scatter(x,yy[i], c=colorcycle[i], label=f'{alt_list[i]} m')
         plt.plot(u, slope*u+intercept, c=colorcycle[i], label=f'slope: {round(slope,3)}')
@@ -245,10 +314,34 @@ def plot_mean_bkg_GST_vs_evolution(site, path_pickle):
 
     return fig
 
-def plot_evolution_snow_cover_melt_out(site, path_pickle, variable=None, value=None):
-    """ Function returns a histogram of the evolution of snow cover (in days) and melt out date
+def plot_mean_bkg_GST_vs_evolution_from_inputs(site, path_pickle):
+    """ Function returns a scatter plot of mean background GST (ground-surface temperature)
+        vs evolution of mean GST between the background and transient period.
+        Note that each point is computed from an average over all reanalyses to avoid bias.
+    
+    Parameters
+    ----------
+    site : str
+        Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
+
+
+    Returns
+    -------
+    fig : figure
+        Scatter plot
+    """
+
+    dic_data = data_bkg_GST_evol_altitudes(site, path_pickle)
+    fig = plot_mean_bkg_GST_vs_evolution(dic_data)
+
+    return fig
+
+def data_evolution_snow_cover_melt_out(site, path_pickle, variable=None, value=None):
+    """ Function returns lists of evolution of snow cover (in days) and melt out date
         between background and transient periods
-        For all simulations or for a given subset, for instance the ones with 'slope'=50
+        For all simulations or for a given subset, for instance the ones with 'slope'=55
         Note that only the simulations with snow are accounted for,
         otherwise, we would get a huge spike at 0 for all simulations that had no snow and kept it this way.
 
@@ -265,8 +358,10 @@ def plot_evolution_snow_cover_melt_out(site, path_pickle, variable=None, value=N
 
     Returns
     -------
-    fig : figure
-        Histogram
+    evol_melt_out : list
+        List of the evolution of melt out date
+    evol_snow_cover : list
+        List of the evolution of snow cover
     """
     
     pkl = load_all_pickles(site, path_pickle)
@@ -283,6 +378,27 @@ def plot_evolution_snow_cover_melt_out(site, path_pickle, variable=None, value=N
     evol_melt_out = [data.iloc[k].melt_out_trans - data.iloc[k].melt_out_bkg for k in range(len(data)) if (data.iloc[k].frac_snow_bkg != 0) | (data.iloc[k].frac_snow_trans != 0)]
     evol_snow_cover = [(data.iloc[k].frac_snow_trans - data.iloc[k].frac_snow_bkg)*365.25 for k in range(len(data)) if (data.iloc[k].frac_snow_bkg != 0) | (data.iloc[k].frac_snow_trans != 0)]
 
+    return evol_melt_out, evol_snow_cover
+
+def plot_evolution_snow_cover_melt_out(evol_melt_out, evol_snow_cover):
+    """ Function returns a histogram of the evolution of snow cover (in days) and melt out date
+        between background and transient periods
+        For all simulations or for a given subset, for instance the ones with 'slope'=55
+        Note that only the simulations with snow are accounted for,
+        otherwise, we would get a huge spike at 0 for all simulations that had no snow and kept it this way.
+
+    Parameters
+    ----------
+    evol_melt_out : list
+        List of the evolution of melt out date
+    evol_snow_cover : list
+        List of the evolution of snow cover
+
+    Returns
+    -------
+    fig : figure
+        Histogram
+    """
     fig, _ = plt.subplots()
 
     # plots both histograms
@@ -310,5 +426,30 @@ def plot_evolution_snow_cover_melt_out(site, path_pickle, variable=None, value=N
     plt.legend(loc='upper left')
     plt.show()
     plt.close()
+
+    return fig
+
+def plot_evolution_snow_cover_melt_out_from_inputs(site, path_pickle, variable=None, value=None):
+    """ Function returns a histogram of the evolution of snow cover (in days) and melt out date
+        between background and transient periods
+        For all simulations or for a given subset, for instance the ones with 'slope'=55
+        Note that only the simulations with snow are accounted for,
+        otherwise, we would get a huge spike at 0 for all simulations that had no snow and kept it this way.
+
+    Parameters
+    ----------
+    evol_melt_out : list
+        List of the evolution of melt out date
+    evol_snow_cover : list
+        List of the evolution of snow cover
+
+    Returns
+    -------
+    fig : figure
+        Histogram
+    """
+
+    evol_melt_out, evol_snow_cover = data_evolution_snow_cover_melt_out(site, path_pickle, variable, value)
+    fig = plot_evolution_snow_cover_melt_out(evol_melt_out, evol_snow_cover)
 
     return fig
