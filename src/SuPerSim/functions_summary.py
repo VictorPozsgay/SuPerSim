@@ -11,7 +11,7 @@ from SuPerSim.mytime import list_tokens_year
 from SuPerSim.pickling import load_all_pickles
 from SuPerSim.weights import assign_weight_sim, plot_hist_stat_weights_from_input, plot_hist_valid_sim_all_variables_from_input
 from SuPerSim.runningstats import mean_all_altitudes, mean_all_reanalyses, assign_tot_water_prod, plot_aggregating_distance_temp_all_from_input
-from SuPerSim.topoheatmap import plot_table_mean_GST_aspect_slope, plot_table_aspect_slope_all_altitudes, plot_table_aspect_slope_all_altitudes_polar, plot_permafrost_all_altitudes_polar
+from SuPerSim.topoheatmap import plot_table_mean_GST_aspect_slope_single_altitude_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs, plot_permafrost_all_altitudes_polar_from_inputs
 from SuPerSim.model import fit_stat_model_grd_temp
 from SuPerSim.percentiles import plot_cdf_GST, plot_10_cold_warm, heatmap_percentile_GST
 from SuPerSim.yearlystats import plot_box_yearly_stat, plot_yearly_quantiles_atmospheric_from_inputs, plot_yearly_quantiles_sim_from_inputs
@@ -150,34 +150,34 @@ def plot_all(site, forcing_list,
     # plot_box_yearly_stat('Precipitation', time_ground, mean_prec, year_bkg_end, year_trans_end)
     # plot_box_yearly_stat('Water production', time_ground, tot_water_prod, year_bkg_end, year_trans_end)
 
-    # alt_list = sorted(set(df_stats['altitude']))
-    # alt_index = int(np.floor((len(alt_list)-1)/2))
-    # alt_index_abs = alt_list[alt_index]
+    alt_list = sorted(set(df_stats['altitude']))
+    alt_index = int(np.floor((len(alt_list)-1)/2))
+    alt_index_abs = alt_list[alt_index]
 
-    # if individual_heatmap:
-    #     alt_show = rockfall_values['altitude'] if ((rockfall_values['exact_topo']) and (rockfall_values['altitude'] in alt_list)) else alt_index_abs
-    #     print('\n---------------------------------------------------------------------------------------------\n')
-    #     print(f'Heatmap of the background mean GST as a function of aspect and slope at {alt_show} m:')
-    #     plot_table_mean_GST_aspect_slope(site, path_pickle, alt_show, True, False)
-    #     print('\n---------------------------------------------------------------------------------------------\n')
-    #     print(f'Heatmap of the evolution of the mean GST between the background and the transient periods as a function of aspect and slope at {alt_index_abs} m:')
-    #     plot_table_mean_GST_aspect_slope(site, path_pickle, alt_show, False, False)
+    if individual_heatmap:
+        alt_show = rockfall_values['altitude'] if ((rockfall_values['exact_topo']) and (rockfall_values['altitude'] in alt_list)) else alt_index_abs
+        print('\n---------------------------------------------------------------------------------------------\n')
+        print(f'Heatmap of the background mean GST as a function of aspect and slope at {alt_show} m:')
+        plot_table_mean_GST_aspect_slope_single_altitude_from_inputs(site, path_pickle, path_thaw_depth, alt_show, background=True, box=True)
+        print('\n---------------------------------------------------------------------------------------------\n')
+        print(f'Heatmap of the evolution of the mean GST between the background and the transient periods as a function of aspect and slope at {alt_show} m:')
+        plot_table_mean_GST_aspect_slope_single_altitude_from_inputs(site, path_pickle, path_thaw_depth, alt_show, background=False, box=True)
 
-    # print('\n---------------------------------------------------------------------------------------------\n')
-    # print('Heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitudes')
-    # plot_table_aspect_slope_all_altitudes(site, path_pickle, show_glacier=False, box=False)
+    print('\n---------------------------------------------------------------------------------------------\n')
+    print('Heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitudes')
+    plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs(site, path_pickle, path_thaw_depth, show_glaciers=True, box=True)
 
 
-    # if polar_plots:
-    #     print('\n---------------------------------------------------------------------------------------------\n')
-    #     print('Polar heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitude')
-    #     plot_table_aspect_slope_all_altitudes_polar(site, path_pickle, box=False)
+    if polar_plots:
+        print('\n---------------------------------------------------------------------------------------------\n')
+        print('Polar heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitude')
+        plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs(site, path_pickle, path_thaw_depth, box=True)
 
-    #     print('\n---------------------------------------------------------------------------------------------\n')
-    #     print('Polar plot of the permafrost and glacier spatial distribution as a function of aspect and slope at all altitude')
-    #     plot_permafrost_all_altitudes_polar(site, path_pickle, thaw_depth, box=False)
+        print('\n---------------------------------------------------------------------------------------------\n')
+        print('Polar plot of the permafrost and glacier spatial distribution as a function of aspect and slope at all altitude')
+        plot_permafrost_all_altitudes_polar_from_inputs(site, path_pickle, path_thaw_depth, box=True)
 
-    # print('\n---------------------------------------------------------------------------------------------\n')
+    print('\n---------------------------------------------------------------------------------------------\n')
     # print('CDF of background, transient, and evolution GST:')
     # plot_cdf_GST(site, path_pickle)
 
