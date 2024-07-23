@@ -14,8 +14,8 @@ from SuPerSim.mytime import list_tokens_year
 from SuPerSim.constants import colorcycle, units
 from SuPerSim.seasonal import stats_all_years_simulations_to_single_year
 
-def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, year_trans_end):
-    """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
+def data_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, year_trans_end):
+    """ Returns dataframe of daily data
     
     Parameters
     ----------
@@ -32,37 +32,57 @@ def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, yea
 
     Returns
     -------
-        plot
-
+    df_data : pandas.core.frame.DataFrame
+        Panda dataframe with columns ['name_series' (e.g. 'Precipitation), 'Year']
     """
 
-    _, ax = plt.subplots()
-
     list_dates = list_tokens_year(time_file, year_bkg_end, year_trans_end)[0]
-    # overall_mean = np.mean(file_to_plot)
-    # exponent = int(np.floor(np.log10(np.abs(overall_mean))))
     
     a = []
     for i in list_dates.keys():
         if i < year_trans_end:
             a = a + [i]*len(list_dates[i])
-    x = pd.DataFrame(file_to_plot[:len(a)], columns=[name_series], index=a)
-    x['Year'] = a
 
     if name_series in ['Precipitation', 'Water production']:
-        x[name_series] = x[name_series]*86400
+        file_to_plot = [i*86400 for i in file_to_plot]
 
-    mean = [np.mean(x[x['Year']<year_bkg_end][name_series]), np.mean(x[(x['Year']>=year_bkg_end) & (x['Year']<year_trans_end)][name_series])]
+    df_data = pd.DataFrame(file_to_plot[:len(a)], columns=[name_series], index=a)
+    df_data['Year'] = a
 
-    meanpointprops = dict(marker='D', markeredgecolor='black', markerfacecolor='firebrick')
-    sn.boxplot(x='Year', y=name_series, data=x, showmeans=True, showfliers=False, meanprops=meanpointprops, color='grey', linecolor='black')
+    return df_data
 
-    # formatted_mean = [f"{i:.2e}" for i in mean] if ((exponent < -1) | (exponent>2)) else [float(f"{i:.2f}") for i in mean]
+def plot_box_yearly_stat(df_data, year_bkg_end, year_trans_end):
+    """ Box plot of yearly statistics of the timeseries, together with mean for the background and transient periods
+    
+    Parameters
+    ----------
+    df_data : pandas.core.frame.DataFrame
+        Panda dataframe with columns ['name_series' (e.g. 'Precipitation), 'Year']
+    year_bkg_end : int
+        Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
+    year_trans_end : int
+        Same for transient period
+
+    Returns
+    -------
+    fig : Figure
+        Box plot of yearly statistics of the timeseries, together with mean for the background and transient periods
+    """
+
+    fig, ax = plt.subplots()
+
+    list_dates = sorted(np.unique(df_data['Year']))
+    year_start = list_dates[0]
+    name_series = df_data.columns[0]
+    mean = [np.mean(df_data[df_data['Year']<year_bkg_end][name_series]), np.mean(df_data[(df_data['Year']>=year_bkg_end) & (df_data['Year']<year_trans_end)][name_series])]
     formatted_mean = [f"{i:.2f}" for i in mean]
 
-    ax.hlines(mean[0], 0, year_bkg_end - list(list_dates.keys())[0] - 1 + 1/2, linewidth=2, color=colorcycle[0],
+    meanpointprops = dict(marker='D', markeredgecolor='black', markerfacecolor='firebrick')
+    sn.boxplot(x='Year', y=name_series, data=df_data, showmeans=True, showfliers=False, meanprops=meanpointprops, color='grey', linecolor='black')
+
+    ax.hlines(mean[0], 0 - 1/2, year_bkg_end - year_start - 1/2, linewidth=2, color=colorcycle[0],
               label=f'Background mean: {formatted_mean[0]}{units[name_series]}')
-    ax.hlines(mean[1], year_bkg_end - list(list_dates.keys())[0] - 1/2, year_trans_end - list(list_dates.keys())[0] - 1, linewidth=2, color=colorcycle[1],
+    ax.hlines(mean[1], year_bkg_end - year_start - 1/2, year_trans_end - year_start - 1/2, linewidth=2, color=colorcycle[1],
               label=f'Transient mean: {formatted_mean[1]}{units[name_series]}')
 
     plt.tight_layout()
@@ -78,6 +98,36 @@ def plot_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, yea
     plt.legend()
     plt.show()
     plt.close()
+
+    return fig
+
+def plot_box_yearly_stat_from_inputs(name_series, time_file, file_to_plot, year_bkg_end, year_trans_end):
+    """ Box plot of yearly statistics of the timeseries, together with mean for the background and transient periods
+    
+    Parameters
+    ----------
+    name_series : str
+        Name of the quantity to plot, has to be one of 'GST', 'Air temperature', 'Precipitation', 'SWE', 'Water production'
+    time_file : netCDF4._netCDF4.Variable
+        File where the time index of each datapoint is stored        
+    file_to_plot : list
+        Mean time series (temp_ground_mean, mean_air_temp, mean_prec, swe_mean, tot_water_prod)
+    year_bkg_end : int
+        Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
+    year_trans_end : int
+        Same for transient period
+
+
+    Returns
+    -------
+    fig : Figure
+        Box plot of yearly statistics of the timeseries, together with mean for the background and transient periods
+    """
+
+    df_data = data_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, year_trans_end)
+    fig = plot_box_yearly_stat(df_data, year_bkg_end, year_trans_end)
+
+    return fig
 
 def atmospheric_data_to_panda(list_time_file, list_time_series, label_plot):
     """ Function returns panda data frame for 'air' timeseries, concatenated all reanalyses

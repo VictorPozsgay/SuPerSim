@@ -6,7 +6,7 @@
 
 import numpy as np
 
-from SuPerSim.open import open_air_nc, open_ground_nc, open_snow_nc, open_swe_nc, open_thaw_depth_nc, open_SW_direct_nc, open_SW_diffuse_nc, open_SW_up_nc, open_SW_down_nc, open_SW_net_nc, open_LW_net_nc
+from SuPerSim.open import open_air_nc, open_ground_nc, open_snow_nc, open_swe_nc, open_SW_direct_nc, open_SW_diffuse_nc, open_SW_up_nc, open_SW_down_nc, open_SW_net_nc, open_LW_net_nc
 from SuPerSim.mytime import list_tokens_year
 from SuPerSim.pickling import load_all_pickles
 from SuPerSim.weights import assign_weight_sim, plot_hist_stat_weights_from_input, plot_hist_valid_sim_all_variables_from_input
@@ -14,12 +14,12 @@ from SuPerSim.runningstats import mean_all_altitudes, mean_all_reanalyses, assig
 from SuPerSim.topoheatmap import plot_table_mean_GST_aspect_slope_single_altitude_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs, plot_permafrost_all_altitudes_polar_from_inputs
 from SuPerSim.model import fit_stat_model_GST_from_inputs
 from SuPerSim.percentiles import plot_cdf_GST_from_inputs, plot_heatmap_percentile_GST_from_inputs
-from SuPerSim.yearlystats import plot_box_yearly_stat, plot_yearly_quantiles_atmospheric_from_inputs, plot_yearly_quantiles_sim_from_inputs, plot_yearly_quantiles_side_by_side_sim_from_inputs
+from SuPerSim.yearlystats import plot_box_yearly_stat_from_inputs, plot_yearly_quantiles_atmospheric_from_inputs, plot_yearly_quantiles_sim_from_inputs, plot_yearly_quantiles_side_by_side_sim_from_inputs
 from SuPerSim.seasonal import plot_sanity_one_year_quantiles_two_periods_from_inputs, plot_sanity_two_variables_one_year_quantiles_from_inputs, plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side_from_inputs
 from SuPerSim.evolution import plot_evolution_snow_cover_melt_out_from_inputs, plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs, plot_mean_bkg_GST_vs_evolution_from_inputs, plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input
 from SuPerSim.horizon import plot_visible_skymap_from_horizon_file
 
-def plot_all(site, forcing_list,
+def plot_all(site,
              path_forcing_list, path_ground, path_snow, path_swe, path_thaw_depth, path_pickle,
              year_bkg_end, year_trans_end, path_horizon=None, no_weight=True, show_glaciers=True,
              individual_heatmap=False, polar_plots=False, parity_plot=False):
@@ -29,8 +29,6 @@ def plot_all(site, forcing_list,
     ----------
     site : str
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
-    forcing_list : list of str
-        List of forcings provided, with a number of entries between 1 and 3 in 'era5', 'merra2', and 'jra55'. E.g. ['era5', 'merra2']
     path_forcing_list : list of str
         List of paths to the .nc file where the atmospheric forcing data for the given reanalysis is stored
     path_ground : str
@@ -70,7 +68,7 @@ def plot_all(site, forcing_list,
     #####################################################################################
 
     pkl = load_all_pickles(site, path_pickle)
-    df = pkl['df']
+    # df = pkl['df']
     list_valid_sim = pkl['list_valid_sim']
     df_stats = pkl['df_stats']
     rockfall_values = pkl['rockfall_values']
@@ -81,7 +79,6 @@ def plot_all(site, forcing_list,
 
     # assign a subjective weight to all simulations
     pd_weight, _ = assign_weight_sim(site, path_pickle, no_weight)
-    _, thaw_depth = open_thaw_depth_nc(path_thaw_depth)
 
     list_vars = ['time_air', 'temp_air', 'SW_flux', 'SW_direct_flux', 'SW_diffuse_flux', 'precipitation']
     list_series = [open_air_nc(i) for i in path_forcing_list]
@@ -144,11 +141,11 @@ def plot_all(site, forcing_list,
                                         ['year'], site, path_pickle, year_bkg_end, year_trans_end, 0, False)
 
     print('\n---------------------------------------------------------------------------------------------\n')
-    # print('Yearly statistics for air and ground surface temperature, and also precipitation and water production')
-    # plot_box_yearly_stat('Air temperature', time_air_all[0], mean_air_temp, year_bkg_end, year_trans_end)
-    # plot_box_yearly_stat('GST', time_ground, temp_ground_mean, year_bkg_end, year_trans_end)
-    # plot_box_yearly_stat('Precipitation', time_ground, mean_prec, year_bkg_end, year_trans_end)
-    # plot_box_yearly_stat('Water production', time_ground, tot_water_prod, year_bkg_end, year_trans_end)
+    print('Yearly statistics for air and ground surface temperature, and also precipitation and water production')
+    plot_box_yearly_stat_from_inputs('Air temperature', time_air_all[0], mean_air_temp, year_bkg_end, year_trans_end)
+    plot_box_yearly_stat_from_inputs('GST', time_ground, temp_ground_mean, year_bkg_end, year_trans_end)
+    plot_box_yearly_stat_from_inputs('Precipitation', time_air_all[0], mean_prec, year_bkg_end, year_trans_end)
+    plot_box_yearly_stat_from_inputs('Water production', time_ground, tot_water_prod, year_bkg_end, year_trans_end)
 
     alt_list = sorted(set(df_stats['altitude']))
     alt_index = int(np.floor((len(alt_list)-1)/2))
@@ -225,8 +222,9 @@ def plot_all(site, forcing_list,
     # # print('')
     # This works well but it would be better to smooth the data
     # plot_sanity_one_year_quantiles_two_periods_from_inputs(time_air_all[0], [temp_air_all[0], temp_air_all[0]], [None, None], 'Air temperature', ['Background', 'Transient'], [time_bkg_air, time_trans_air])
-    # print('\n---------------------------------------------------------------------------------------------\n')
-    # print('All done!')
+    
+    print('\n---------------------------------------------------------------------------------------------\n')
+    print('All done!')
 
 def plot_camparison_two_sites(list_site, list_label_site,
              list_path_forcing_list, list_path_ground, list_path_snow, list_path_swe,
