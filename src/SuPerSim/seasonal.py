@@ -128,7 +128,7 @@ def stats_air_all_years_simulations_to_single_year(time_file, time_series, mask_
     return quantiles, mean_end
 
 def data_one_year_quantiles_two_periods(time_file, time_series_list, list_valid_sim_list, list_mask_period=None):
-    """ Function returns a plot of a single timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread,
+    """ Function returns a single timeseries for 2 periods reduced to a 1-year window with mean and 1 and 2-sigma spread,
     for background and transient piods
     
     Parameters
@@ -344,7 +344,100 @@ def plot_sanity_two_variables_one_year_quantiles_from_inputs(time_file, time_ser
 
     return fig
 
-def plot_sanity_two_variables_one_year_quantiles_side_by_side(time_file, time_series_list, list_valid_sim_list, list_label, list_site):
+def data_two_variables_two_sites_one_year_quantiles(time_file, time_series_list, list_valid_sim_list):
+    """ Function returns 2 plots side by side of 2 timeseries each reduced to a 1-year window with mean and 1 and 2-sigma spread.
+        Each plot is a plot of two timeseries of the same variable at two different sites
+    
+    Parameters
+    ----------
+    time_file : netCDF4._netCDF4.Variable
+        File where the time index of each datapoint is stored (time_ground, not time_air)
+    time_series_list : list of netCDF4._netCDF4.Variable
+        List of time series (could be temperature, precipitation, snow depth, etc.). 1 per plot.
+    list_valid_sim_list : list of list
+        List of list of the indices of all valid simulations
+
+    Returns
+    -------
+    quantiles : list of pandas.core.frame.DataFrame
+        list of 2*2 panda dataframes in the shape (5, number of yearly timestamps), one for each period
+        There is a row per quantile in [0.023, 0.16, 0.5, 0.84, 0.977] and a column per timestamp in the year (hourly: ~8784, yearly: ~365)
+        [[df_var0_site0, df_var0_site1], [df_var1_site0, df_var1_site1]]
+    mean_end : list of pandas.core.series.Series
+        List of 1-year time series of the mean, one for each periods
+        [[df_var0_site0, df_var0_site1], [df_var1_site0, df_var1_site1]]
+    """
+
+    quantiles = [[] for _ in range(len(time_series_list))]
+    mean_end = [[] for _ in range(len(time_series_list))]
+
+    for ts in range(len(time_series_list)):
+        quantiles[ts], mean_end[ts] = data_one_year_quantiles_two_periods(time_file, time_series_list[ts], list_valid_sim_list)
+
+    return quantiles, mean_end
+
+def plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side(quantiles, mean_end, list_label, list_site):
+    """ Function returns 2 plots side by side of 2 timeseries each reduced to a 1-year window with mean and 1 and 2-sigma spread.
+        Each plot is a plot of two timeseries of the same variable at two different sites
+    
+    Parameters
+    ----------
+    quantiles : list of pandas.core.frame.DataFrame
+        list of 2*2 panda dataframes in the shape (5, number of yearly timestamps), one for each period
+        There is a row per quantile in [0.023, 0.16, 0.5, 0.84, 0.977] and a column per timestamp in the year (hourly: ~8784, yearly: ~365)
+        [[df_var0_site0, df_var0_site1], [df_var1_site0, df_var1_site1]]
+    mean_end : list of pandas.core.series.Series
+        List of 1-year time series of the mean, one for each periods
+        [[df_var0_site0, df_var0_site1], [df_var1_site0, df_var1_site1]]
+    list_label : list
+        List of the labels associated to each plot
+    list_site : list
+        List of labels for the site of each entry
+
+    Returns
+    -------
+    fig : Figure
+        Plot of 2 timeseries over 2 sites reduced to a 1-year window with mean and 1 and 2-sigma spread.
+        1 subplot per variable, both sites compared on the same plot.
+    """
+
+    fig, a = plt.subplots(1, 2, figsize=(10, 5))
+    for ts,ax in enumerate(a):
+
+        site=0
+        xdata = range(len(mean_end[ts][site]))
+
+        ax.plot(xdata, mean_end[ts][site], color=colorcycle[site], linewidth=2, label=list_site[site])
+        ax.fill_between(xdata, quantiles[ts][site].iloc[1], quantiles[ts][site].iloc[3], alpha = 0.4, color=colorcycle[site], linewidth=1)
+        ax.fill_between(xdata, quantiles[ts][site].iloc[0], quantiles[ts][site].iloc[4], alpha = 0.2, color=colorcycle[site], linewidth=0.5)
+        ax.set_ylabel(list_label[ts]+' ['+units[list_label[ts]]+']')
+
+        site=1
+        ax.plot(xdata, mean_end[ts][site], color=colorcycle[site], linewidth=2, label=list_site[site])
+        ax.fill_between(xdata, quantiles[ts][site].iloc[1], quantiles[ts][site].iloc[3], alpha = 0.4, color=colorcycle[site], linewidth=1)
+        ax.fill_between(xdata, quantiles[ts][site].iloc[0], quantiles[ts][site].iloc[4], alpha = 0.2, color=colorcycle[site], linewidth=0.5)
+
+        if list_label[ts] in ['GST', 'Air temperature']:
+            ax.axhline(y=0, color='grey', linestyle='dashed')
+
+        locs = np.linspace(0, len(mean_end[ts][site]), num=13, endpoint=True)
+        labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan']
+        ax.set_xticks(locs)
+        ax.set_xticklabels(labels)
+
+        if ts == 1:
+            ax.legend(loc="upper right")
+
+
+    plt.tight_layout()  # otherwise the right y-label is slightly clipped
+
+    # Show the graph
+    plt.show()
+    plt.close()
+
+    return fig
+
+def plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side_from_inputs(time_file, time_series_list, list_valid_sim_list, list_label, list_site):
     """ Function returns 2 plots side by side of 2 timeseries each reduced to a 1-year window with mean and 1 and 2-sigma spread.
         Each plot is a plot of two timeseries of the same variable at two different sites
     
@@ -363,44 +456,12 @@ def plot_sanity_two_variables_one_year_quantiles_side_by_side(time_file, time_se
 
     Returns
     -------
-    Plot of 2 (or more?) timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread.
-    Both series have their own y axis if they have different units.
-
+    fig : Figure
+        Plot of 2 timeseries over 2 sites reduced to a 1-year window with mean and 1 and 2-sigma spread.
+        1 subplot per variable, both sites compared on the same plot.
     """
 
-    _, a = plt.subplots(1, 2, figsize=(10, 5))
-    for idx,ax in enumerate(a):
+    quantiles, mean_end = data_two_variables_two_sites_one_year_quantiles(time_file, time_series_list, list_valid_sim_list)
+    fig = plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side(quantiles, mean_end, list_label, list_site)
 
-        quantiles, mean_end = stats_all_years_simulations_to_single_year(time_file, time_series_list[idx][0], list_valid_sim_list[0])
-        xdata = range(len(mean_end))
-
-        indx=0
-        ax.plot(xdata, mean_end, color=colorcycle[indx], linewidth=2, label=list_site[indx])
-        ax.fill_between(xdata, quantiles.iloc[1], quantiles.iloc[3], alpha = 0.4, color=colorcycle[indx], linewidth=1)
-        ax.fill_between(xdata, quantiles.iloc[0], quantiles.iloc[4], alpha = 0.2, color=colorcycle[indx], linewidth=0.5)
-        ax.set_ylabel(list_label[idx]+' ['+units[list_label[idx]]+']')
-
-        quantiles, mean_end = stats_all_years_simulations_to_single_year(time_file, time_series_list[idx][1], list_valid_sim_list[1])
-        indx=1
-
-        ax.plot(xdata, mean_end, color=colorcycle[indx], linewidth=2, label=list_site[indx])
-        ax.fill_between(xdata, quantiles.iloc[1], quantiles.iloc[3], alpha = 0.4, color=colorcycle[indx], linewidth=1)
-        ax.fill_between(xdata, quantiles.iloc[0], quantiles.iloc[4], alpha = 0.2, color=colorcycle[indx], linewidth=0.5)
-
-        if list_label[idx] in ['GST', 'Air temperature']:
-            ax.axhline(y=0, color='grey', linestyle='dashed')
-
-        locs = np.linspace(0, len(mean_end), num=13, endpoint=True)
-        labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan']
-        ax.set_xticks(locs)
-        ax.set_xticklabels(labels)
-
-        if idx == 1:
-            ax.legend(loc="upper right")
-
-
-    plt.tight_layout()  # otherwise the right y-label is slightly clipped
-
-    # Show the graph
-    plt.show()
-    plt.close()
+    return fig

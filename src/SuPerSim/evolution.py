@@ -30,6 +30,7 @@ def sorted_bkg_GST_data(site, path_pickle):
         List of lists of background GST and GST evolution for a single site.
         The nth element of each list corresponds to the same simulation
         The background GST is in increasing order
+        in the shape [list_x, list_y]
     """
     
     pkl = load_all_pickles(site, path_pickle)
@@ -54,6 +55,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(list_xy):
         List of lists of background GST and GST evolution for a single site.
         The nth element of each list corresponds to the same simulation
         The background GST is in increasing order
+        in the shape [list_x, list_y]
     
     Returns
     -------
@@ -130,10 +132,9 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs(site, path_pi
 
     return fig
 
-def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, list_path_pickle, list_label_site):
-    """ Function return scatter plot of background GST vs GST evolution for 2 sites.
-    Both sites are binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
-    A linear regression is produced for each site.
+def sorted_bkg_GST_data_two_sites(list_site, list_path_pickle):
+    """ Function returns background GST and GST evolution for two sites.
+        For each site, the two lists have the same order and are ordered in background GST increasing order
     
     Parameters
     ----------
@@ -141,6 +142,35 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, list_path_pickle, list_lab
         List of labels for the site of each entry
     list_path_pickle : list of str
         List of string path to the location of the folder where the pickles are saved
+    
+    Returns
+    -------
+    list_xy : list
+        List of lists of background GST and GST evolution for a single site.
+        The nth element of each list corresponds to the same simulation
+        in the shape [[list_x_site0, list_y_site0], [list_x_site1, list_y_site1]]
+    """
+
+    list_xy = [[] for _ in list_site]
+
+    num = len(list_site)
+
+    for i in range(num):
+        list_xy[i] = sorted_bkg_GST_data(list_site[i], list_path_pickle[i])
+
+    return list_xy
+
+def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites(list_xy, list_label_site):
+    """ Function return scatter plot of background GST vs GST evolution for 2 sites.
+        Both sites are binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
+        A linear regression is produced for each site.
+    
+    Parameters
+    ----------
+    list_xy : list
+        List of lists of background GST and GST evolution for a single site.
+        The nth element of each list corresponds to the same simulation
+        in the shape [[list_x_site0, list_y_site0], [list_x_site1, list_y_site1]]
     list_label_site : list of str
         List of label for each site
     
@@ -153,17 +183,13 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, list_path_pickle, list_lab
         A linear regression is produced for each site.
     """
 
-    df_stats = [load_all_pickles(l, list_path_pickle[i])['df_stats'] for i, l in enumerate(list_site)]
+    num = len(list_xy)
 
-    num = len(df_stats)
+    list_x = [[] for _ in list_xy]
+    list_y = [[] for _ in list_xy]
 
-    df_stats_bis = [pd.DataFrame(data=i, columns=['bkg_grd_temp', 'evol_grd_temp']) for i in df_stats]
     for i in range(num):
-        df_stats_bis[i]['bkg_grd_temp'] = pd.Categorical(df_stats_bis[i]['bkg_grd_temp'], np.sort(df_stats[i]['bkg_grd_temp']))
-        df_stats_bis[i] = df_stats_bis[i].sort_values('bkg_grd_temp')
-
-    list_x = [list(i.loc[:, 'bkg_grd_temp']) for i in df_stats_bis]
-    list_y = [list(i.loc[:, 'evol_grd_temp']) for i in df_stats_bis]
+        list_x[i], list_y[i] = list_xy[i]
 
     quantiles = np.arange(0, 101, 10)
 
@@ -172,14 +198,14 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, list_path_pickle, list_lab
     cmap = plt.cm.seismic #pylint: disable=no-member
     # colors = cmap(np.linspace(0, 1, len(quantiles)+(1 if len(quantiles)%2 else 0)))
 
-    vmax = [[] for _ in df_stats]
-    list_x_mean = [[] for _ in df_stats]
+    vmax = [[] for _ in list_xy]
+    list_x_mean = [[] for _ in list_xy]
 
     for j in range(num):
 
         for i in range(len(quantiles)-1):
-            low = int(np.ceil(len(df_stats[j])*quantiles[i]/100))
-            up = int(np.ceil(len(df_stats[j])*quantiles[i+1]/100))
+            low = int(np.ceil(len(list_x[j])*quantiles[i]/100))
+            up = int(np.ceil(len(list_x[j])*quantiles[i+1]/100))
             list_x_mean[j].append(np.mean(list_x[j][low:up]))
 
         vmax[j] = np.max(np.abs(list_x_mean[j]))
@@ -195,8 +221,8 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, list_path_pickle, list_lab
 
         for i in range(len(quantiles)-1):
             color = cmap((list_x_mean[j][i] + vmax)/(2*vmax))
-            low = int(np.ceil(len(df_stats[j])*quantiles[i]/100))
-            up = int(np.ceil(len(df_stats[j])*quantiles[i+1]/100))
+            low = int(np.ceil(len(list_x[j])*quantiles[i]/100))
+            up = int(np.ceil(len(list_x[j])*quantiles[i+1]/100))
             plt.scatter(list_x[j][low:up], list_y[j][low:up], color=color,s=0.8)
             plt.errorbar(np.mean(list_x[j][low:up]), np.mean(list_y[j][low:up]), np.std(list_y[j][low:up]), np.std(list_x[j][low:up]), color=color)
             plt.scatter(np.mean(list_x[j][low:up]), np.mean(list_y[j][low:up]), color=color, s=50)
@@ -243,6 +269,34 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, list_path_pickle, list_lab
     plt.legend(handles=[line_j], loc='lower right')
     plt.show()
     plt.close()
+
+    return fig
+
+def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input(list_site, list_path_pickle, list_label_site):
+    """ Function return scatter plot of background GST vs GST evolution for 2 sites.
+    Both sites are binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
+    A linear regression is produced for each site.
+    
+    Parameters
+    ----------
+    list_site : list
+        List of labels for the site of each entry
+    list_path_pickle : list of str
+        List of string path to the location of the folder where the pickles are saved
+    list_label_site : list of str
+        List of label for each site
+    
+    Returns
+    -------
+    fig : figure
+        List of linear regression r-value (1 for each site). Need to square it to get R^2.
+        Scatter plot of background GST vs GST evolution for 2 sites.
+        Both sites are binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
+        A linear regression is produced for each site.
+    """
+
+    list_xy = sorted_bkg_GST_data_two_sites(list_site, list_path_pickle)
+    fig = plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites(list_xy, list_label_site)
 
     return fig
 

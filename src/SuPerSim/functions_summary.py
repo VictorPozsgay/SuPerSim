@@ -14,9 +14,9 @@ from SuPerSim.runningstats import mean_all_altitudes, mean_all_reanalyses, assig
 from SuPerSim.topoheatmap import plot_table_mean_GST_aspect_slope_single_altitude_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs, plot_permafrost_all_altitudes_polar_from_inputs
 from SuPerSim.model import fit_stat_model_GST_from_inputs
 from SuPerSim.percentiles import plot_cdf_GST_from_inputs, plot_heatmap_percentile_GST_from_inputs
-from SuPerSim.yearlystats import plot_box_yearly_stat, plot_yearly_quantiles_atmospheric_from_inputs, plot_yearly_quantiles_sim_from_inputs
-from SuPerSim.seasonal import plot_sanity_one_year_quantiles_two_periods_from_inputs, plot_sanity_two_variables_one_year_quantiles_from_inputs, plot_sanity_two_variables_one_year_quantiles_side_by_side
-from SuPerSim.evolution import plot_evolution_snow_cover_melt_out_from_inputs, plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs, plot_mean_bkg_GST_vs_evolution_from_inputs
+from SuPerSim.yearlystats import plot_box_yearly_stat, plot_yearly_quantiles_atmospheric_from_inputs, plot_yearly_quantiles_sim_from_inputs, plot_yearly_quantiles_side_by_side_sim_from_inputs
+from SuPerSim.seasonal import plot_sanity_one_year_quantiles_two_periods_from_inputs, plot_sanity_two_variables_one_year_quantiles_from_inputs, plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side_from_inputs
+from SuPerSim.evolution import plot_evolution_snow_cover_melt_out_from_inputs, plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs, plot_mean_bkg_GST_vs_evolution_from_inputs, plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input
 from SuPerSim.horizon import plot_visible_skymap_from_horizon_file
 
 def plot_all(site, forcing_list,
@@ -316,29 +316,29 @@ def plot_camparison_two_sites(list_site, list_label_site,
     print('\n---------------------------------------------------------------------------------------------\n')
 
     print('Plot of a single timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread, for both sites:')
-    # plot_sanity_two_variables_one_year_quantiles(time_ground[0], [temp_ground[0], temp_ground[1]], [list_valid_sim[0], list_valid_sim[1]], ['GST'], list_label_site)
-    # plot_sanity_two_variables_one_year_quantiles(time_ground[0], [SW_direct[0], SW_direct[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW direct'], list_label_site)
-    # plot_sanity_two_variables_one_year_quantiles(time_ground[0], [SW_diffuse[0], SW_diffuse[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW diffuse'], list_label_site)
-    # plot_sanity_two_variables_one_year_quantiles(time_ground[0], [SW_down[0], SW_down[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW up'], list_label_site)
-    # plot_sanity_two_variables_one_year_quantiles(time_ground[0], [SW_up[0], SW_up[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW down'], list_label_site)
-    # plot_sanity_two_variables_one_year_quantiles(time_ground[0], [SW_net[0], SW_net[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW net'], list_label_site)
-    # plot_sanity_two_variables_one_year_quantiles(time_ground[0], [LW_net[0], LW_net[1]], [list_valid_sim[0], list_valid_sim[1]], ['LW net'], list_label_site)
+    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [temp_ground[0], temp_ground[1]], [list_valid_sim[0], list_valid_sim[1]], ['GST'], list_label_site)
+    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [SW_direct[0], SW_direct[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW direct'], list_label_site)
+    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [SW_diffuse[0], SW_diffuse[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW diffuse'], list_label_site)
+    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [SW_down[0], SW_down[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW up'], list_label_site)
+    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [SW_up[0], SW_up[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW down'], list_label_site)
+    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [SW_net[0], SW_net[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW net'], list_label_site)
+    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [LW_net[0], LW_net[1]], [list_valid_sim[0], list_valid_sim[1]], ['LW net'], list_label_site)
 
-    # print('\n---------------------------------------------------------------------------------------------\n')
+    print('\n---------------------------------------------------------------------------------------------\n')
 
-    # print('Plot of seasonal statistics for GST and SW net for both sites side by side:')
-    # plot_sanity_two_variables_one_year_quantiles_side_by_side(time_ground[0], [[temp_ground[0], temp_ground[1]], [SW_net[0], SW_net[1]]], [list_valid_sim[0], list_valid_sim[1]], ['GST', 'SW net'], list_label_site)
+    print('Plot of seasonal statistics for GST and SW net for both sites side by side:')
+    plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side_from_inputs(time_ground[0], [[temp_ground[0], temp_ground[1]], [SW_net[0], SW_net[1]]], [list_valid_sim[0], list_valid_sim[1]], ['GST', 'SW net'], list_label_site)
     
-    # print('\n---------------------------------------------------------------------------------------------\n')
+    print('\n---------------------------------------------------------------------------------------------\n')
 
-    # print('Plot of yearly, background, and transient statistics for GST for both sites side by side:')
-    # plot_yearly_quantiles_all_sims_side_by_side(time_ground[0], [temp_ground[0], temp_ground[1]], [list_valid_sim[0], list_valid_sim[1]], 'GST', list_label_site, year_bkg_end, year_trans_end)
+    print('Plot of yearly, background, and transient statistics for GST for both sites side by side:')
+    plot_yearly_quantiles_side_by_side_sim_from_inputs(time_ground[0], [temp_ground[0], temp_ground[1]], [list_valid_sim[0], list_valid_sim[1]], 'GST', list_label_site, year_bkg_end, year_trans_end)
     
-    # print('\n---------------------------------------------------------------------------------------------\n')
+    print('\n---------------------------------------------------------------------------------------------\n')
 
-    # print('Plot of mean GST evolution vs background GST, fit, and binning per 10% quantiles for both sites:')
-    # plot_GST_bkg_vs_evol_quantile_bins_fit(list_site, list_path_pickle, list_label_site)
+    print('Plot of mean GST evolution vs background GST, fit, and binning per 10% quantiles for both sites:')
+    plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input(list_site, list_path_pickle, list_label_site)
 
-    # print('\n---------------------------------------------------------------------------------------------\n')
+    print('\n---------------------------------------------------------------------------------------------\n')
 
     print('All done!')
