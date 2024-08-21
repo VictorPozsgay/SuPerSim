@@ -193,7 +193,7 @@ def plot_sanity_one_year_quantiles_two_periods(quantiles, mean_end, axis_label, 
     fig = plt.subplots()
 
     for idx in range(len(quantiles)):
-        plt.plot(xdata, mean_end[idx], color=colorcycle[idx], linewidth=2, label=list_label[0])
+        plt.plot(xdata, mean_end[idx], color=colorcycle[idx], linewidth=2, label=list_label[idx])
         plt.fill_between(xdata, quantiles[idx].iloc[1], quantiles[idx].iloc[3], alpha = 0.4, color=colorcycle[idx], linewidth=1)
         plt.fill_between(xdata, quantiles[idx].iloc[0], quantiles[idx].iloc[4], alpha = 0.2, color=colorcycle[idx], linewidth=0.5)
         plt.ylabel(axis_label+' ['+units[axis_label]+']')
