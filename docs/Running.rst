@@ -1,6 +1,25 @@
 Running
 =======
 
+Useful functions
+----------------
+
+All reusable functions are found in\  *src/SuPerSim/__init__.py*.
+
+All plotting functions combine a data formatting function and an input-independent plotting function.
+For example, the function that plots the horizon line (or visible part of the sky from a point location) can be found under\  *src/SuPerSim/horizon.py*\  and is called\  *plot_visible_skymap_from_horizon_file()*\. It takes \  *path_horizon*\  for argument. However, this path points to a csv file with a specific format and the user might have a different format at hand. Thus, there is a first function\  *read_horizon_to_polar()*\  that formats the csv file into 2 lists of angles (numpy arrays) called\  *theta*\  and\  *zenith_angle*. From there, the plotting function\  *plot_visible_skymap()*\  plots the horizon in polar coordinates from the pre-fromatted angles. Schematically,
+
+*path_horizon* -> *read_horizon_to_polar(path_horizon)* -> *(theta, zenith_angle)* -> *plot_visible_skymap(theta, zenith_angle)* -> *fig*
+
+is equivalent to
+
+*path_horizon* -> *plot_visible_skymap_from_horizon_file(path_horizon)* -> *fig*
+
+but provides a chance for the user to jump in the middle of the process if they do not have the csv file where *path_horizon* points to, but instead already have the lists of angles *(theta, zenith_angle)*.
+
+
+
+
 Single site
 -----------
 
@@ -10,10 +29,14 @@ Setup
 For a single site, we recommend the user to start any script with the following list of parameter definitions
 (such as can be found in the\  *examples/*\  folder under\  *produce_plots_North.ipynb*\  and\  *produce_plots_South.ipynb*)::
 
-      # Paths to the data
-      path_forcing_ranalysis_1 = '<path>'
+
+      ################################################
+      # Here, write the paths to your own data files #
+      ################################################
+
+      path_forcing_reanalysis_1 = '<path>' # placeholder path
       ...
-      path_forcing_ranalysis_n = '<path>'
+      path_forcing_reanalysis_n = '<path>'
       path_ground = '<path>'
       path_snow = '<path>'
       path_swe = '<path>'
@@ -21,10 +44,15 @@ For a single site, we recommend the user to start any script with the following 
       path_repository = '<path>'
       path_pickle = '<path>'
 
-      forcing_list = ['reanalysis_1', ..., 'reanalysis_n']
-      path_forcing_list = [path_forcing_ranalysis_1, ..., path_forcing_ranalysis_n]
+      path_horizon = path_data+'/horizon.csv' # optional and set to 'None' by default
 
-      # Site and event characteristics
+      forcing_list = ['reanalysis_1', ..., 'reanalysis_n'] # list of forcing names
+      path_forcing_list = [path_forcing_reanalysis_1, ..., path_forcing_reanalysis_n]
+
+      ###############################################################
+      # Enter the parameters of your site and of the rockfall event #
+      ###############################################################
+
       site = '<name_site>'
       year_bkg_end = <year>
       year_trans_end = <year>
@@ -33,15 +61,15 @@ For a single site, we recommend the user to start any script with the following 
 
       # Glaciers
       consecutive = <number>
-      glacier = <bool>
-      min_glacier_depth = <min>
-      max_glacier_depth = <max>
+      glacier = <bool> # optional and set to 'False' by default
+      min_glacier_depth = <min> # optional and set to '100' by default
+      max_glacier_depth = <max> # optional and set to '20000' by default
 
       # Plotting options
-      no_weight = <bool>
-      individual_heatmap = <bool>
-      polar_plots = <bool>
-      parity_plot = <bool>
+      no_weight = <bool> # optional and set to 'True' by default
+      individual_heatmap = <bool> # optional and set to 'False' by default
+      polar_plots = <bool> # optional and set to 'False' by default
+      parity_plot = <bool> # optional and set to 'False' by default
 
 
 Glaciers
@@ -49,13 +77,13 @@ Glaciers
 
 **SuPerSim** has the ability to exclude all simulations that build glaciers. For this, the user should select ::
 
-      glacier = True
+      glacier = False
 
 The filtering will then get rid of all simulation products where the minimum summer snow depth
 is above the threshold given by\ *min_glacier_depth*\. These simulations do not melt out in the summer and are discarded.
 However, the user can also decide to **only** keep glaciers by setting ::
 
-      glacier = False
+      glacier = True
 
 In which case the simulations that are kept are the ones with a minimal snow depth comprised
 between\  *min_glacier_depth*\  and\  *max_glacier_depth*\.
@@ -71,11 +99,18 @@ Running the script
 
 The first thing to do is to build the statistics for all the metrics by calling the function\  *get_all_stats*\  ::
 
-      df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats, rockfall_values = get_all_stats(
-            forcing_list, path_forcing_list, path_repository, path_ground, path_snow, path_pickle,
-            year_bkg_end, year_trans_end, consecutive,
-            site, date_event, topo_event,
-            glacier, min_glacier_depth)
+      pkl = get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground, path_snow, path_pickle,
+                              year_bkg_end, year_trans_end, consecutive,
+                              site, date_event, topo_event,
+                              glacier, min_glacier_depth, max_glacier_depth)
+
+      df = pkl['df']
+      reanalysis_stats = pkl['reanalysis_stats']
+      list_valid_sim = pkl['list_valid_sim']
+      dict_melt_out = pkl['dict_melt_out']
+      stats_melt_out_dic = pkl['stats_melt_out_dic']
+      df_stats = pkl['df_stats']
+      rockfall_values = pkl['rockfall_values']
 
 This creates a number of pickles that are saved in the directory given by\  *path_pickle*\.
 Once the pickles are created, every time the function is called again,
@@ -85,13 +120,21 @@ first erase the content of the pickle directory, and then run the function again
 Once the pickles are created, there is an easier way to open them than running the function\  *get_all_stats*\  again,
 indeed, we have the function\  *load_all_pickles*\  ::
 
-      df, reanalysis_stats, list_valid_sim, dict_melt_out, stats_melt_out_dic, df_stats, rockfall_values = load_all_pickles(site, path_pickle)
+
+      pkl = load_all_pickles(site, path_pickle)
+
+      df = pkl['df']
+      reanalysis_stats = pkl['reanalysis_stats']
+      list_valid_sim = pkl['list_valid_sim']
+      dict_melt_out = pkl['dict_melt_out']
+      stats_melt_out_dic = pkl['stats_melt_out_dic']
+      df_stats = pkl['df_stats']
+      rockfall_values = pkl['rockfall_values']
 
 Finally, the plotting function\  *plot_all*\  can be called ::
 
-      plot_all(site, forcing_list, path_forcing_list,
-         path_ground, path_snow, path_swe, path_thaw_depth, path_pickle,
-         year_bkg_end, year_trans_end, no_weight,
+      plot_all(site, path_forcing_list, path_ground, path_snow, path_swe, path_thaw_depth, path_pickle,
+         year_bkg_end, year_trans_end, path_horizon, no_weight, show_glaciers,
          individual_heatmap, polar_plots, parity_plot)
 
 
@@ -111,33 +154,26 @@ The user should start with a definition of all parameters, for instance ::
       # Here, write the paths to your own data files #
       ################################################
 
-      # this is just introduced for convenience
-      path_data = path_parent+'/examples/Aksaut_Caucasus/data/'
-      path_data_North = path_data+'North/'
-      path_data_South = path_data+'South/'
-      path_forcing_merra2 = path_data+'/scaled_merra2_Aksaut.nc'
-
-      # those are the real variables
-      list_path_forcing_list = [[path_forcing_merra2], [path_forcing_merra2]]
-      list_path_ground = [path_data_North+'result_soil_temperature.nc', path_data_South+'result_soil_temperature.nc']
-      list_path_snow = [path_data_North+'result_snow_depth.nc', path_data_South+'result_snow_depth.nc']
-      list_path_swe = [path_data_North+'result_swe.nc', path_data_South+'result_swe.nc']
-      list_path_SW_direct = [path_data_North+'result_SW_direct.nc', path_data_South+'result_SW_direct.nc']
-      list_path_SW_diffuse = [path_data_North+'result_SW_diffuse.nc', path_data_South+'result_SW_diffuse.nc']
-      list_path_SW_up = [path_data_North+'result_SW_up.nc', path_data_South+'result_SW_up.nc']
-      list_path_SW_down = [path_data_North+'result_SW_down.nc', path_data_South+'result_SW_down.nc']
-      list_path_SW_net = [path_data_North+'result_SW_net.nc', path_data_South+'result_SW_net.nc']
-      list_path_LW_net = [path_data_North+'result_LW_net.nc', path_data_South+'result_LW_net.nc']
-      list_path_pickle = [path_parent+'/examples/Aksaut_Caucasus/python_pickles/', path_parent+'/examples/Aksaut_Caucasus/python_pickles/']
+      list_path_forcing_list = [['<path_forcing_site_1_reanalysis_1>', ..., '<path_forcing_site_1_reanalysis_n>'], ['<path_forcing_site_2_reanalysis_1>', ..., '<path_forcing_site_2_reanalysis_m>']]
+      list_path_ground = ['<path_ground_site_1>', '<path_ground_site_2>']
+      list_path_snow = ['<..._site_1>', '<..._site_2>']
+      list_path_swe = ['<..._site_1>', '<..._site_2>']
+      list_path_SW_direct = ['<..._site_1>', '<..._site_2>']
+      list_path_SW_diffuse = ['<..._site_1>', '<..._site_2>']
+      list_path_SW_up = ['<..._site_1>', '<..._site_2>']
+      list_path_SW_down = ['<..._site_1>', '<..._site_2>']
+      list_path_SW_net = ['<..._site_1>', '<..._site_2>']
+      list_path_LW_net = ['<..._site_1>', '<..._site_2>']
+      list_path_pickle = ['<..._site_1>', '<..._site_2>']
 
       ###############################################################
       # Enter the parameters of your site and of the rockfall event #
       ###############################################################
 
-      list_site = ['Aksaut_North', 'Aksaut_South']
-      list_label_site = ['North', 'South']
-      year_bkg_end = 2000
-      year_trans_end = 2023
+      list_site = ['<name_site_1>', '<name_site_2>']
+      list_label_site = ['<label_site_1>', '<label_site_2>']
+      year_bkg_end = <year>
+      year_trans_end = <year>
 
 Running the script
 ^^^^^^^^^^^^^^^^^^
@@ -148,7 +184,7 @@ and produces a series of plots comparing timeseries and metrics on each site.
 The comparison plotting function\  *plot_camparison_two_sites*\  is called in the following way ::
 
       plot_camparison_two_sites(list_site, list_label_site,
-                  list_path_forcing_list, list_path_ground, list_path_snow, list_path_swe,
-                  list_path_SW_direct, list_path_SW_diffuse, list_path_SW_up,
-                  list_path_SW_down, list_path_SW_net, list_path_LW_net,
-                  list_path_pickle, year_bkg_end, year_trans_end)
+             list_path_forcing_list, list_path_ground, list_path_snow, list_path_swe,
+             list_path_SW_direct, list_path_SW_diffuse, list_path_SW_up,
+             list_path_SW_down, list_path_SW_net, list_path_LW_net,
+             list_path_pickle, year_bkg_end, year_trans_end)
