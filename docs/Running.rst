@@ -1,6 +1,8 @@
 Running
 =======
 
+All reusable functions are found in [\_\_init\_\_.py](Introductions.rst)
+
 Single site
 -----------
 
