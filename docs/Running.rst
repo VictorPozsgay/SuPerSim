@@ -1,6 +1,7 @@
 Running
 =======
 
+<<<<<<< HEAD
 Useful functions
 ----------------
 
@@ -19,6 +20,9 @@ but provides a chance for the user to jump in the middle of the process if they 
 
 
 
+=======
+All reusable functions are found in [\_\_init\_\_.py](Introductions.rst)
+>>>>>>> 694e8a5ffae4cb4b07e7e2563d6faf7964c89f3d
 
 Single site
 -----------
@@ -184,7 +188,14 @@ and produces a series of plots comparing timeseries and metrics on each site.
 The comparison plotting function\  *plot_camparison_two_sites*\  is called in the following way ::
 
       plot_camparison_two_sites(list_site, list_label_site,
+<<<<<<< HEAD
              list_path_forcing_list, list_path_ground, list_path_snow, list_path_swe,
              list_path_SW_direct, list_path_SW_diffuse, list_path_SW_up,
              list_path_SW_down, list_path_SW_net, list_path_LW_net,
              list_path_pickle, year_bkg_end, year_trans_end)
+=======
+                  list_path_forcing_list, list_path_ground, list_path_snow, list_path_swe,
+                  list_path_SW_direct, list_path_SW_diffuse, list_path_SW_up,
+                  list_path_SW_down, list_path_SW_net, list_path_LW_net,
+                  list_path_pickle, year_bkg_end, year_trans_end)
+>>>>>>> 694e8a5ffae4cb4b07e7e2563d6faf7964c89f3d
