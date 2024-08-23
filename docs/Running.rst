@@ -1,7 +1,6 @@
 Running
 =======
 
-<<<<<<< HEAD
 Useful functions
 ----------------
 
@@ -18,11 +17,6 @@ is equivalent to
 
 but provides a chance for the user to jump in the middle of the process if they do not have the csv file where *path_horizon* points to, but instead already have the lists of angles *(theta, zenith_angle)*.
 
-
-
-=======
-All reusable functions are found in [\_\_init\_\_.py](Introductions.rst)
->>>>>>> 694e8a5ffae4cb4b07e7e2563d6faf7964c89f3d
 
 Single site
 -----------
