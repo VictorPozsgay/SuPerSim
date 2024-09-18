@@ -123,7 +123,7 @@ def fit_stat_model_GST(data_set, all_data=True):
     optimizedParameters = []
     pcov = []
     corr_matrix = []
-    bounds=((-50, -np.inf, -np.inf, -np.inf, -np.inf), (50, np.inf, np.inf, np.inf, np.inf))
+    bounds=((-50, -np.inf, -10000, -np.inf, -np.inf), (50, np.inf, 10000, np.inf, np.inf))
     p0 = (0,0,1000,0,0)
 
     fig = plt.figure(figsize=(6,6))

@@ -77,12 +77,43 @@ def assign_value_global_dict(path_forcing_list, path_ground, path_snow, path_pic
 
     return global_dict
 
-def assign_value_df_raw(path_repository):
+# def assign_value_df_raw(path_metadata):
+#     """ Function converts the .csv ensemble simulation repository into a panda dataframe with a column for each parameter
+    
+#     Parameters
+#     ----------
+#     path_metadata : str
+#         Path to the .csv file with all the simulation parameters
+
+#     Returns
+#     -------
+#     df_raw : pandas.core.frame.DataFrame
+#         A panda dataframe version of the .csv file where the simulation paramaters have been unpacked into readable columns
+
+#     """
+
+#     df_raw = pd.read_csv(path_metadata, usecols=['site','directory','parameters'])
+#     df_raw['altitude'] = (df_raw['site'].str.split('_').str[1]).apply(pd.to_numeric)
+#     df_raw['site_name'] = df_raw['site'].str.split('_').str[0]
+#     df_raw['forcing'] = df_raw['directory'].str.split('_').str[3]
+#     df_raw['aspect'] = [pd.to_numeric(i.replace('p','.')) for i in (df_raw['parameters'].str.split('aspect_').str[1]).str.split('.inpts').str[0]]
+#     df_raw['slope'] = ((df_raw['parameters'].str.split('slope_').str[1]).str.split('.inpts').str[0]).apply(pd.to_numeric)
+#     df_raw['snow'] = [(y/100 if y > 10 else y) for y in [pd.to_numeric(i.replace('p','.')) for i in ((df_raw['parameters'].str.split('snow_').str[1]).str.split('.inpts').str[0])]]
+#     if len(df_raw['parameters'].str.split('pointmaxswe_')[0]) == 2:
+#         df_raw['maxswe'] = (df_raw['parameters'].str.split('pointmaxswe_').str[1]).str.split('.inpts').str[0]
+#     else:
+#         df_raw['maxswe'] = [np.nan for i in df_raw['altitude']]
+#     df_raw['material'] = (df_raw['parameters'].str.split('soil_').str[1]).str.split('.inpts').str[0]
+#     df_raw.drop('parameters', axis=1, inplace=True)
+
+#     return df_raw
+
+def assign_value_df_raw(path_metadata):
     """ Function converts the .csv ensemble simulation repository into a panda dataframe with a column for each parameter
     
     Parameters
     ----------
-    path_repository : str
+    path_metadata : str
         Path to the .csv file with all the simulation parameters
 
     Returns
@@ -92,28 +123,17 @@ def assign_value_df_raw(path_repository):
 
     """
 
-    df_raw = pd.read_csv(path_repository, usecols=['site','directory','parameters'])
-    df_raw['altitude'] = (df_raw['site'].str.split('_').str[1]).apply(pd.to_numeric)
-    df_raw['site_name'] = df_raw['site'].str.split('_').str[0]
-    df_raw['forcing'] = df_raw['directory'].str.split('_').str[3]
-    df_raw['aspect'] = [pd.to_numeric(i.replace('p','.')) for i in (df_raw['parameters'].str.split('aspect_').str[1]).str.split('.inpts').str[0]]
-    df_raw['slope'] = ((df_raw['parameters'].str.split('slope_').str[1]).str.split('.inpts').str[0]).apply(pd.to_numeric)
-    df_raw['snow'] = [(y/100 if y > 10 else y) for y in [pd.to_numeric(i.replace('p','.')) for i in ((df_raw['parameters'].str.split('snow_').str[1]).str.split('.inpts').str[0])]]
-    if len(df_raw['parameters'].str.split('pointmaxswe_')[0]) == 2:
-        df_raw['maxswe'] = (df_raw['parameters'].str.split('pointmaxswe_').str[1]).str.split('.inpts').str[0]
-    else:
-        df_raw['maxswe'] = [np.nan for i in df_raw['altitude']]
-    df_raw['material'] = (df_raw['parameters'].str.split('soil_').str[1]).str.split('.inpts').str[0]
-    df_raw.drop('parameters', axis=1, inplace=True)
+    df_raw = pd.read_csv(path_metadata, usecols=['directory', 'site_name', 'altitude', 'forcing_name', 'aspect', 'slope', 'scf', 'swe', 'soil'])
+    df_raw = df_raw.rename(columns={"forcing_name": "forcing", "scf": "snow", "swe": "maxswe", "soil": "material"})
 
     return df_raw
 
-def assign_value_df(path_repository, path_ground, path_pickle, site):
+def assign_value_df(path_metadata, path_ground, path_pickle, site):
     """ Function returns the panda dataframe with all ensemble simulation parameters and saves it to a pickle
     
     Parameters
     ----------
-    path_repository : str
+    path_metadata : str
         Path to the .csv file with all the simulation parameters
     path_ground : str
         Path to the .nc file where the aggregated ground simulations are stored
@@ -151,7 +171,7 @@ def assign_value_df(path_repository, path_ground, path_pickle, site):
 
     # if the pickle file does not exist, we have to create it
     except (OSError, IOError) as e:
-        df_raw = assign_value_df_raw(path_repository)
+        df_raw = assign_value_df_raw(path_metadata)
             
         # this is a method that re-orders the 'directory' column thanks to the simulation index of f_ground
         df_raw.directory = df_raw.directory.astype("category")
@@ -751,7 +771,7 @@ def load_all_pickles(site, path_pickle):
 
     return pkl
 
-def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground, path_snow, path_pickle,
+def get_all_stats(forcing_list, path_forcing_list, path_metadata, path_ground, path_snow, path_pickle,
                   year_bkg_end, year_trans_end, consecutive,
                   site, date_event, topo_event,
                   glacier=False, min_glacier_depth=100, max_glacier_depth=20000):
@@ -763,7 +783,7 @@ def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground,
         List of forcings provided, with a number of entries between 1 and 3 in 'era5', 'merra2', and 'jra55'. E.g. ['era5', 'merra2']
     path_forcing_list : list of str
         List of paths to the .nc file where the atmospheric forcing data for the given reanalysis is stored
-    path_repository : str
+    path_metadata : str
         Path to the .csv file with all the simulation parameters
     path_ground : str
         Path to the .nc file where the aggregated ground simulations are stored
@@ -818,7 +838,7 @@ def get_all_stats(forcing_list, path_forcing_list, path_repository, path_ground,
 
     """
 
-    df = assign_value_df(path_repository, path_ground, path_pickle, site)
+    df = assign_value_df(path_metadata, path_ground, path_pickle, site)
     reanalysis_stats = assign_value_reanalysis_stat(forcing_list, path_forcing_list, path_pickle, year_bkg_end, year_trans_end, site)
     list_valid_sim = glacier_filter(site, path_snow, path_pickle, glacier, min_glacier_depth, max_glacier_depth)
     dict_melt_out, stats_melt_out_dic = melt_out_date(consecutive, path_ground, path_snow, path_pickle, year_bkg_end, year_trans_end, site)
