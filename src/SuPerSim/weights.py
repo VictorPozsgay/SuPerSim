@@ -12,7 +12,7 @@ from SuPerSim.open import open_thaw_depth_nc
 from SuPerSim.constants import colorcycle
 from SuPerSim.pickling import load_all_pickles
 
-def assign_weight_sim(site, path_pickle, no_weight=True):
+def assign_weight_sim(site, path_pickle, no_weight):
     """ Function returns a statistical weight for each simulation according to the importance in rockfall starting zone 
     
     Parameters
@@ -64,7 +64,7 @@ def assign_weight_sim(site, path_pickle, no_weight=True):
 
     return pd_weight, pd_weight_long
 
-def count_stat_weights(site, path_pickle, no_weight=True): 
+def count_stat_weights(site, path_pickle, no_weight): 
     """ Function returns a binned count of the weight distribution over all (valid) simulations 
     
     Parameters
@@ -98,7 +98,7 @@ def count_stat_weights(site, path_pickle, no_weight=True):
     
     return bins, counts, number_glaciers
 
-def plot_hist_stat_weights(bins, counts, number_glaciers, show_glaciers=True): 
+def plot_hist_stat_weights(bins, counts, number_glaciers, show_glaciers): 
     """ Function returns a histogram of the weight distribution over all (valid) simulations 
         given a binned count of simulation weights and a number of glaciers
     
@@ -145,7 +145,7 @@ def plot_hist_stat_weights(bins, counts, number_glaciers, show_glaciers=True):
 
     return fig
 
-def plot_hist_stat_weights_from_input(site, path_pickle, no_weight=True, show_glaciers=True): 
+def plot_hist_stat_weights_from_input(site, path_pickle, no_weight, show_glaciers): 
     """ Function returns a histogram of the weight distribution over all (valid) simulations 
     
     Parameters

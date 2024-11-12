@@ -258,7 +258,7 @@ def plot_table_mean_GST_aspect_slope_single_altitude_from_inputs(site, path_pick
 
     return fig
 
-def plot_table_mean_GST_aspect_slope_all_altitudes(table_all, rockfall_values, sim_per_cell, show_glaciers=True, box=True):
+def plot_table_mean_GST_aspect_slope_all_altitudes(table_all, rockfall_values, sim_per_cell, show_glaciers, box=True):
     """ Function returns a plot of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope, aspect, and altitude and higlights the cell corresponding to the 
@@ -368,7 +368,7 @@ def plot_table_mean_GST_aspect_slope_all_altitudes(table_all, rockfall_values, s
 
     return fig
 
-def plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs(site, path_pickle, show_glaciers=True, box=True):
+def plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs(site, path_pickle, show_glaciers, box=True):
     """ Function returns a plot of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope, aspect, and altitude and higlights the cell corresponding to the 

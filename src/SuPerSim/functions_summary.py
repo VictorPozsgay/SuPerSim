@@ -22,7 +22,8 @@ from SuPerSim.horizon import plot_visible_skymap_from_horizon_file
 def plot_all(site,
              path_forcing_list, path_ground, path_snow, path_swe, path_thaw_depth, path_pickle,
              year_bkg_end, year_trans_end, path_horizon=None, no_weight=True, show_glaciers=True,
-             individual_heatmap=False, polar_plots=False, parity_plot=False):
+             individual_heatmap=False, polar_plots=False, parity_plot=False,
+             show_landslide_time=True):
     """ Function returns a series of summary plots for a given site.
     
     Parameters
@@ -57,6 +58,8 @@ def plot_all(site,
         Show or not polar plots
     parity_plot : bool, optional
         Show or not parity plot
+    show_landslide_time : bool
+        Choose to show or not the vertical dashed line indicating the time of the landslide. For a slow landslide, choose False.
 
     Returns
     -------
@@ -171,14 +174,16 @@ def plot_all(site,
         plot_aggregating_distance_temp_all_from_input(['Air temperature', 'Water production', 'Ground temperature'],
                                         [time_air_all[0], time_ground, time_ground],
                                         [mean_air_temp, tot_water_prod, temp_ground_mean],
-                                        ['week', 'month'], site, path_pickle, year_bkg_end, year_trans_end, year_rockfall, False)
+                                        ['week', 'month'], site, path_pickle, year_bkg_end, year_trans_end, year_rockfall, False,
+                                        show_landslide_time)
     
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Granularity: year, plotted for all years')
     plot_aggregating_distance_temp_all_from_input(['Air temperature', 'Water production', 'Ground temperature'],
                                         [time_air_all[0], time_ground, time_ground],
                                         [mean_air_temp, tot_water_prod, temp_ground_mean],
-                                        ['year'], site, path_pickle, year_bkg_end, year_trans_end, 0, False)
+                                        ['year'], site, path_pickle, year_bkg_end, year_trans_end, 0, False,
+                                        show_landslide_time)
 
 
 
@@ -200,7 +205,7 @@ def plot_all(site,
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitudes')
-    plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs(site, path_pickle, show_glaciers=True, box=True)
+    plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs(site, path_pickle, show_glaciers, box=True)
 
 
     if polar_plots:

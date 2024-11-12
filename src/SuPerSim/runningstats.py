@@ -367,7 +367,7 @@ def aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_pickle
 
     return dict_distances, rockfall_time_index
 
-def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year_bkg_end, year_trans_end, year, show_landslide_time=True):
+def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year_bkg_end, year_trans_end, year, show_landslide_time):
     """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
         Vertical subplots for different variables
         Plots from user-given dictionaries
@@ -386,7 +386,7 @@ def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year
         Same for transient period
     year : int
         One can choose to display a specific year or the whole set by choosing an integer not in the study sample, e.g. 0.
-    show_landslide_time : boll
+    show_landslide_time : bool
         Choose to show or not the vertical dashed line indicating the time of the landslide. For a slow landslide, choose False.
 
     Returns
@@ -459,7 +459,7 @@ def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year
 
     return fig
 
-def plot_aggregating_distance_temp_all_from_input(yaxes, xdata, ydata, window, site, path_pickle, year_bkg_end, year_trans_end, year, fill_before=False):
+def plot_aggregating_distance_temp_all_from_input(yaxes, xdata, ydata, window, site, path_pickle, year_bkg_end, year_trans_end, year, fill_before=False, show_landslide_time=True):
     """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
         Vertical subplots for different variables
         Plots directly from intended inputs
@@ -493,6 +493,8 @@ def plot_aggregating_distance_temp_all_from_input(yaxes, xdata, ydata, window, s
         One can choose to display a specific year or the whole set by choosing an integer not in the study sample, e.g. 0.
     fill_before : bool, optional
         Option to fill the first empty values of the smoothed data with the first running average value if True
+    show_landslide_time : bool
+        Choose to show or not the vertical dashed line indicating the time of the landslide. For a slow landslide, choose False.
 
     Returns
     -------
@@ -501,6 +503,6 @@ def plot_aggregating_distance_temp_all_from_input(yaxes, xdata, ydata, window, s
     """
 
     dict_distances, rockfall_time_index = aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_pickle, year_bkg_end, year_trans_end, year, fill_before)
-    fig = plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year_bkg_end, year_trans_end, year)
+    fig = plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year_bkg_end, year_trans_end, year, show_landslide_time)
 
     return fig
