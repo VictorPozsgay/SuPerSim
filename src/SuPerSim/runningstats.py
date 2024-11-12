@@ -367,7 +367,7 @@ def aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_pickle
 
     return dict_distances, rockfall_time_index
 
-def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year_bkg_end, year_trans_end, year):
+def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year_bkg_end, year_trans_end, year, show_landslide_time=True):
     """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
         Vertical subplots for different variables
         Plots from user-given dictionaries
@@ -386,6 +386,8 @@ def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year
         Same for transient period
     year : int
         One can choose to display a specific year or the whole set by choosing an integer not in the study sample, e.g. 0.
+    show_landslide_time : boll
+        Choose to show or not the vertical dashed line indicating the time of the landslide. For a slow landslide, choose False.
 
     Returns
     -------
@@ -407,15 +409,17 @@ def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year
             ax.plot(dict_distances[yaxes[idx]][window[0]], label='Deviation')
             ax.fill_between(range(len(dict_distances[yaxes[idx]][window[0]])), -2, 2, alpha = 0.2, color = 'blue')
             ax.axhline(y = 0, color = 'black', linestyle='--', linewidth=1)
-            if not isinstance(rockfall_time_index[yaxes[idx]], list):
-                ax.axvline(x = rockfall_time_index[yaxes[idx]], color = 'r', linestyle='--', label = 'Landslide')
+            if show_landslide_time:
+                if not isinstance(rockfall_time_index[yaxes[idx]], list):
+                    ax.axvline(x = rockfall_time_index[yaxes[idx]], color = 'r', linestyle='--', label = 'Landslide')
         else:
             for i in range(num_cols):
                 ax[i].plot(dict_distances[yaxes[idx]][window[i]], label='Deviation')
                 ax[i].fill_between(range(len(dict_distances[yaxes[idx]][window[i]])), -2, 2, alpha = 0.2, color = 'blue')
                 ax[i].axhline(y = 0, color = 'black', linestyle='--', linewidth=1)
-                if not isinstance(rockfall_time_index[yaxes[idx]], list):
-                    ax[i].axvline(x = rockfall_time_index[yaxes[idx]], color = 'r', linestyle='--', label = 'Landslide')
+                if show_landslide_time:
+                    if not isinstance(rockfall_time_index[yaxes[idx]], list):
+                        ax[i].axvline(x = rockfall_time_index[yaxes[idx]], color = 'r', linestyle='--', label = 'Landslide')
 
         if year in np.arange(year_bkg_end, year_trans_end):
             locs = np.linspace(0, len(dict_distances[yaxes[idx]][window[0]]), num=12, endpoint=False)
