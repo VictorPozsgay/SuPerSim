@@ -11,7 +11,7 @@ from SuPerSim.mytime import list_tokens_year
 from SuPerSim.pickling import load_all_pickles
 from SuPerSim.weights import assign_weight_sim, plot_hist_stat_weights_from_input, plot_hist_valid_sim_all_variables_from_input
 from SuPerSim.runningstats import mean_all_altitudes, mean_all_reanalyses, assign_tot_water_prod, plot_aggregating_distance_temp_all_from_input
-from SuPerSim.topoheatmap import plot_table_mean_GST_aspect_slope_single_altitude_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs, plot_permafrost_all_altitudes_polar_from_inputs
+from SuPerSim.topoheatmap import plot_table_mean_GST_aspect_slope_single_altitude_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs, plot_permafrost_all_altitudes_polar_from_inputs, plot_table_mean_GST_aspect_altitude_all_slopes_polar_from_inputs, plot_permafrost_all_slopes_polar_from_inputs
 from SuPerSim.model import fit_stat_model_GST_from_inputs
 from SuPerSim.percentiles import plot_cdf_GST_from_inputs, plot_heatmap_percentile_GST_from_inputs
 from SuPerSim.yearlystats import plot_box_yearly_stat_from_inputs, plot_yearly_quantiles_atmospheric_from_inputs, plot_yearly_quantiles_sim_from_inputs, plot_yearly_quantiles_side_by_side_sim_from_inputs
@@ -212,10 +212,12 @@ def plot_all(site,
         print('\n---------------------------------------------------------------------------------------------\n')
         print('Polar heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitude')
         plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs(site, path_pickle, box=True)
+        plot_table_mean_GST_aspect_altitude_all_slopes_polar_from_inputs(site, path_pickle, box=True)
 
         print('\n---------------------------------------------------------------------------------------------\n')
         print('Polar plot of the permafrost and glacier spatial distribution as a function of aspect and slope at all altitude')
         plot_permafrost_all_altitudes_polar_from_inputs(site, path_pickle, path_thaw_depth, box=True)
+        plot_permafrost_all_slopes_polar_from_inputs(site, path_pickle, path_thaw_depth, box=True)
 
 
 
