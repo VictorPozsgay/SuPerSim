@@ -429,7 +429,7 @@ def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year
                 labels = ['Jan','','Mar','','May','','Jul','','Sep','','Nov','']
         else:
             locs = np.linspace(0, len(dict_distances[yaxes[idx]][window[0]]), num= year_trans_end - year_bkg_end + 1, endpoint=True)
-            dloc = int(len(locs)/10*num_cols)
+            dloc = int(np.ceil(len(locs)/10*num_cols))
             locs = locs[::dloc]
             labels = list(range(year_bkg_end,year_trans_end+1,1))
             labels = labels[::dloc]
