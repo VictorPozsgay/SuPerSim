@@ -283,10 +283,10 @@ def plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_tran
     plt.scatter(list_years, yearly_mean, color=colorcycle[0], linestyle='None', label='Yearly mean')
     # plt.plot(list_years, yearly_mean, color=colorcycle[0], label='Mean')
     # plt.plot(list_years, yearly_quantiles.iloc[dict_indices_quantiles[list_quantiles[2]]][label_plot], color=colorcycle[0])
-    for i in [0,1,3,4]:
-        plt.scatter(list_years, yearly_quantiles.loc[[list_quantiles[i]]][label_plot], color=colorcycle[0], alpha=dict_points[i]['alpha'], linewidth=dict_points[i]['width'])
     
     if plot_quantiles:
+        for i in [0,1,3,4]:
+            plt.scatter(list_years, yearly_quantiles.loc[[list_quantiles[i]]][label_plot], color=colorcycle[0], alpha=dict_points[i]['alpha'], linewidth=dict_points[i]['width'])
         plt.fill_between(list_years, yearly_quantiles.loc[[list_quantiles[1]]][label_plot], yearly_quantiles.loc[[list_quantiles[3]]][label_plot],
                             alpha = 0.4, color=colorcycle[0], linewidth=1,
                             # label='Quantiles 16-84'
