@@ -176,17 +176,17 @@ def plot_all(site,
         year_rockfall = rockfall_values['year']
         print('\n---------------------------------------------------------------------------------------------\n')
         print('Granularity: week and month side by side')
-        plot_aggregating_distance_temp_all_from_input(['Air temperature', 'Water production', 'Ground temperature'],
-                                        [time_air_all[0], time_ground, time_ground],
-                                        [mean_air_temp, tot_water_prod, temp_ground_mean],
+        plot_aggregating_distance_temp_all_from_input(['Water production', 'Air temperature', 'Ground temperature'],
+                                        [time_ground, time_air_all[0], time_ground],
+                                        [tot_water_prod, mean_air_temp, temp_ground_mean],
                                         ['week', 'month'], site, path_pickle, year_bkg_end, year_trans_end, year_rockfall, False,
                                         show_landslide_time)
     
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Granularity: year, plotted for all years')
-    plot_aggregating_distance_temp_all_from_input(['Air temperature', 'Water production', 'Ground temperature'],
-                                        [time_air_all[0], time_ground, time_ground],
-                                        [mean_air_temp, tot_water_prod, temp_ground_mean],
+    plot_aggregating_distance_temp_all_from_input(['Water production', 'Air temperature', 'Ground temperature'],
+                                        [time_ground, time_air_all[0], time_ground],
+                                        [tot_water_prod, mean_air_temp, temp_ground_mean],
                                         ['year'], site, path_pickle, year_bkg_end, year_trans_end, 0, False,
                                         show_landslide_time)
 
@@ -369,6 +369,7 @@ def plot_camparison_two_sites(list_site, list_label_site,
 
     print('Plot of yearly, background, and transient statistics for GST for both sites side by side:')
     plot_yearly_quantiles_side_by_side_sim_from_inputs(time_ground[0], [temp_ground[0], temp_ground[1]], [list_valid_sim[0], list_valid_sim[1]], 'GST', list_label_site, year_bkg_end, year_trans_end)
+    plot_yearly_quantiles_side_by_side_sim_from_inputs(time_ground[0], [temp_ground[0], temp_ground[1]], [list_valid_sim[0], list_valid_sim[1]], 'GST', list_label_site, year_bkg_end, year_trans_end, False)
     
     print('\n---------------------------------------------------------------------------------------------\n')
 

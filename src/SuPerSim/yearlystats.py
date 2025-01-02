@@ -478,7 +478,7 @@ def plot_yearly_quantiles_sim_from_inputs(time_file, time_series, list_valid_sim
 #     plt.show()
 #     plt.close()
 
-def plot_yearly_quantiles_side_by_side(list_yearly_quantiles, list_yearly_mean, list_site, year_bkg_end, year_trans_end):
+def plot_yearly_quantiles_side_by_side(list_yearly_quantiles, list_yearly_mean, list_site, year_bkg_end, year_trans_end, plot_quantiles=True):
     """ Function plots yearly statistics for 'air' timeseries, averaged over all reanalyses and altitudes
     
     Parameters
@@ -496,6 +496,9 @@ def plot_yearly_quantiles_side_by_side(list_yearly_quantiles, list_yearly_mean, 
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int, optional
         Same for transient period
+    plot_quantiles : bool, optional
+        Gives the option to plot the 1-sigma and 2-sigma spread. True by default but the range is largely dominated by the 2-sigma envelope,
+        which hinders a good representation of the mean's trend (better if False).
     
     Returns
     -------
@@ -528,16 +531,17 @@ def plot_yearly_quantiles_side_by_side(list_yearly_quantiles, list_yearly_mean, 
         ax.scatter(list_years, list_yearly_mean[idx], color=colorcycle[idx], linestyle='None', label='Yearly mean')
         # ax.plot(xdata, mean_end, color=colorcycle[idx], label='Mean')
         # plt.plot(xdata, quantiles.iloc[dict_indices_quantiles[list_quantiles[2]]]['timeseries'], color=colorcycle[0])
-        for i in [0,1,3,4]:
-            ax.scatter(list_years, list_yearly_quantiles[idx].loc[[list_quantiles[i]]][label_plot[idx]], color=colorcycle[idx], alpha=dict_points[i]['alpha'], linewidth=dict_points[i]['width'])
-        ax.fill_between(list_years, list_yearly_quantiles[idx].loc[[list_quantiles[1]]][label_plot[idx]], list_yearly_quantiles[idx].loc[[list_quantiles[3]]][label_plot[idx]],
-                            alpha = 0.4, color=colorcycle[idx], linewidth=1,
-                            # label='Quantiles 16-84'
-                            )
-        ax.fill_between(list_years, list_yearly_quantiles[idx].loc[[list_quantiles[0]]][label_plot[idx]], list_yearly_quantiles[idx].loc[[list_quantiles[4]]][label_plot[idx]],
-                            alpha = 0.2, color=colorcycle[idx], linewidth=0.5,
-                            # label='Quantiles 2.3-97.7'
-                            )
+        if plot_quantiles:
+            for i in [0,1,3,4]:
+                ax.scatter(list_years, list_yearly_quantiles[idx].loc[[list_quantiles[i]]][label_plot[idx]], color=colorcycle[idx], alpha=dict_points[i]['alpha'], linewidth=dict_points[i]['width'])
+            ax.fill_between(list_years, list_yearly_quantiles[idx].loc[[list_quantiles[1]]][label_plot[idx]], list_yearly_quantiles[idx].loc[[list_quantiles[3]]][label_plot[idx]],
+                                alpha = 0.4, color=colorcycle[idx], linewidth=1,
+                                # label='Quantiles 16-84'
+                                )
+            ax.fill_between(list_years, list_yearly_quantiles[idx].loc[[list_quantiles[0]]][label_plot[idx]], list_yearly_quantiles[idx].loc[[list_quantiles[4]]][label_plot[idx]],
+                                alpha = 0.2, color=colorcycle[idx], linewidth=0.5,
+                                # label='Quantiles 2.3-97.7'
+                                )
 
         ax.hlines(mean_bkg[idx], list_years[0], year_bkg_end, color=colorcycle[2],
                label=f'Background mean: {formatted_mean[idx][0]}{units[label_plot[idx]]}')
@@ -569,7 +573,7 @@ def plot_yearly_quantiles_side_by_side(list_yearly_quantiles, list_yearly_mean, 
 
     return fig
 
-def plot_yearly_quantiles_side_by_side_atmospheric_from_inputs(list_time_file, list_list_time_series, label_plot, list_site, year_bkg_end, year_trans_end):
+def plot_yearly_quantiles_side_by_side_atmospheric_from_inputs(list_time_file, list_list_time_series, label_plot, list_site, year_bkg_end, year_trans_end, plot_quantiles=True):
     """ Function returns panda data frame for atmospheric timeseries, concatenated over all reanalyses
         and averaged over all altitudes
         from intended atmospheric input
@@ -588,6 +592,9 @@ def plot_yearly_quantiles_side_by_side_atmospheric_from_inputs(list_time_file, l
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int, optional
         Same for transient period
+    plot_quantiles : bool, optional
+        Gives the option to plot the 1-sigma and 2-sigma spread. True by default but the range is largely dominated by the 2-sigma envelope,
+        which hinders a good representation of the mean's trend (better if False).
     
     Returns
     -------
@@ -604,11 +611,11 @@ def plot_yearly_quantiles_side_by_side_atmospheric_from_inputs(list_time_file, l
         panda_test[i] = atmospheric_data_to_panda(list_time_file, list_list_time_series[i], label_plot[i])
         yearly_quantiles[i], yearly_mean[i] = panda_data_to_yearly_stats(panda_test[i], year_trans_end)
     
-    fig = plot_yearly_quantiles_side_by_side(yearly_quantiles, yearly_mean, list_site, year_bkg_end, year_trans_end)
+    fig = plot_yearly_quantiles_side_by_side(yearly_quantiles, yearly_mean, list_site, year_bkg_end, year_trans_end, plot_quantiles)
 
     return fig
 
-def plot_yearly_quantiles_side_by_side_sim_from_inputs(time_file, list_time_series, list_list_valid_sim, label_plot, list_site, year_bkg_end, year_trans_end):
+def plot_yearly_quantiles_side_by_side_sim_from_inputs(time_file, list_time_series, list_list_valid_sim, label_plot, list_site, year_bkg_end, year_trans_end, plot_quantiles=True):
     """ Function returns panda data frame for simulated timeseries, concatenated over all reanalyses
         and averaged over all altitudes
         from intended simulated input
@@ -629,6 +636,9 @@ def plot_yearly_quantiles_side_by_side_sim_from_inputs(time_file, list_time_seri
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int, optional
         Same for transient period
+    plot_quantiles : bool, optional
+        Gives the option to plot the 1-sigma and 2-sigma spread. True by default but the range is largely dominated by the 2-sigma envelope,
+        which hinders a good representation of the mean's trend (better if False).
     
     Returns
     -------
@@ -644,7 +654,7 @@ def plot_yearly_quantiles_side_by_side_sim_from_inputs(time_file, list_time_seri
         panda_test[i] = sim_data_to_panda(time_file, list_time_series[i], list_list_valid_sim[i], label_plot)
         yearly_quantiles[i], yearly_mean[i] = panda_data_to_yearly_stats(panda_test[i], year_trans_end)
     
-    fig = plot_yearly_quantiles_side_by_side(yearly_quantiles, yearly_mean, list_site, year_bkg_end, year_trans_end)
+    fig = plot_yearly_quantiles_side_by_side(yearly_quantiles, yearly_mean, list_site, year_bkg_end, year_trans_end, plot_quantiles)
 
     return fig
 

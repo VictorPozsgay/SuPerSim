@@ -407,16 +407,22 @@ def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year
         # ax labels the xdata and window
         if num_cols == 1:
             ax.plot(dict_distances[yaxes[idx]][window[0]], label='Deviation')
+            xmin, xmax = 0, len(dict_distances[yaxes[idx]][window[0]])-1
             ax.fill_between(range(len(dict_distances[yaxes[idx]][window[0]])), -2, 2, alpha = 0.2, color = 'blue')
             ax.axhline(y = 0, color = 'black', linestyle='--', linewidth=1)
+            for yline in [-2,2]:
+                ax.axhline(y = yline, color = 'grey', linestyle='-', linewidth=1)
             if show_landslide_time:
                 if not isinstance(rockfall_time_index[yaxes[idx]], list):
                     ax.axvline(x = rockfall_time_index[yaxes[idx]], color = 'r', linestyle='--', label = 'Landslide')
         else:
             for i in range(num_cols):
                 ax[i].plot(dict_distances[yaxes[idx]][window[i]], label='Deviation')
+                xmin, xmax = 0, len(dict_distances[yaxes[idx]][window[i]])-1
                 ax[i].fill_between(range(len(dict_distances[yaxes[idx]][window[i]])), -2, 2, alpha = 0.2, color = 'blue')
                 ax[i].axhline(y = 0, color = 'black', linestyle='--', linewidth=1)
+                for yline in [-2,2]:
+                    ax[i].axhline(y = yline, color = 'grey', linestyle='-', linewidth=1)
                 if show_landslide_time:
                     if not isinstance(rockfall_time_index[yaxes[idx]], list):
                         ax[i].axvline(x = rockfall_time_index[yaxes[idx]], color = 'r', linestyle='--', label = 'Landslide')
@@ -439,13 +445,15 @@ def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year
         else:
             labels_end = labels
         if num_cols == 1:
-            ax.set_xticks(locs, labels)
+            ax.set_xticks(locs, labels_end)
+            ax.set_xlim(xmin, xmax)
             ax.set_ylabel(yaxes[idx])
-            ax.grid(axis = 'y')
+            # ax.grid(axis = 'y')
         else: 
             for i in range(num_cols):
                 ax[i].set_xticks(locs, labels_end)
-                ax[i].grid(axis = 'y')
+                ax[i].set_xlim(xmin, xmax)
+                # ax[i].grid(axis = 'y')
                 if idx == 0:
                     ax[i].set_title(window[i].capitalize())
             ax[0].set_ylabel(yaxes[idx])
