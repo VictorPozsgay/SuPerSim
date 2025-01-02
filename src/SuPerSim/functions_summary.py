@@ -145,13 +145,18 @@ def plot_all(site,
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of yearly statistics for atmospheric timeseries. Mean and several quantiles for each year:')
     plot_yearly_quantiles_atmospheric_from_inputs(time_air_all, temp_air_all, 'Air temperature', year_bkg_end, year_trans_end)
+    plot_yearly_quantiles_atmospheric_from_inputs(time_air_all, temp_air_all, 'Air temperature', year_bkg_end, year_trans_end, False)
     plot_yearly_quantiles_atmospheric_from_inputs(time_air_all, precipitation_all, 'Precipitation', year_bkg_end, year_trans_end)
+    plot_yearly_quantiles_atmospheric_from_inputs(time_air_all, precipitation_all, 'Precipitation', year_bkg_end, year_trans_end, False)
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of yearly statistics for simulated timeseries. Mean and several quantiles for each year:')
     plot_yearly_quantiles_sim_from_inputs(time_ground, temp_ground, list_valid_sim, 'GST', year_bkg_end, year_trans_end)
+    plot_yearly_quantiles_sim_from_inputs(time_ground, temp_ground, list_valid_sim, 'GST', year_bkg_end, year_trans_end, False)
     plot_yearly_quantiles_sim_from_inputs(time_ground, snow_height, list_valid_sim, 'Snow depth', year_bkg_end, year_trans_end)
+    plot_yearly_quantiles_sim_from_inputs(time_ground, snow_height, list_valid_sim, 'Snow depth', year_bkg_end, year_trans_end, False)
     plot_yearly_quantiles_sim_from_inputs(time_ground, swe, list_valid_sim, 'SWE', year_bkg_end, year_trans_end)
+    plot_yearly_quantiles_sim_from_inputs(time_ground, swe, list_valid_sim, 'SWE', year_bkg_end, year_trans_end, False)
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of 2 timeseries reduced to a 1-year window with mean and 1- and 2-sigma spread:')

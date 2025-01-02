@@ -233,7 +233,7 @@ def panda_data_to_yearly_stats(panda_test, year_trans_end):
 
     return yearly_quantiles, yearly_mean
 
-def plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_trans_end):
+def plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_trans_end, plot_quantiles=True):
     """ Function plots yearly statistics for 'air' timeseries, averaged over all reanalyses and altitudes
     
     Parameters
@@ -249,6 +249,9 @@ def plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_tran
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int, optional
         Same for transient period
+    plot_quantiles : bool, optional
+        Gives the option to plot the 1-sigma and 2-sigma spread. True by default but the range is largely dominated by the 2-sigma envelope,
+        which hinders a good representation of the mean's trend (better if False).
     
     Returns
     -------
@@ -282,14 +285,16 @@ def plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_tran
     # plt.plot(list_years, yearly_quantiles.iloc[dict_indices_quantiles[list_quantiles[2]]][label_plot], color=colorcycle[0])
     for i in [0,1,3,4]:
         plt.scatter(list_years, yearly_quantiles.loc[[list_quantiles[i]]][label_plot], color=colorcycle[0], alpha=dict_points[i]['alpha'], linewidth=dict_points[i]['width'])
-    plt.fill_between(list_years, yearly_quantiles.loc[[list_quantiles[1]]][label_plot], yearly_quantiles.loc[[list_quantiles[3]]][label_plot],
-                        alpha = 0.4, color=colorcycle[0], linewidth=1,
-                        # label='Quantiles 16-84'
-                        )
-    plt.fill_between(list_years, yearly_quantiles.loc[[list_quantiles[0]]][label_plot], yearly_quantiles.loc[[list_quantiles[4]]][label_plot],
-                        alpha = 0.2, color=colorcycle[0], linewidth=0.5,
-                        # label='Quantiles 2.3-97.7'
-                        )
+    
+    if plot_quantiles:
+        plt.fill_between(list_years, yearly_quantiles.loc[[list_quantiles[1]]][label_plot], yearly_quantiles.loc[[list_quantiles[3]]][label_plot],
+                            alpha = 0.4, color=colorcycle[0], linewidth=1,
+                            # label='Quantiles 16-84'
+                            )
+        plt.fill_between(list_years, yearly_quantiles.loc[[list_quantiles[0]]][label_plot], yearly_quantiles.loc[[list_quantiles[4]]][label_plot],
+                            alpha = 0.2, color=colorcycle[0], linewidth=0.5,
+                            # label='Quantiles 2.3-97.7'
+                            )
     
     plt.hlines(mean_bkg, list_years[0], year_bkg_end, color=colorcycle[1],
                label=f'Background mean: {formatted_mean[0]}{units[label_plot]}')
@@ -317,7 +322,7 @@ def plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_tran
 
     return fig 
 
-def plot_yearly_quantiles_atmospheric_from_inputs(list_time_file, list_time_series, label_plot, year_bkg_end, year_trans_end):
+def plot_yearly_quantiles_atmospheric_from_inputs(list_time_file, list_time_series, label_plot, year_bkg_end, year_trans_end, plot_quantiles=True):
     """ Function returns panda data frame for atmospheric timeseries, concatenated over all reanalyses
         and averaged over all altitudes
         from intended atmospheric input
@@ -334,6 +339,9 @@ def plot_yearly_quantiles_atmospheric_from_inputs(list_time_file, list_time_seri
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int, optional
         Same for transient period
+    plot_quantiles : bool, optional
+        Gives the option to plot the 1-sigma and 2-sigma spread. True by default but the range is largely dominated by the 2-sigma envelope,
+        which hinders a good representation of the mean's trend (better if False).
     
     Returns
     -------
@@ -343,11 +351,11 @@ def plot_yearly_quantiles_atmospheric_from_inputs(list_time_file, list_time_seri
 
     panda_test = atmospheric_data_to_panda(list_time_file, list_time_series, label_plot)
     yearly_quantiles, yearly_mean = panda_data_to_yearly_stats(panda_test, year_trans_end)
-    fig = plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_trans_end)
+    fig = plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_trans_end, plot_quantiles)
 
     return fig
 
-def plot_yearly_quantiles_sim_from_inputs(time_file, time_series, list_valid_sim, label_plot, year_bkg_end, year_trans_end):
+def plot_yearly_quantiles_sim_from_inputs(time_file, time_series, list_valid_sim, label_plot, year_bkg_end, year_trans_end, plot_quantiles=True):
     """ Function returns panda data frame for atmospheric timeseries, concatenated over all reanalyses
         and averaged over all altitudes
         from intended simulated input
@@ -366,6 +374,9 @@ def plot_yearly_quantiles_sim_from_inputs(time_file, time_series, list_valid_sim
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int, optional
         Same for transient period
+    plot_quantiles : bool, optional
+        Gives the option to plot the 1-sigma and 2-sigma spread. True by default but the range is largely dominated by the 2-sigma envelope,
+        which hinders a good representation of the mean's trend (better if False).
     
     Returns
     -------
@@ -375,7 +386,7 @@ def plot_yearly_quantiles_sim_from_inputs(time_file, time_series, list_valid_sim
 
     panda_test = sim_data_to_panda(time_file, time_series, list_valid_sim, label_plot)
     yearly_quantiles, yearly_mean = panda_data_to_yearly_stats(panda_test, year_trans_end)
-    fig = plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_trans_end)
+    fig = plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_trans_end, plot_quantiles)
 
     return fig
 
