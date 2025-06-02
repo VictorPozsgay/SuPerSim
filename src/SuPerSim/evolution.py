@@ -37,7 +37,7 @@ def sorted_bkg_GST_data(site, path_pickle):
     df_stats = pkl['df_stats']
 
     df_stats_bis = pd.DataFrame(data=df_stats, columns=['bkg_grd_temp', 'evol_grd_temp'])
-    df_stats_bis['bkg_grd_temp'] = pd.Categorical(df_stats_bis['bkg_grd_temp'], np.sort(df_stats['bkg_grd_temp']))
+    # df_stats_bis['bkg_grd_temp'] = pd.Categorical(df_stats_bis['bkg_grd_temp'], np.sort(df_stats['bkg_grd_temp']))
     df_stats_bis = df_stats_bis.sort_values('bkg_grd_temp')
 
     list_xy = [list(df_stats_bis.loc[:, 'bkg_grd_temp']), list(df_stats_bis.loc[:, 'evol_grd_temp'])]
