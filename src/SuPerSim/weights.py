@@ -217,8 +217,9 @@ def count_perma_sim_per_variable(site, path_thaw_depth, path_pickle):
 
     for var in variables:
         # number_no_glaciers: number of valid simulations (without glaciers) per value in list_var_prev
-        _, number_no_glaciers = [list(i) for i in np.unique(df_stats.loc[:, var], return_counts=True)]
-        _, number_perma = [list(i) for i in np.unique((df_stats.loc[list_perma, :]).loc[:, var], return_counts=True)]
+        list_vals = list(np.unique(df_stats.loc[:, var]))
+        _, number_no_glaciers = [list_vals, [list(df_stats.loc[:, var]).count(i) for i in list_vals]]
+        _, number_perma = [list_vals, [list(df_stats.loc[list_perma, var]).count(i) for i in list_vals]]
         
         # total number of simulations per value per variable
         dict_bins[var], tot = [list(i) for i in np.unique(df.loc[:, var], return_counts=True)]
