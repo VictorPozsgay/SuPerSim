@@ -63,7 +63,8 @@ def plot_all(site,
 
     Returns
     -------
-    Plots
+    dic_figs: dict
+        Dictionary {k: v} where the keys 'k' are the figure names and the values 'v' the figures
     """  
 
     #####################################################################################
@@ -114,20 +115,26 @@ def plot_all(site,
     alt_index = int(np.floor((len(alt_list)-1)/2))
     alt_index_abs = alt_list[alt_index]
 
+    list_figs = []
+    list_fig_names = []
+
     if path_horizon is not None:
         print('\n---------------------------------------------------------------------------------------------\n')
         print('Fisheye view of the sky with the visible portion in blue and the blocked one in black:')
-        plot_visible_skymap_from_horizon_file(path_horizon)
+        list_fig_names.append('fisheye_horizon')
+        list_figs.append(plot_visible_skymap_from_horizon_file(path_horizon))
 
     print('\n---------------------------------------------------------------------------------------------\n')
 
     print('The following plot is a histogram of the distribution of the statistical weights of all simulations:')
-    plot_hist_stat_weights_from_input(site, path_pickle, no_weight, show_glaciers)
+    list_fig_names.append('hist_stat_weight')
+    list_figs.append(plot_hist_stat_weights_from_input(site, path_pickle, no_weight, show_glaciers))
 
     print('\n---------------------------------------------------------------------------------------------\n')
 
     print('The following plot is a histogram of the distribution of glacier simulations wrt to altitude, aspect, slope, and forcing:')
-    plot_hist_valid_sim_all_variables_from_input(site, path_thaw_depth, path_pickle)
+    list_fig_names.append('hist_distrib_glaciers_perma')
+    list_figs.append(plot_hist_valid_sim_all_variables_from_input(site, path_thaw_depth, path_pickle))
 
 
 
@@ -137,35 +144,52 @@ def plot_all(site,
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Yearly statistics for air and ground surface temperature, and also precipitation and water production')
-    plot_box_yearly_stat_from_inputs('Air temperature', time_air_all[0], mean_air_temp, year_bkg_end, year_trans_end)
-    plot_box_yearly_stat_from_inputs('GST', time_ground, temp_ground_mean, year_bkg_end, year_trans_end)
-    plot_box_yearly_stat_from_inputs('Precipitation', time_air_all[0], mean_prec, year_bkg_end, year_trans_end)
-    plot_box_yearly_stat_from_inputs('Water production', time_ground, tot_water_prod, year_bkg_end, year_trans_end)
+    list_fig_names.append('AirTemp_yearly_stats_box')
+    list_figs.append(plot_box_yearly_stat_from_inputs('Air temperature', time_air_all[0], mean_air_temp, year_bkg_end, year_trans_end))
+    list_fig_names.append('GST_yearly_stats_box')
+    list_figs.append(plot_box_yearly_stat_from_inputs('GST', time_ground, temp_ground_mean, year_bkg_end, year_trans_end))
+    list_fig_names.append('Precip_yearly_stats_box')
+    list_figs.append(plot_box_yearly_stat_from_inputs('Precipitation', time_air_all[0], mean_prec, year_bkg_end, year_trans_end))
+    list_fig_names.append('WaterProd_yearly_stats_box')
+    list_figs.append(plot_box_yearly_stat_from_inputs('Water production', time_ground, tot_water_prod, year_bkg_end, year_trans_end))
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of yearly statistics for atmospheric timeseries. Mean and several quantiles for each year:')
-    plot_yearly_quantiles_atmospheric_from_inputs(time_air_all, temp_air_all, 'Air temperature', year_bkg_end, year_trans_end)
-    plot_yearly_quantiles_atmospheric_from_inputs(time_air_all, temp_air_all, 'Air temperature', year_bkg_end, year_trans_end, False)
-    plot_yearly_quantiles_atmospheric_from_inputs(time_air_all, precipitation_all, 'Precipitation', year_bkg_end, year_trans_end)
-    plot_yearly_quantiles_atmospheric_from_inputs(time_air_all, precipitation_all, 'Precipitation', year_bkg_end, year_trans_end, False)
+    list_fig_names.append('AirTemp_yearly_quantiles')
+    list_figs.append(plot_yearly_quantiles_atmospheric_from_inputs(time_air_all, temp_air_all, 'Air temperature', year_bkg_end, year_trans_end))
+    list_fig_names.append('AirTemp_yearly_mean')
+    list_figs.append(plot_yearly_quantiles_atmospheric_from_inputs(time_air_all, temp_air_all, 'Air temperature', year_bkg_end, year_trans_end, False))
+    list_fig_names.append('Precip_yearly_quantiles')
+    list_figs.append(plot_yearly_quantiles_atmospheric_from_inputs(time_air_all, precipitation_all, 'Precipitation', year_bkg_end, year_trans_end))
+    list_fig_names.append('Precip_yearly_mean')
+    list_figs.append(plot_yearly_quantiles_atmospheric_from_inputs(time_air_all, precipitation_all, 'Precipitation', year_bkg_end, year_trans_end, False))
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of yearly statistics for simulated timeseries. Mean and several quantiles for each year:')
-    plot_yearly_quantiles_sim_from_inputs(time_ground, temp_ground, list_valid_sim, 'GST', year_bkg_end, year_trans_end)
-    plot_yearly_quantiles_sim_from_inputs(time_ground, temp_ground, list_valid_sim, 'GST', year_bkg_end, year_trans_end, False)
-    plot_yearly_quantiles_sim_from_inputs(time_ground, snow_height, list_valid_sim, 'Snow depth', year_bkg_end, year_trans_end)
-    plot_yearly_quantiles_sim_from_inputs(time_ground, snow_height, list_valid_sim, 'Snow depth', year_bkg_end, year_trans_end, False)
-    plot_yearly_quantiles_sim_from_inputs(time_ground, swe, list_valid_sim, 'SWE', year_bkg_end, year_trans_end)
-    plot_yearly_quantiles_sim_from_inputs(time_ground, swe, list_valid_sim, 'SWE', year_bkg_end, year_trans_end, False)
+    list_fig_names.append('GST_yearly_quantiles')
+    list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, temp_ground, list_valid_sim, 'GST', year_bkg_end, year_trans_end))
+    list_fig_names.append('GST_yearly_mean')
+    list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, temp_ground, list_valid_sim, 'GST', year_bkg_end, year_trans_end, False))
+    list_fig_names.append('Snow_yearly_quantiles')
+    list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, snow_height, list_valid_sim, 'Snow depth', year_bkg_end, year_trans_end))
+    list_fig_names.append('Snow_yearly_mean')
+    list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, snow_height, list_valid_sim, 'Snow depth', year_bkg_end, year_trans_end, False))
+    list_fig_names.append('SWE_yearly_quantiles')
+    list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, swe, list_valid_sim, 'SWE', year_bkg_end, year_trans_end))
+    list_fig_names.append('SWE_yearly_mean')
+    list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, swe, list_valid_sim, 'SWE', year_bkg_end, year_trans_end, False))
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of 2 timeseries reduced to a 1-year window with mean and 1- and 2-sigma spread:')
-    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground, [temp_ground, snow_height], [list_valid_sim, list_valid_sim], ['GST', 'Snow depth'])
+    list_fig_names.append('GST_v_snow')
+    list_figs.append(plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground, [temp_ground, snow_height], [list_valid_sim, list_valid_sim], ['GST', 'Snow depth']))
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of a single timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread, for background and transient periods:')
-    plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [temp_ground, temp_ground], [list_valid_sim, list_valid_sim], 'GST', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground])
-    plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [snow_height, snow_height], [list_valid_sim, list_valid_sim], 'Snow depth', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground])
+    list_fig_names.append('GST_1year_bkg_v_transient')
+    list_figs.append(plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [temp_ground, temp_ground], [list_valid_sim, list_valid_sim], 'GST', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground]))
+    list_fig_names.append('snow_1year_bkg_v_transient')
+    list_figs.append(plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [snow_height, snow_height], [list_valid_sim, list_valid_sim], 'Snow depth', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground]))
 
     # # print('')
     # This works well but it would be better to smooth the data
@@ -176,19 +200,21 @@ def plot_all(site,
         year_rockfall = rockfall_values['year']
         print('\n---------------------------------------------------------------------------------------------\n')
         print('Granularity: week and month side by side')
-        plot_aggregating_distance_temp_all_from_input(['Water production', 'Air temperature', 'Ground temperature'],
+        list_fig_names.append('normdev_week_month')
+        list_figs.append(plot_aggregating_distance_temp_all_from_input(['Water production', 'Air temperature', 'Ground temperature'],
                                         [time_ground, time_air_all[0], time_ground],
                                         [tot_water_prod, mean_air_temp, temp_ground_mean],
                                         ['week', 'month'], site, path_pickle, year_bkg_end, year_trans_end, year_rockfall, False,
-                                        show_landslide_time)
+                                        show_landslide_time))
     
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Granularity: year, plotted for all years')
-    plot_aggregating_distance_temp_all_from_input(['Water production', 'Air temperature', 'Ground temperature'],
+    list_fig_names.append('normdev')
+    list_figs.append(plot_aggregating_distance_temp_all_from_input(['Water production', 'Air temperature', 'Ground temperature'],
                                         [time_ground, time_air_all[0], time_ground],
                                         [tot_water_prod, mean_air_temp, temp_ground_mean],
                                         ['year'], site, path_pickle, year_bkg_end, year_trans_end, 0, False,
-                                        show_landslide_time)
+                                        show_landslide_time))
 
 
 
@@ -203,26 +229,33 @@ def plot_all(site,
         alt_show = rockfall_values['altitude'] if ((rockfall_values['exact_topo']) and (rockfall_values['altitude'] in alt_list)) else alt_index_abs
         print('\n---------------------------------------------------------------------------------------------\n')
         print(f'Heatmap of the background mean GST as a function of aspect and slope at {alt_show} m:')
-        plot_table_mean_GST_aspect_slope_single_altitude_from_inputs(site, path_pickle, alt_show, background=True, box=True)
+        list_fig_names.append('heatmap_centre_GST_bkg')
+        list_figs.append(plot_table_mean_GST_aspect_slope_single_altitude_from_inputs(site, path_pickle, alt_show, background=True, box=True))
         print('\n---------------------------------------------------------------------------------------------\n')
         print(f'Heatmap of the evolution of the mean GST between the background and the transient periods as a function of aspect and slope at {alt_show} m:')
-        plot_table_mean_GST_aspect_slope_single_altitude_from_inputs(site, path_pickle, alt_show, background=False, box=True)
+        list_fig_names.append('heatmap_centre_GST_evol')
+        list_figs.append(plot_table_mean_GST_aspect_slope_single_altitude_from_inputs(site, path_pickle, alt_show, background=False, box=True))
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitudes')
-    plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs(site, path_pickle, show_glaciers, box=True)
+    list_fig_names.append('heatmap_GST')
+    list_figs.append(plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs(site, path_pickle, show_glaciers, box=True))
 
 
     if polar_plots:
         print('\n---------------------------------------------------------------------------------------------\n')
         print('Polar heatmap of the background mean GST and its evolution as a function of aspect and slope at all altitude')
-        plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs(site, path_pickle, box=True)
-        plot_table_mean_GST_aspect_altitude_all_slopes_polar_from_inputs(site, path_pickle, box=True)
+        list_fig_names.append('heatmap_GST_polar_alts')
+        list_figs.append(plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs(site, path_pickle, box=True))
+        list_fig_names.append('heatmap_GST_polar')
+        list_figs.append(plot_table_mean_GST_aspect_altitude_all_slopes_polar_from_inputs(site, path_pickle, box=True))
 
         print('\n---------------------------------------------------------------------------------------------\n')
         print('Polar plot of the permafrost and glacier spatial distribution as a function of aspect and slope at all altitude')
-        plot_permafrost_all_altitudes_polar_from_inputs(site, path_pickle, path_thaw_depth, box=True)
-        plot_permafrost_all_slopes_polar_from_inputs(site, path_pickle, path_thaw_depth, box=True)
+        list_fig_names.append('heatmap_perma_polar_alts')
+        list_figs.append(plot_permafrost_all_altitudes_polar_from_inputs(site, path_pickle, path_thaw_depth, box=True))
+        list_fig_names.append('heatmap_perma_polar')
+        list_figs.append(plot_permafrost_all_slopes_polar_from_inputs(site, path_pickle, path_thaw_depth, box=True))
 
 
 
@@ -234,33 +267,42 @@ def plot_all(site,
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('CDF of background, transient, and evolution GST:')
-    plot_cdf_GST_from_inputs(site, path_pickle)
+    list_fig_names.append('CDF_GST_SO')
+    list_figs.append(plot_cdf_GST_from_inputs(site, path_pickle))
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Heatmap of 10th, 25th, 50th, 75th, and 90th percentile in background and transient GST, and the difference:')
-    plot_heatmap_percentile_GST_from_inputs(site, path_pickle)
+    list_fig_names.append('heatmap_percentiles_GST_bkg_trans_evol')
+    list_figs.append(plot_heatmap_percentile_GST_from_inputs(site, path_pickle))
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Histogram of the evolution of the snow cover (in days) and melt-out date:')
-    plot_evolution_snow_cover_melt_out_from_inputs(site, path_pickle)
+    list_fig_names.append('hist_snow_cover')
+    list_figs.append(plot_evolution_snow_cover_melt_out_from_inputs(site, path_pickle))
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of mean GST evolution vs background GST, fit, and binning per 10% quantiles')
-    plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs(site, path_pickle)
+    list_fig_names.append('GST_evol_v_bkg')
+    list_figs.append(plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs(site, path_pickle))
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Scatter plot of mean background GST vs evolution of mean GST between the background and transient period')
-    plot_mean_bkg_GST_vs_evolution_from_inputs(site, path_pickle)
+    list_fig_names.append('GST_evol_v_bkg_alts')
+    list_figs.append(plot_mean_bkg_GST_vs_evolution_from_inputs(site, path_pickle))
 
     if parity_plot:
         print('\n---------------------------------------------------------------------------------------------\n')
         print('Parity plot (statistically-modeled vs numerically-simulated) of background mean GST:')
-        fit_stat_model_GST_from_inputs(site, path_pickle, all_data=False, diff_forcings=True)
+        list_fig_names.append('parity_plot_stat_model_bkg_mean_GST')
+        list_figs.append(fit_stat_model_GST_from_inputs(site, path_pickle, all_data=False, diff_forcings=True))
 
     
     print('\n---------------------------------------------------------------------------------------------')
     print('---------------------------------- SUCCESSFULLY COMPLETED -----------------------------------')
     print('---------------------------------------------------------------------------------------------\n')
+
+    dic_figs = dict(zip(list_fig_names, list_figs))
+    return dic_figs
 
 
 
