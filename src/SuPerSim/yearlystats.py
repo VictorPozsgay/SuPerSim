@@ -20,7 +20,8 @@ def data_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, yea
     Parameters
     ----------
     name_series : str
-        Name of the quantity to plot, has to be one of 'GST', 'Air temperature', 'Precipitation', 'SWE', 'Water production'
+        Name of the quantity to plot, has to be one of 'GST', '1m ground temperature', '5m ground temperature',
+        '10m ground temperature', 'Air temperature', 'Precipitation', 'SWE', 'Water production'
     time_file : netCDF4._netCDF4.Variable
         File where the time index of each datapoint is stored        
     file_to_plot : list
@@ -107,7 +108,8 @@ def plot_box_yearly_stat_from_inputs(name_series, time_file, file_to_plot, year_
     Parameters
     ----------
     name_series : str
-        Name of the quantity to plot, has to be one of 'GST', 'Air temperature', 'Precipitation', 'SWE', 'Water production'
+        Name of the quantity to plot, has to be one of 'GST', '1m ground temperature', '5m ground temperature',
+        '10m ground temperature', 'Air temperature', 'Precipitation', 'SWE', 'Water production'
     time_file : netCDF4._netCDF4.Variable
         File where the time index of each datapoint is stored        
     file_to_plot : list
@@ -166,8 +168,8 @@ def atmospheric_data_to_panda(list_time_file, list_time_series, label_plot):
 
     return panda_test
 
-def sim_data_to_panda(time_file, time_series, list_valid_sim, label_plot):
-    """ Function returns panda data frame for 'air' timeseries, concatenated all reanalyses
+def sim_data_to_panda(time_file, time_series, list_valid_sim, label_plot, idx_depth=0):
+    """ Function returns panda data frame for simulated timeseries, concatenated all reanalyses
         and averaged over all altitudes
     
     Parameters
@@ -180,6 +182,8 @@ def sim_data_to_panda(time_file, time_series, list_valid_sim, label_plot):
         List of the indices of all valid simulations
     label_plot : str
         label associated to the plot
+    idx_depth : int, optional
+        For ground temperatures, selects the depth index
     
     Returns
     -------
@@ -190,7 +194,7 @@ def sim_data_to_panda(time_file, time_series, list_valid_sim, label_plot):
 
     long_timeseries = []
     for sim in list_valid_sim:
-        long_timeseries.append(time_series[sim,:,0] if len(time_series.shape) == 3 else time_series[sim,:])
+        long_timeseries.append(time_series[sim,:,idx_depth] if len(time_series.shape) == 3 else time_series[sim,:])
 
     long_timeseries = np.array(long_timeseries).flatten()
     long_years = np.array([int(i.year) for i in num2date(time_file[:], time_file.units)]*len(list_valid_sim))
@@ -231,7 +235,9 @@ def panda_data_to_yearly_stats(panda_test, year_trans_end):
     yearly_quantiles = yearly_quantiles.swaplevel()
     yearly_mean = panda_test.groupby(['year']).mean()
 
-    return yearly_quantiles, yearly_mean
+    excep_years = list(yearly_mean.sort_values(by=[yearly_mean.columns[0]], ascending=False).index[:3])
+
+    return yearly_quantiles, yearly_mean, excep_years
 
 def plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_trans_end, plot_quantiles=True):
     """ Function plots yearly statistics for 'air' timeseries, averaged over all reanalyses and altitudes
@@ -307,7 +313,7 @@ def plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_tran
 
     plt.gca().set_ylim(ylim)
 
-    if label_plot in ['GST', 'Air temperature']:
+    if label_plot in ['GST', '1m ground temperature', '5m ground temperature', '10m ground temperature', 'Air temperature']:
         plt.axhline(y=0, color='grey', linestyle='dashed')
     
     plt.ylabel(label_plot+' ['+units[label_plot]+']')
@@ -350,12 +356,12 @@ def plot_yearly_quantiles_atmospheric_from_inputs(list_time_file, list_time_seri
     """
 
     panda_test = atmospheric_data_to_panda(list_time_file, list_time_series, label_plot)
-    yearly_quantiles, yearly_mean = panda_data_to_yearly_stats(panda_test, year_trans_end)
+    yearly_quantiles, yearly_mean, _ = panda_data_to_yearly_stats(panda_test, year_trans_end)
     fig = plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_trans_end, plot_quantiles)
 
     return fig
 
-def plot_yearly_quantiles_sim_from_inputs(time_file, time_series, list_valid_sim, label_plot, year_bkg_end, year_trans_end, plot_quantiles=True):
+def plot_yearly_quantiles_sim_from_inputs(time_file, time_series, list_valid_sim, label_plot, year_bkg_end, year_trans_end, plot_quantiles=True, idx_depth=0):
     """ Function returns panda data frame for atmospheric timeseries, concatenated over all reanalyses
         and averaged over all altitudes
         from intended simulated input
@@ -377,6 +383,8 @@ def plot_yearly_quantiles_sim_from_inputs(time_file, time_series, list_valid_sim
     plot_quantiles : bool, optional
         Gives the option to plot the 1-sigma and 2-sigma spread. True by default but the range is largely dominated by the 2-sigma envelope,
         which hinders a good representation of the mean's trend (better if False).
+    idx_depth : int, optional
+        For ground temperatures, selects the depth index
     
     Returns
     -------
@@ -384,8 +392,8 @@ def plot_yearly_quantiles_sim_from_inputs(time_file, time_series, list_valid_sim
         Plot of yearly statistics for simulated timeseries. Mean and several quantiles for each year.
     """
 
-    panda_test = sim_data_to_panda(time_file, time_series, list_valid_sim, label_plot)
-    yearly_quantiles, yearly_mean = panda_data_to_yearly_stats(panda_test, year_trans_end)
+    panda_test = sim_data_to_panda(time_file, time_series, list_valid_sim, label_plot, idx_depth)
+    yearly_quantiles, yearly_mean, _ = panda_data_to_yearly_stats(panda_test, year_trans_end)
     fig = plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_trans_end, plot_quantiles)
 
     return fig
@@ -548,7 +556,7 @@ def plot_yearly_quantiles_side_by_side(list_yearly_quantiles, list_yearly_mean, 
         ax.hlines(mean_trans[idx],  year_bkg_end, list_years[-1], color=colorcycle[3],
                label=f'Transient mean: {formatted_mean[idx][1]}{units[label_plot[idx]]}')
             
-        if label_plot[idx] in ['GST', 'Air temperature']:
+        if label_plot[idx] in ['GST', '1m ground temperature', '5m ground temperature', '10m ground temperature', 'Air temperature']:
             ax.axhline(y=0, color='grey', linestyle='dashed')
 
         ax.title.set_text(list_site[idx])
@@ -609,13 +617,13 @@ def plot_yearly_quantiles_side_by_side_atmospheric_from_inputs(list_time_file, l
 
     for i in range(2):
         panda_test[i] = atmospheric_data_to_panda(list_time_file, list_list_time_series[i], label_plot[i])
-        yearly_quantiles[i], yearly_mean[i] = panda_data_to_yearly_stats(panda_test[i], year_trans_end)
+        yearly_quantiles[i], yearly_mean[i], _ = panda_data_to_yearly_stats(panda_test[i], year_trans_end)
     
     fig = plot_yearly_quantiles_side_by_side(yearly_quantiles, yearly_mean, list_site, year_bkg_end, year_trans_end, plot_quantiles)
 
     return fig
 
-def plot_yearly_quantiles_side_by_side_sim_from_inputs(time_file, list_time_series, list_list_valid_sim, label_plot, list_site, year_bkg_end, year_trans_end, plot_quantiles=True):
+def plot_yearly_quantiles_side_by_side_sim_from_inputs(time_file, list_time_series, list_list_valid_sim, label_plot, list_site, year_bkg_end, year_trans_end, plot_quantiles=True, idx_depth=0):
     """ Function returns panda data frame for simulated timeseries, concatenated over all reanalyses
         and averaged over all altitudes
         from intended simulated input
@@ -639,6 +647,8 @@ def plot_yearly_quantiles_side_by_side_sim_from_inputs(time_file, list_time_seri
     plot_quantiles : bool, optional
         Gives the option to plot the 1-sigma and 2-sigma spread. True by default but the range is largely dominated by the 2-sigma envelope,
         which hinders a good representation of the mean's trend (better if False).
+    idx_depth : int, optional
+        For ground temperatures, selects the depth index
     
     Returns
     -------
@@ -651,8 +661,8 @@ def plot_yearly_quantiles_side_by_side_sim_from_inputs(time_file, list_time_seri
     yearly_mean = [[] for _ in range(2)]
 
     for i in range(2):
-        panda_test[i] = sim_data_to_panda(time_file, list_time_series[i], list_list_valid_sim[i], label_plot)
-        yearly_quantiles[i], yearly_mean[i] = panda_data_to_yearly_stats(panda_test[i], year_trans_end)
+        panda_test[i] = sim_data_to_panda(time_file, list_time_series[i], list_list_valid_sim[i], label_plot, idx_depth)
+        yearly_quantiles[i], yearly_mean[i], _ = panda_data_to_yearly_stats(panda_test[i], year_trans_end)
     
     fig = plot_yearly_quantiles_side_by_side(yearly_quantiles, yearly_mean, list_site, year_bkg_end, year_trans_end, plot_quantiles)
 
@@ -803,7 +813,7 @@ def plot_sanity_two_variables_one_year_quantiles_side_by_side(time_file, time_se
         ax.fill_between(xdata, quantiles.iloc[1], quantiles.iloc[3], alpha = 0.4, color=colorcycle[indx], linewidth=1)
         ax.fill_between(xdata, quantiles.iloc[0], quantiles.iloc[4], alpha = 0.2, color=colorcycle[indx], linewidth=0.5)
 
-        if list_label[idx] in ['GST', 'Air temperature']:
+        if list_label[idx] in ['GST', '1m ground temperature', '5m ground temperature', '10m ground temperature', 'Air temperature']:
             ax.axhline(y=0, color='grey', linestyle='dashed')
 
         locs = np.linspace(0, len(mean_end), num=13, endpoint=True)
@@ -820,3 +830,113 @@ def plot_sanity_two_variables_one_year_quantiles_side_by_side(time_file, time_se
     # Show the graph
     plt.show()
     plt.close()
+
+def yearly_max_thaw_depth(time_file, thaw_depth, list_depths, df):
+    """ Function returns maximum annual thaw depth for each simulations
+    and binned by altitude and slope
+    
+    Parameters
+    ----------
+    time_file : netCDF4._netCDF4.Variable
+        File where the time index of each datapoint is stored (time_ground, not time_air)
+    thaw_depth : netCDF4._netCDF4.Variable
+        Depth of thaw in the shape (simulation, time)
+    list_depths : list
+        List of all the plotted simulated depths
+    df : pandas.core.frame.DataFrame
+        Panda dataframe with columns ['altitude', 'slope']
+
+    Returns
+    -------
+    list_data : list of dict
+        A list of dictionary. One dictionary per (altitude,slope) bin that supports permafrost
+        Each dictionary has the following keys:
+        'alt': altitude, 'slo': slope, 'years': list of years, 'td_mean': mean thaw depth, 'td_std': std thaw depth}
+    """
+
+    max_depth_sim = np.max(list_depths)
+
+    df_perma_test_all = pd.DataFrame(thaw_depth[:].T,
+                                    index=[str(i) for i in num2date(time_file[:], time_file.units)])
+    df_perma_test_all.index = (df_perma_test_all.index).astype('datetime64[ns]')
+    df_perma_test_all_resampled = df_perma_test_all.resample('1Y').max()
+
+    list_alt = sorted(np.unique(df['altitude']))
+    list_slo = sorted(np.unique(df['slope']))
+
+    list_data = []
+
+    for alt in list_alt[::-1]:
+        for slo in list_slo[::-1]:
+            idx = df[(df['altitude']==alt) & (df['slope']==slo)].index
+            df_temp = -df_perma_test_all_resampled[idx]
+            td_mean = df_temp.mean(axis=1)
+            td_std = df_temp.std(axis=1)
+            if (np.abs(td_mean.mean())>max_depth_sim-1 and td_std.mean()<0.10):
+                pass
+            else:
+                list_data.append({'alt': alt, 'slo': slo, 'years': df_temp.index, 'td_mean': td_mean, 'td_std': td_std})
+
+    return list_data
+
+def plot_yearly_max_thaw_depth(list_data):
+    """ Function plots the maximum annual thaw depth for each simulations
+    and binned by altitude and slope
+    
+    Parameters
+    ----------
+    list_data : list of dict
+        A list of dictionary. One dictionary per (altitude,slope) bin that supports permafrost
+        Each dictionary has the following keys:
+        'alt': altitude, 'slo': slope, 'years': list of years, 'td_mean': mean thaw depth, 'td_std': std thaw depth}
+
+    Returns
+    -------
+    fig : Figure
+        Plot of mean and standard deviation of the maximal yearly thaw depth for all simulations with the same
+        altitude and slope
+    """
+
+    fig, ax = plt.subplots()
+
+    for c,i in enumerate(list_data):
+        ax.plot(i['td_mean'], label=f'{int(i['alt'])}m with {int(i['slo'])}° slope', color=colorcycle[c])
+        ax.fill_between(i['years'], (i['td_mean']+i['td_std']).clip(upper=0),
+                        (i['td_mean']-i['td_std']).clip(lower=-20),
+                        alpha=0.2, color=colorcycle[c])
+
+    ax.axhline(y=0, color='gray', ls='--')
+    ax.legend(bbox_to_anchor=(1,1), loc='upper left')
+    ax.set_ylabel('Maximum annual thaw depth [m]')
+
+    plt.show()
+    plt.close()
+
+    return fig
+
+def plot_yearly_max_thaw_depth_from_inputs(time_file, thaw_depth, list_depths, df):
+    """ Function plots the maximum annual thaw depth for each simulations
+    and binned by altitude and slope
+    
+    Parameters
+    ----------
+    time_file : netCDF4._netCDF4.Variable
+        File where the time index of each datapoint is stored (time_ground, not time_air)
+    thaw_depth : netCDF4._netCDF4.Variable
+        Depth of thaw in the shape (simulation, time)
+    list_depths : list
+        List of all the plotted simulated depths
+    df : pandas.core.frame.DataFrame
+        Panda dataframe with columns ['altitude', 'slope']
+
+    Returns
+    -------
+    fig : Figure
+        Plot of mean and standard deviation of the maximal yearly thaw depth for all simulations with the same
+        altitude and slope
+    """
+
+    list_data = yearly_max_thaw_depth(time_file, thaw_depth, list_depths, df)
+    fig = plot_yearly_max_thaw_depth(list_data)
+
+    return fig

@@ -12,7 +12,7 @@ import mpl_axes_aligner
 
 from SuPerSim.constants import colorcycle, units
 
-def stats_all_years_simulations_to_single_year(time_file, time_series, list_valid_sim, mask_period=None):
+def stats_all_years_simulations_to_single_year(time_file, time_series, list_valid_sim, mask_period=None, idx_depth=0):
     """ Function returns daily mean and several quantiles of a multi-year timeseries over a 1-year period
         e.g. assigns the GST mean over all years and simulations on a given day, e.g. Dec 21st
     
@@ -28,6 +28,8 @@ def stats_all_years_simulations_to_single_year(time_file, time_series, list_vali
         Period could be 'background' or 'transient' and is a list of booleans, i.e. a mask.
         Can take values 'time_bkg_ground' or 'time_trans_ground' for instance.
         If None, it considers everything.
+    idx_depth : int, optional
+        For ground temperatures, selects the depth index
 
     Returns
     -------
@@ -54,9 +56,9 @@ def stats_all_years_simulations_to_single_year(time_file, time_series, list_vali
     # for all simulations
     for sim in list_valid_sim:
         if mask_period is None:
-            panda_test['timeseries'] = time_series[sim,:,0] if len(time_series.shape) == 3 else time_series[sim,:]
+            panda_test['timeseries'] = time_series[sim,:,idx_depth] if len(time_series.shape) == 3 else time_series[sim,:]
         else:
-            panda_test['timeseries'] = time_series[sim,mask_period[:],0] if len(time_series.shape) == 3 else time_series[sim,mask_period[:]]
+            panda_test['timeseries'] = time_series[sim,mask_period[:],idx_depth] if len(time_series.shape) == 3 else time_series[sim,mask_period[:]]
         # here we group the values of the multi-year timeseries by month, day, and hour and take the mean
         # this produces a single year average timeseries
         mean_test.append([i for i in panda_test.groupby(['month', 'day', 'hour']).mean().reset_index()['timeseries']])
@@ -127,7 +129,7 @@ def stats_air_all_years_simulations_to_single_year(time_file, time_series, mask_
 
     return quantiles, mean_end
 
-def data_one_year_quantiles_two_periods(time_file, time_series_list, list_valid_sim_list, list_mask_period=None):
+def data_one_year_quantiles_two_periods(time_file, time_series_list, list_valid_sim_list, list_mask_period=None, idx_depth=0):
     """ Function returns a single timeseries for 2 periods reduced to a 1-year window with mean and 1 and 2-sigma spread,
     for background and transient piods
     
@@ -141,6 +143,8 @@ def data_one_year_quantiles_two_periods(time_file, time_series_list, list_valid_
         List of list of the indices of all valid simulations
     list_mask_period : list
         List of the time masks for each entry, could be 'time_bkg_ground' or 'time_trans_ground' for instance.
+    idx_depth : int, optional
+        For ground temperatures, selects the depth index
 
 
     Returns
@@ -157,11 +161,11 @@ def data_one_year_quantiles_two_periods(time_file, time_series_list, list_valid_
     quantiles = [[] for _ in range(len(time_series_list))]
     mean_end = [[] for _ in range(len(time_series_list))]
 
-    for idx in range(len(time_series_list)):
+    for idx, time_series in enumerate(time_series_list):
         if delta_hours == 1:
-            quantiles[idx], mean_end[idx] = stats_air_all_years_simulations_to_single_year(time_file, time_series_list[idx], None if list_mask_period is None else list_mask_period[idx])
+            quantiles[idx], mean_end[idx] = stats_air_all_years_simulations_to_single_year(time_file, time_series, None if list_mask_period is None else list_mask_period[idx])
         else:
-            quantiles[idx], mean_end[idx] = stats_all_years_simulations_to_single_year(time_file, time_series_list[idx], list_valid_sim_list[idx], None if list_mask_period is None else list_mask_period[idx])
+            quantiles[idx], mean_end[idx] = stats_all_years_simulations_to_single_year(time_file, time_series, list_valid_sim_list[idx], None if list_mask_period is None else list_mask_period[idx], idx_depth=idx_depth)
 
     return quantiles, mean_end
 
@@ -188,14 +192,16 @@ def plot_sanity_one_year_quantiles_two_periods(quantiles, mean_end, axis_label, 
         Both series have their own y axis if they have different units.
     """
 
-    xdata = range(len(mean_end[0]))
-
     fig = plt.subplots()
 
-    for idx in range(len(quantiles)):
+    for idx,qt in enumerate(quantiles):
+        xdata = range(len(mean_end[idx]))
         plt.plot(xdata, mean_end[idx], color=colorcycle[idx], linewidth=2, label=list_label[idx])
-        plt.fill_between(xdata, quantiles[idx].iloc[1], quantiles[idx].iloc[3], alpha = 0.4, color=colorcycle[idx], linewidth=1)
-        plt.fill_between(xdata, quantiles[idx].iloc[0], quantiles[idx].iloc[4], alpha = 0.2, color=colorcycle[idx], linewidth=0.5)
+        if ('Decade' in list_label[idx]) or ('Year' in list_label[idx]):
+            pass
+        else:
+            plt.fill_between(xdata, qt.iloc[1], qt.iloc[3], alpha = 0.4, color=colorcycle[idx], linewidth=1)
+            plt.fill_between(xdata, qt.iloc[0], qt.iloc[4], alpha = 0.2, color=colorcycle[idx], linewidth=0.5)
         plt.ylabel(axis_label+' ['+units[axis_label]+']')
 
     if axis_label in ['GST', 'Air temperature']:
@@ -215,7 +221,7 @@ def plot_sanity_one_year_quantiles_two_periods(quantiles, mean_end, axis_label, 
 
     return fig
     
-def plot_sanity_one_year_quantiles_two_periods_from_inputs(time_file, time_series_list, list_valid_sim_list, axis_label, list_label, list_mask_period):
+def plot_sanity_one_year_quantiles_two_periods_from_inputs(time_file, time_series_list, list_valid_sim_list, axis_label, list_label, list_mask_period, idx_depth=0):
     """ Function returns a plot of a single timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread,
     for background and transient piods
     
@@ -233,6 +239,8 @@ def plot_sanity_one_year_quantiles_two_periods_from_inputs(time_file, time_serie
         List of the labels associated to each entry (if both entries are identical, can put a single label)
     list_mask_period : list
         List of the time masks for each entry, could be 'time_bkg_ground' or 'time_trans_ground' for instance.
+    idx_depth : int, optional
+        For ground temperatures, selects the depth index
 
     Returns
     -------
@@ -241,7 +249,7 @@ def plot_sanity_one_year_quantiles_two_periods_from_inputs(time_file, time_serie
         Both series have their own y axis if they have different units.
     """
 
-    quantiles, mean_end = data_one_year_quantiles_two_periods(time_file, time_series_list, list_valid_sim_list, list_mask_period)
+    quantiles, mean_end = data_one_year_quantiles_two_periods(time_file, time_series_list, list_valid_sim_list, list_mask_period, idx_depth)
     fig = plot_sanity_one_year_quantiles_two_periods(quantiles, mean_end, axis_label, list_label)
 
     return fig
@@ -314,7 +322,7 @@ def plot_sanity_two_variables_one_year_quantiles(quantiles, mean_end, list_label
 
     return fig
 
-def plot_sanity_two_variables_one_year_quantiles_from_inputs(time_file, time_series_list, list_valid_sim_list, list_label, list_site=None):
+def plot_sanity_two_variables_one_year_quantiles_from_inputs(time_file, time_series_list, list_valid_sim_list, list_label, list_site=None, idx_depth=0):
     """ Function returns a plot of 2 timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread.
     
     Parameters
@@ -331,6 +339,8 @@ def plot_sanity_two_variables_one_year_quantiles_from_inputs(time_file, time_ser
         List of labels for the site of each entry
         If both labels are identical (i.e. if only 1 label is provided in list_label) then this means we are plotting 
         the same quantity for different sites, in which case we want to label the curves by their site
+    idx_depth : int, optional
+        For ground temperatures, selects the depth index
 
     Returns
     -------
@@ -339,12 +349,12 @@ def plot_sanity_two_variables_one_year_quantiles_from_inputs(time_file, time_ser
         Both series have their own y axis if they have different units.
     """
 
-    quantiles, mean_end = data_one_year_quantiles_two_periods(time_file, time_series_list, list_valid_sim_list)
+    quantiles, mean_end = data_one_year_quantiles_two_periods(time_file, time_series_list, list_valid_sim_list, idx_depth=idx_depth)
     fig = plot_sanity_two_variables_one_year_quantiles(quantiles, mean_end, list_label, list_site)
 
     return fig
 
-def data_two_variables_two_sites_one_year_quantiles(time_file, time_series_list, list_valid_sim_list):
+def data_two_variables_two_sites_one_year_quantiles(time_file, time_series_list, list_valid_sim_list, idx_depth=0):
     """ Function returns 2 plots side by side of 2 timeseries each reduced to a 1-year window with mean and 1 and 2-sigma spread.
         Each plot is a plot of two timeseries of the same variable at two different sites
     
@@ -356,6 +366,8 @@ def data_two_variables_two_sites_one_year_quantiles(time_file, time_series_list,
         List of time series (could be temperature, precipitation, snow depth, etc.). 1 per plot.
     list_valid_sim_list : list of list
         List of list of the indices of all valid simulations
+    idx_depth : int, optional
+        For ground temperatures, selects the depth index
 
     Returns
     -------
@@ -371,8 +383,8 @@ def data_two_variables_two_sites_one_year_quantiles(time_file, time_series_list,
     quantiles = [[] for _ in range(len(time_series_list))]
     mean_end = [[] for _ in range(len(time_series_list))]
 
-    for ts in range(len(time_series_list)):
-        quantiles[ts], mean_end[ts] = data_one_year_quantiles_two_periods(time_file, time_series_list[ts], list_valid_sim_list)
+    for i,ts in enumerate(time_series_list):
+        quantiles[i], mean_end[i] = data_one_year_quantiles_two_periods(time_file, ts, list_valid_sim_list, idx_depth)
 
     return quantiles, mean_end
 

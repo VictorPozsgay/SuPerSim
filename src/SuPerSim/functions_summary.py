@@ -6,7 +6,7 @@
 
 import numpy as np
 
-from SuPerSim.open import open_air_nc, open_ground_nc, open_snow_nc, open_swe_nc, open_SW_direct_nc, open_SW_diffuse_nc, open_SW_up_nc, open_SW_down_nc, open_SW_net_nc, open_LW_net_nc
+from SuPerSim.open import open_air_nc, open_ground_nc, open_snow_nc, open_swe_nc, open_SW_direct_nc, open_SW_diffuse_nc, open_SW_up_nc, open_SW_down_nc, open_SW_net_nc, open_LW_net_nc, open_thaw_depth_nc
 from SuPerSim.mytime import list_tokens_year
 from SuPerSim.pickling import load_all_pickles
 from SuPerSim.weights import assign_weight_sim, plot_hist_stat_weights_from_input, plot_hist_valid_sim_all_variables_from_input
@@ -14,7 +14,7 @@ from SuPerSim.runningstats import mean_all_altitudes, mean_all_reanalyses, assig
 from SuPerSim.topoheatmap import plot_table_mean_GST_aspect_slope_single_altitude_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs, plot_permafrost_all_altitudes_polar_from_inputs, plot_table_mean_GST_aspect_altitude_all_slopes_polar_from_inputs, plot_permafrost_all_slopes_polar_from_inputs
 from SuPerSim.model import fit_stat_model_GST_from_inputs
 from SuPerSim.percentiles import plot_cdf_GST_from_inputs, plot_heatmap_percentile_GST_from_inputs
-from SuPerSim.yearlystats import plot_box_yearly_stat_from_inputs, plot_yearly_quantiles_atmospheric_from_inputs, plot_yearly_quantiles_sim_from_inputs, plot_yearly_quantiles_side_by_side_sim_from_inputs
+from SuPerSim.yearlystats import plot_box_yearly_stat_from_inputs, plot_yearly_quantiles_atmospheric_from_inputs, plot_yearly_quantiles_sim_from_inputs, plot_yearly_quantiles_side_by_side_sim_from_inputs, sim_data_to_panda, panda_data_to_yearly_stats, plot_yearly_max_thaw_depth_from_inputs
 from SuPerSim.seasonal import plot_sanity_one_year_quantiles_two_periods_from_inputs, plot_sanity_two_variables_one_year_quantiles_from_inputs, plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side_from_inputs
 from SuPerSim.evolution import plot_evolution_snow_cover_melt_out_from_inputs, plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs, plot_mean_bkg_GST_vs_evolution_from_inputs, plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input
 from SuPerSim.horizon import plot_visible_skymap_from_horizon_file
@@ -72,7 +72,7 @@ def plot_all(site,
     #####################################################################################
 
     pkl = load_all_pickles(site, path_pickle)
-    # df = pkl['df']
+    df = pkl['df']
     list_valid_sim = pkl['list_valid_sim']
     df_stats = pkl['df_stats']
     rockfall_values = pkl['rockfall_values']
@@ -93,9 +93,14 @@ def plot_all(site,
     temp_air_all = air_all_dict['temp_air']
     precipitation_all = air_all_dict['precipitation']
 
-    _, time_ground, temp_ground = open_ground_nc(path_ground)
+    f_ground, time_ground, temp_ground = open_ground_nc(path_ground)
     _, snow_height = open_snow_nc(path_snow)
     _, swe = open_swe_nc(path_swe)
+    _, thaw_depth = open_thaw_depth_nc(path_thaw_depth)
+
+    list_depths = list(f_ground['soil_depth'][:])
+    idxs_depths = {depth: list_depths.index(depth) if depth in list_depths else -1 for depth in [1,5,10]}
+    idxs_depths = {k: v for k,v in idxs_depths.items() if v!=-1}
 
     _, time_bkg_ground, time_trans_ground, _ = list_tokens_year(time_ground, year_bkg_end, year_trans_end)
 
@@ -169,15 +174,23 @@ def plot_all(site,
     list_fig_names.append('GST_yearly_quantiles')
     list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, temp_ground, list_valid_sim, 'GST', year_bkg_end, year_trans_end))
     list_fig_names.append('GST_yearly_mean')
-    list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, temp_ground, list_valid_sim, 'GST', year_bkg_end, year_trans_end, False))
+    list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, temp_ground, list_valid_sim, 'GST', year_bkg_end, year_trans_end, plot_quantiles=False))
+    for k,v in idxs_depths.items():
+        list_fig_names.append(f'{k}m_grdtemp_yearly_quantiles')
+        list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, temp_ground, list_valid_sim, f'{k}m ground temperature', year_bkg_end, year_trans_end, idx_depth=v))
+        list_fig_names.append(f'{k}m_grdtemp_yearly_mean')
+        list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, temp_ground, list_valid_sim, f'{k}m ground temperature', year_bkg_end, year_trans_end, plot_quantiles=False, idx_depth=v))
     list_fig_names.append('Snow_yearly_quantiles')
     list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, snow_height, list_valid_sim, 'Snow depth', year_bkg_end, year_trans_end))
     list_fig_names.append('Snow_yearly_mean')
-    list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, snow_height, list_valid_sim, 'Snow depth', year_bkg_end, year_trans_end, False))
+    list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, snow_height, list_valid_sim, 'Snow depth', year_bkg_end, year_trans_end, plot_quantiles=False))
     list_fig_names.append('SWE_yearly_quantiles')
     list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, swe, list_valid_sim, 'SWE', year_bkg_end, year_trans_end))
     list_fig_names.append('SWE_yearly_mean')
-    list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, swe, list_valid_sim, 'SWE', year_bkg_end, year_trans_end, False))
+    list_figs.append(plot_yearly_quantiles_sim_from_inputs(time_ground, swe, list_valid_sim, 'SWE', year_bkg_end, year_trans_end, plot_quantiles=False))
+
+    list_fig_names.append('max_thaw_depth')
+    list_figs.append(plot_yearly_max_thaw_depth_from_inputs(time_ground, thaw_depth, list_depths, df))
 
     print('\n---------------------------------------------------------------------------------------------\n')
     print('Plot of 2 timeseries reduced to a 1-year window with mean and 1- and 2-sigma spread:')
@@ -188,9 +201,48 @@ def plot_all(site,
     print('Plot of a single timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread, for background and transient periods:')
     list_fig_names.append('GST_1year_bkg_v_transient')
     list_figs.append(plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [temp_ground, temp_ground], [list_valid_sim, list_valid_sim], 'GST', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground]))
+    panda_test = sim_data_to_panda(time_ground, temp_ground, list_valid_sim, 'GST')
+    _, _, excep_years = panda_data_to_yearly_stats(panda_test, year_trans_end)
+    list_fig_names.append('GST_1year_bkg_v_transient_excep_years')
+    list_figs.append(plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [temp_ground]*(len(excep_years)+1), [list_valid_sim]*(len(excep_years)+1),
+                                                                            'GST', ['Background']+[f'Year {k}' for k in excep_years], [time_bkg_ground]+[list_tokens_year(time_ground, k, k+1)[2] for k in excep_years]))
+    # list_decs = []
+    # for k in range(int((year_trans_end-year_bkg_end-1)/10)):
+    #     list_decs.append(year_bkg_end+1+k*10)
+    # list_fig_names.append('GST_1year_bkg_v_transient_decades')
+    # list_figs.append(plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [temp_ground]*(len(list_decs)+2), [list_valid_sim]*(len(list_decs)+2),
+    #                                                                         'GST', ['Background', 'Transient']+[f'Decade {k}-{k+9}' for k in list_decs], [time_bkg_ground, time_trans_ground]+[list_tokens_year(time_ground, k, k+10)[2] for k in list_decs]))
+    
+    for k,v in idxs_depths.items():
+        list_fig_names.append(f'{k}m_grdtemp_1year_bkg_v_transient')
+        list_figs.append(plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [temp_ground, temp_ground], [list_valid_sim, list_valid_sim], f'{k}m ground temperature', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground], idx_depth=v))
+        panda_test = sim_data_to_panda(time_ground, temp_ground, list_valid_sim, f'{k}m ground temperature', idx_depth=v)
+        _, _, excep_years = panda_data_to_yearly_stats(panda_test, year_trans_end)
+        list_fig_names.append(f'{k}m_grdtemp_1year_bkg_v_transient_excep_years')
+        list_figs.append(plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [temp_ground]*(len(excep_years)+1), [list_valid_sim]*(len(excep_years)+1),
+                                                                                f'{k}m ground temperature', ['Background']+[f'Year {k}' for k in excep_years], [time_bkg_ground]+[list_tokens_year(time_ground, k, k+1)[2] for k in excep_years], idx_depth=v))
+        # list_decs = []
+        # for k in range(int((year_trans_end-year_bkg_end-1)/10)):
+        #     list_decs.append(year_bkg_end+1+k*10)
+        # list_fig_names.append(f'{k}m_grdtemp_1year_bkg_v_transient_decades')
+        # list_figs.append(plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [temp_ground]*(len(list_decs)+2), [list_valid_sim]*(len(list_decs)+2),
+        #                                                                         f'{k}m ground temperature', ['Background', 'Transient']+[f'Decade {k}-{k+9}' for k in list_decs], [time_bkg_ground, time_trans_ground]+[list_tokens_year(time_ground, k, k+10)[2] for k in list_decs], idx_depth=v))
+
+
     list_fig_names.append('snow_1year_bkg_v_transient')
     list_figs.append(plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [snow_height, snow_height], [list_valid_sim, list_valid_sim], 'Snow depth', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground]))
-
+    panda_test = sim_data_to_panda(time_ground, snow_height, list_valid_sim, 'Snow depth')
+    _, _, excep_years = panda_data_to_yearly_stats(panda_test, year_trans_end)
+    list_fig_names.append('snow_1year_bkg_v_transient_excep_years')
+    list_figs.append(plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [snow_height]*(len(excep_years)+1), [list_valid_sim]*(len(excep_years)+1),
+                                                                            'Snow depth', ['Background']+[f'Year {k}' for k in excep_years], [time_bkg_ground]+[list_tokens_year(time_ground, k, k+1)[2] for k in excep_years]))
+    list_decs = []
+    for k in range(int((year_trans_end-year_bkg_end-1)/10)):
+        list_decs.append(year_bkg_end+1+k*10)
+    list_fig_names.append('snow_1year_bkg_v_transient_decades')
+    list_figs.append(plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [snow_height]*(len(list_decs)+2), [list_valid_sim]*(len(list_decs)+2),
+                                                                            'Snow depth', ['Background', 'Transient']+[f'Decade {k}-{k+9}' for k in list_decs], [time_bkg_ground, time_trans_ground]+[list_tokens_year(time_ground, k, k+10)[2] for k in list_decs]))
+    
     # # print('')
     # This works well but it would be better to smooth the data
     # plot_sanity_one_year_quantiles_two_periods_from_inputs(time_air_all[0], [temp_air_all[0], temp_air_all[0]], [None, None], 'Air temperature', ['Background', 'Transient'], [time_bkg_air, time_trans_air])
