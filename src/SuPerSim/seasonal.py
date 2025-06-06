@@ -169,7 +169,7 @@ def data_one_year_quantiles_two_periods(time_file, time_series_list, list_valid_
 
     return quantiles, mean_end
 
-def plot_sanity_one_year_quantiles_two_periods(quantiles, mean_end, axis_label, list_label):
+def plot_sanity_one_year_quantiles_two_periods(quantiles, mean_end, axis_label, list_label, show_plots):
     """ Function returns a plot of a single timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread,
     for background and transient piods
     
@@ -184,6 +184,8 @@ def plot_sanity_one_year_quantiles_two_periods(quantiles, mean_end, axis_label, 
         Label of the y axis, could be 'GST' or 'Snow depth' for instance
     list_label : list
         List of the labels associated to each entry (if both entries are identical, can put a single label)
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -213,15 +215,15 @@ def plot_sanity_one_year_quantiles_two_periods(quantiles, mean_end, axis_label, 
     plt.xticks(locs, labels)
 
     plt.tight_layout()  # otherwise the right y-label is slightly clipped
-
-    # Show the graph
     plt.legend(loc="upper right")
-    plt.show()
+    # Show the graph
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
     
-def plot_sanity_one_year_quantiles_two_periods_from_inputs(time_file, time_series_list, list_valid_sim_list, axis_label, list_label, list_mask_period, idx_depth=0):
+def plot_sanity_one_year_quantiles_two_periods_from_inputs(time_file, time_series_list, list_valid_sim_list, axis_label, list_label, list_mask_period, show_plots, idx_depth=0):
     """ Function returns a plot of a single timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread,
     for background and transient piods
     
@@ -239,6 +241,8 @@ def plot_sanity_one_year_quantiles_two_periods_from_inputs(time_file, time_serie
         List of the labels associated to each entry (if both entries are identical, can put a single label)
     list_mask_period : list
         List of the time masks for each entry, could be 'time_bkg_ground' or 'time_trans_ground' for instance.
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     idx_depth : int, optional
         For ground temperatures, selects the depth index
 
@@ -250,11 +254,11 @@ def plot_sanity_one_year_quantiles_two_periods_from_inputs(time_file, time_serie
     """
 
     quantiles, mean_end = data_one_year_quantiles_two_periods(time_file, time_series_list, list_valid_sim_list, list_mask_period, idx_depth)
-    fig = plot_sanity_one_year_quantiles_two_periods(quantiles, mean_end, axis_label, list_label)
+    fig = plot_sanity_one_year_quantiles_two_periods(quantiles, mean_end, axis_label, list_label, show_plots)
 
     return fig
 
-def plot_sanity_two_variables_one_year_quantiles(quantiles, mean_end, list_label, list_site=None):
+def plot_sanity_two_variables_one_year_quantiles(quantiles, mean_end, list_label, show_plots, list_site=None):
     """ Function returns a plot of 2 timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread.
     
     Parameters
@@ -266,6 +270,8 @@ def plot_sanity_two_variables_one_year_quantiles(quantiles, mean_end, list_label
         List of 1-year time series of the mean, one for each variable
     list_label : list
         List of the labels associated to each entry (if both entries are identical, can put a single label)
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     list_site : list, optional
         List of labels for the site of each entry
         If both labels are identical (i.e. if only 1 label is provided in list_label) then this means we are plotting 
@@ -314,15 +320,15 @@ def plot_sanity_two_variables_one_year_quantiles(quantiles, mean_end, list_label
     plt.xticks(locs, labels)
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
-
-    # Show the graph
     fig.legend(loc="upper right", bbox_to_anchor=(1,1), bbox_transform=ax1.transAxes)
-    plt.show()
+    # Show the graph
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_sanity_two_variables_one_year_quantiles_from_inputs(time_file, time_series_list, list_valid_sim_list, list_label, list_site=None, idx_depth=0):
+def plot_sanity_two_variables_one_year_quantiles_from_inputs(time_file, time_series_list, list_valid_sim_list, list_label, show_plots, list_site=None, idx_depth=0):
     """ Function returns a plot of 2 timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread.
     
     Parameters
@@ -335,6 +341,8 @@ def plot_sanity_two_variables_one_year_quantiles_from_inputs(time_file, time_ser
         List of list of the indices of all valid simulations
     list_label : list
         List of the labels associated to each entry (if both entries are identical, can put a single label)
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     list_site : list, optional
         List of labels for the site of each entry
         If both labels are identical (i.e. if only 1 label is provided in list_label) then this means we are plotting 
@@ -350,7 +358,7 @@ def plot_sanity_two_variables_one_year_quantiles_from_inputs(time_file, time_ser
     """
 
     quantiles, mean_end = data_one_year_quantiles_two_periods(time_file, time_series_list, list_valid_sim_list, idx_depth=idx_depth)
-    fig = plot_sanity_two_variables_one_year_quantiles(quantiles, mean_end, list_label, list_site)
+    fig = plot_sanity_two_variables_one_year_quantiles(quantiles, mean_end, list_label, show_plots, list_site)
 
     return fig
 
@@ -388,7 +396,7 @@ def data_two_variables_two_sites_one_year_quantiles(time_file, time_series_list,
 
     return quantiles, mean_end
 
-def plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side(quantiles, mean_end, list_label, list_site):
+def plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side(quantiles, mean_end, list_label, list_site, show_plots):
     """ Function returns 2 plots side by side of 2 timeseries each reduced to a 1-year window with mean and 1 and 2-sigma spread.
         Each plot is a plot of two timeseries of the same variable at two different sites
     
@@ -405,6 +413,8 @@ def plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side(quantile
         List of the labels associated to each plot
     list_site : list
         List of labels for the site of each entry
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -444,12 +454,13 @@ def plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side(quantile
     plt.tight_layout()  # otherwise the right y-label is slightly clipped
 
     # Show the graph
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side_from_inputs(time_file, time_series_list, list_valid_sim_list, list_label, list_site):
+def plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side_from_inputs(time_file, time_series_list, list_valid_sim_list, list_label, list_site, show_plots):
     """ Function returns 2 plots side by side of 2 timeseries each reduced to a 1-year window with mean and 1 and 2-sigma spread.
         Each plot is a plot of two timeseries of the same variable at two different sites
     
@@ -465,6 +476,8 @@ def plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side_from_inp
         List of the labels associated to each plot
     list_site : list
         List of labels for the site of each entry
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -474,6 +487,6 @@ def plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side_from_inp
     """
 
     quantiles, mean_end = data_two_variables_two_sites_one_year_quantiles(time_file, time_series_list, list_valid_sim_list)
-    fig = plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side(quantiles, mean_end, list_label, list_site)
+    fig = plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side(quantiles, mean_end, list_label, list_site, show_plots)
 
     return fig

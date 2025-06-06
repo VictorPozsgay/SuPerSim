@@ -98,7 +98,7 @@ def count_stat_weights(site, path_pickle, no_weight):
     
     return bins, counts, number_glaciers
 
-def plot_hist_stat_weights(bins, counts, number_glaciers, show_glaciers): 
+def plot_hist_stat_weights(bins, counts, number_glaciers, show_glaciers, show_plots): 
     """ Function returns a histogram of the weight distribution over all (valid) simulations 
         given a binned count of simulation weights and a number of glaciers
     
@@ -112,6 +112,8 @@ def plot_hist_stat_weights(bins, counts, number_glaciers, show_glaciers):
         number of simulations yielding a 'glacier'
     show_glaciers : bool, optional
         If True, shows the glacier simulations with a 0 weight, if False, those are ignored.
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -140,12 +142,14 @@ def plot_hist_stat_weights(bins, counts, number_glaciers, show_glaciers):
         plt.legend(loc='upper right')
     plt.xlabel('Statistical weight')
     plt.ylabel('Frequency')
-    plt.show()
+
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_hist_stat_weights_from_input(site, path_pickle, no_weight, show_glaciers): 
+def plot_hist_stat_weights_from_input(site, path_pickle, no_weight, show_glaciers, show_plots): 
     """ Function returns a histogram of the weight distribution over all (valid) simulations 
     
     Parameters
@@ -158,6 +162,8 @@ def plot_hist_stat_weights_from_input(site, path_pickle, no_weight, show_glacier
         If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
     show_glaciers : bool, optional
         If True, shows the glacier simulations with a 0 weight, if False, those are ignored.
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -166,7 +172,7 @@ def plot_hist_stat_weights_from_input(site, path_pickle, no_weight, show_glacier
     """
 
     bins, counts, number_glaciers = count_stat_weights(site, path_pickle, no_weight)
-    fig = plot_hist_stat_weights(bins, counts, number_glaciers, show_glaciers)
+    fig = plot_hist_stat_weights(bins, counts, number_glaciers, show_glaciers, show_plots)
 
     return fig
 
@@ -242,7 +248,7 @@ def count_perma_sim_per_variable(site, path_thaw_depth, path_pickle):
 
     return dict_bins, dict_counts
 
-def plot_hist_valid_sim_all_variables(dict_bins, dict_counts): 
+def plot_hist_valid_sim_all_variables(dict_bins, dict_counts, show_plots): 
     """ Function returns a histogram of the number of valid/glacier simulations for each of the following variable
         ('altitude', 'aspect', 'slope', 'forcing') 
         It also shows the breakdown of valid simulations into permafrost and no-permafrost ones
@@ -255,6 +261,8 @@ def plot_hist_valid_sim_all_variables(dict_bins, dict_counts):
     dict_counts : dict
         Dictionary giving the number of simulation per variable and per parmafrost state
         e.g. dict_counts = {'altitude': {'Permafrost': [14, 37, 45], 'No permafrost, no glaciers': [31, 8, 0], 'Glaciers': [0, 0, 0]}, 'aspect': {}, ...}
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -291,12 +299,14 @@ def plot_hist_valid_sim_all_variables(dict_bins, dict_counts):
     fig.align_ylabels(axs[:,0])
     plt.legend(loc='lower right', reverse=True)
     plt.tight_layout()
-    plt.show()
+
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_hist_valid_sim_all_variables_from_input(site, path_thaw_depth, path_pickle): 
+def plot_hist_valid_sim_all_variables_from_input(site, path_thaw_depth, path_pickle, show_plots): 
     """ Function returns a binned count over all simulations
         of the number of valid/glacier simulations for each of the following variable
         ('altitude', 'aspect', 'slope', 'forcing') 
@@ -310,6 +320,8 @@ def plot_hist_valid_sim_all_variables_from_input(site, path_thaw_depth, path_pic
         Path to the .nc file where the aggregated thaw depth simulations are stored
     path_pickle : str
         String path to the location of the folder where the pickles are saved 
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -318,6 +330,6 @@ def plot_hist_valid_sim_all_variables_from_input(site, path_thaw_depth, path_pic
     """
 
     dict_bins, dict_counts = count_perma_sim_per_variable(site, path_thaw_depth, path_pickle)
-    fig = plot_hist_valid_sim_all_variables(dict_bins, dict_counts)
+    fig = plot_hist_valid_sim_all_variables(dict_bins, dict_counts, show_plots)
 
     return fig

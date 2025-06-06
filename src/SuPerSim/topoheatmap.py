@@ -193,7 +193,7 @@ def prepare_data_table_GST_per_slope(site, path_pickle, path_thaw_depth=None):
 
     return table_all_new, rockfall_values, sim_per_cell
 
-def plot_table_mean_GST_aspect_slope_single_altitude(table_all, rockfall_values, altitude, background=True, box=True):
+def plot_table_mean_GST_aspect_slope_single_altitude(table_all, rockfall_values, altitude, show_plots, background=True, box=True):
     """ Function returns a plot of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope and aspect, for a given altitude and higlights the cell corresponding to the 
@@ -219,6 +219,8 @@ def plot_table_mean_GST_aspect_slope_single_altitude(table_all, rockfall_values,
         Dictionary with date and topography info for the event
     altitude :
         desired altitude for the plot
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     background : bool, optional 
         If True, plots the mean background value, else, plots the evolution of the mean
     box : bool, optional 
@@ -269,12 +271,13 @@ def plot_table_mean_GST_aspect_slope_single_altitude(table_all, rockfall_values,
     plt.text(0.5, 1,'Aspect [°]', fontsize= 16, rotation=0, horizontalalignment='center', verticalalignment='bottom')
 
     plt.tight_layout()
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_table_mean_GST_aspect_slope_single_altitude_from_inputs(site, path_pickle, altitude, background=True, box=True):
+def plot_table_mean_GST_aspect_slope_single_altitude_from_inputs(site, path_pickle, altitude, show_plots, background=True, box=True):
     """ Function returns a plot of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope and aspect, for a given altitude and higlights the cell corresponding to the 
@@ -288,6 +291,8 @@ def plot_table_mean_GST_aspect_slope_single_altitude_from_inputs(site, path_pick
         String path to the location of the folder where the pickles are saved
     altitude :
         desired altitude for the plot
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     background : bool, optional 
         If True, plots the mean background value, else, plots the evolution of the mean
     box : bool, optional 
@@ -300,11 +305,11 @@ def plot_table_mean_GST_aspect_slope_single_altitude_from_inputs(site, path_pick
     """
 
     table_all, rockfall_values, _ = prepare_data_table_GST(site, path_pickle)
-    fig = plot_table_mean_GST_aspect_slope_single_altitude(table_all, rockfall_values, altitude, background, box)
+    fig = plot_table_mean_GST_aspect_slope_single_altitude(table_all, rockfall_values, altitude, show_plots, background, box)
 
     return fig
 
-def plot_table_mean_GST_aspect_slope_all_altitudes(table_all, rockfall_values, sim_per_cell, show_glaciers, box=True):
+def plot_table_mean_GST_aspect_slope_all_altitudes(table_all, rockfall_values, sim_per_cell, show_glaciers, show_plots, box=True):
     """ Function returns a plot of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope, aspect, and altitude and higlights the cell corresponding to the 
@@ -332,6 +337,8 @@ def plot_table_mean_GST_aspect_slope_all_altitudes(table_all, rockfall_values, s
         number of simulations for a given cell with fixed (altitude, slope, aspect) triplet
     show_glaciers : bool, opional
         Whether or not to plot the glacier fraction
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     box : bool, optional 
         If True, highlights the cell corresponding to the rockfall starting zone with a black box
 
@@ -409,12 +416,13 @@ def plot_table_mean_GST_aspect_slope_all_altitudes(table_all, rockfall_values, s
     fig.supylabel('Slope [°]')
 
     # displaying the plotted heatmap 
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs(site, path_pickle, show_glaciers, box=True):
+def plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs(site, path_pickle, show_glaciers, show_plots, box=True):
     """ Function returns a plot of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope, aspect, and altitude and higlights the cell corresponding to the 
@@ -430,6 +438,8 @@ def plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs(site, path_pickle
         desired altitude for the plot
     show_glaciers : bool, opional
         Whether or not to plot the glacier fraction
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     box : bool, optional 
         If True, highlights the cell corresponding to the rockfall starting zone with a black box
 
@@ -440,11 +450,11 @@ def plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs(site, path_pickle
     """
 
     table_all, rockfall_values, sim_per_cell = prepare_data_table_GST(site, path_pickle)
-    fig = plot_table_mean_GST_aspect_slope_all_altitudes(table_all, rockfall_values, sim_per_cell, show_glaciers, box)
+    fig = plot_table_mean_GST_aspect_slope_all_altitudes(table_all, rockfall_values, sim_per_cell, show_glaciers, show_plots, box)
 
     return fig
 
-def plot_table_mean_GST_aspect_slope_all_altitudes_polar(table_all, rockfall_values, box=True):
+def plot_table_mean_GST_aspect_slope_all_altitudes_polar(table_all, rockfall_values, show_plots, box=True):
     """ Function returns a polar plot per altitude of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
@@ -468,6 +478,8 @@ def plot_table_mean_GST_aspect_slope_all_altitudes_polar(table_all, rockfall_val
                 dic_var = {'aspect': array([22.5, 45. , 67.5]), 'slope': array([55, 60, 65, 70, 75]), ...}
     rockfall_values : dict
         Dictionary with date and topography info for the event
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     box : bool, optional 
         If True, highlights the cell corresponding to the rockfall starting zone with a black box
 
@@ -562,12 +574,13 @@ def plot_table_mean_GST_aspect_slope_all_altitudes_polar(table_all, rockfall_val
     for i in [6,7]:
         axs[0,0].figure.axes[i].yaxis.label.set_size(13)
 
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_table_mean_GST_aspect_altitude_all_slopes_polar(table_all, rockfall_values, box=True):
+def plot_table_mean_GST_aspect_altitude_all_slopes_polar(table_all, rockfall_values, show_plots, box=True):
     """ Function returns a polar plot per slope of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
@@ -591,6 +604,8 @@ def plot_table_mean_GST_aspect_altitude_all_slopes_polar(table_all, rockfall_val
                 dic_var = {'aspect': array([22.5, 45. , 67.5]), 'slope': array([55, 60, 65, 70, 75]), ...}
     rockfall_values : dict
         Dictionary with date and topography info for the event
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     box : bool, optional 
         If True, highlights the cell corresponding to the rockfall starting zone with a black box
 
@@ -687,12 +702,13 @@ def plot_table_mean_GST_aspect_altitude_all_slopes_polar(table_all, rockfall_val
     for i in [6,7]:
         axs[0,0].figure.axes[i].yaxis.label.set_size(13)
 
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs(site, path_pickle, box=True):
+def plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs(site, path_pickle, show_plots, box=True):
     """ Function returns a polar plot per altitude of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
@@ -704,6 +720,8 @@ def plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs(site, path_
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
     path_pickle : str
         String path to the location of the folder where the pickles are saved
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     box : bool, optional 
         If True, highlights the cell corresponding to the rockfall starting zone with a black box
 
@@ -714,11 +732,11 @@ def plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs(site, path_
     """
 
     table_all, rockfall_values, _ = prepare_data_table_GST(site, path_pickle)
-    fig = plot_table_mean_GST_aspect_slope_all_altitudes_polar(table_all, rockfall_values, box)
+    fig = plot_table_mean_GST_aspect_slope_all_altitudes_polar(table_all, rockfall_values, show_plots, box)
 
     return fig
 
-def plot_table_mean_GST_aspect_altitude_all_slopes_polar_from_inputs(site, path_pickle, box=True):
+def plot_table_mean_GST_aspect_altitude_all_slopes_polar_from_inputs(site, path_pickle, show_plots, box=True):
     """ Function returns a polar plot per altitude of the table of either mean background GST (ground-surface temperature)
         or its evolution between the background and the transient periods,
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
@@ -730,6 +748,8 @@ def plot_table_mean_GST_aspect_altitude_all_slopes_polar_from_inputs(site, path_
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
     path_pickle : str
         String path to the location of the folder where the pickles are saved
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     box : bool, optional 
         If True, highlights the cell corresponding to the rockfall starting zone with a black box
 
@@ -740,11 +760,11 @@ def plot_table_mean_GST_aspect_altitude_all_slopes_polar_from_inputs(site, path_
     """
 
     table_all, rockfall_values, _ = prepare_data_table_GST_per_slope(site, path_pickle)
-    fig = plot_table_mean_GST_aspect_altitude_all_slopes_polar(table_all, rockfall_values, box)
+    fig = plot_table_mean_GST_aspect_altitude_all_slopes_polar(table_all, rockfall_values, show_plots, box)
 
     return fig
 
-def plot_permafrost_all_altitudes_polar(table_all, rockfall_values, box=True):
+def plot_permafrost_all_altitudes_polar(table_all, rockfall_values, show_plots, box=True):
     """ Function returns a polar plot per altitude of the table of the permafrost state
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
         rockfall starting zone
@@ -767,6 +787,8 @@ def plot_permafrost_all_altitudes_polar(table_all, rockfall_values, box=True):
                 dic_var = {'aspect': array([22.5, 45. , 67.5]), 'slope': array([55, 60, 65, 70, 75]), ...}
     rockfall_values : dict
         Dictionary with date and topography info for the event
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     box : bool, optional 
         If True, highlights the cell corresponding to the rockfall starting zone with a black box
 
@@ -837,12 +859,13 @@ def plot_permafrost_all_altitudes_polar(table_all, rockfall_values, box=True):
     axs[0].figure.axes[-1].set_yticklabels(['Permafrost', 'No permafrost, no glaciers', 'Glaciers']) 
     axs[0].figure.axes[-1].yaxis.label.set_size(15)
 
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_permafrost_all_altitudes_polar_from_inputs(site, path_pickle, path_thaw_depth, box=True):
+def plot_permafrost_all_altitudes_polar_from_inputs(site, path_pickle, path_thaw_depth, show_plots, box=True):
     """ Function returns a polar plot per altitude of the table of the permafrost state
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
         rockfall starting zone
@@ -855,6 +878,8 @@ def plot_permafrost_all_altitudes_polar_from_inputs(site, path_pickle, path_thaw
         String path to the location of the folder where the pickles are saved
     path_thaw_depth : str
         Path to the .nc file where the aggregated thaw depth simulations are stored
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     box : bool, optional 
         If True, highlights the cell corresponding to the rockfall starting zone with a black box
 
@@ -864,11 +889,11 @@ def plot_permafrost_all_altitudes_polar_from_inputs(site, path_pickle, path_thaw
         (# altitudes) polar heatmaps of permafrost state
     """
     table_all, rockfall_values, _ = prepare_data_table_GST(site, path_pickle, path_thaw_depth)
-    fig = plot_permafrost_all_altitudes_polar(table_all, rockfall_values, box)
+    fig = plot_permafrost_all_altitudes_polar(table_all, rockfall_values, show_plots, box)
 
     return fig
 
-def plot_permafrost_all_slopes_polar(table_all, rockfall_values, box=True):
+def plot_permafrost_all_slopes_polar(table_all, rockfall_values, show_plots, box=True):
     """ Function returns a polar plot per slope of the table of the permafrost state
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
         rockfall starting zone
@@ -891,6 +916,8 @@ def plot_permafrost_all_slopes_polar(table_all, rockfall_values, box=True):
                 dic_var = {'aspect': array([22.5, 45. , 67.5]), 'slope': array([55, 60, 65, 70, 75]), ...}
     rockfall_values : dict
         Dictionary with date and topography info for the event
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     box : bool, optional 
         If True, highlights the cell corresponding to the rockfall starting zone with a black box
 
@@ -963,12 +990,13 @@ def plot_permafrost_all_slopes_polar(table_all, rockfall_values, box=True):
     axs[0].figure.axes[-1].set_yticklabels(['Permafrost', 'No permafrost, no glaciers', 'Glaciers']) 
     axs[0].figure.axes[-1].yaxis.label.set_size(15)
 
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_permafrost_all_slopes_polar_from_inputs(site, path_pickle, path_thaw_depth, box=True):
+def plot_permafrost_all_slopes_polar_from_inputs(site, path_pickle, path_thaw_depth, show_plots, box=True):
     """ Function returns a polar plot per altitude of the table of the permafrost state
         as a function of slope, aspect, and altitude and higlight the cell corresponding to the 
         rockfall starting zone
@@ -981,6 +1009,8 @@ def plot_permafrost_all_slopes_polar_from_inputs(site, path_pickle, path_thaw_de
         String path to the location of the folder where the pickles are saved
     path_thaw_depth : str
         Path to the .nc file where the aggregated thaw depth simulations are stored
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     box : bool, optional 
         If True, highlights the cell corresponding to the rockfall starting zone with a black box
 
@@ -990,6 +1020,6 @@ def plot_permafrost_all_slopes_polar_from_inputs(site, path_pickle, path_thaw_de
         (# altitudes) polar heatmaps of permafrost state
     """
     table_all, rockfall_values, _ = prepare_data_table_GST_per_slope(site, path_pickle, path_thaw_depth)
-    fig = plot_permafrost_all_slopes_polar(table_all, rockfall_values, box)
+    fig = plot_permafrost_all_slopes_polar(table_all, rockfall_values, show_plots, box)
 
     return fig

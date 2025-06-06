@@ -52,7 +52,7 @@ def data_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, yea
 
     return df_data
 
-def plot_box_yearly_stat(df_data, year_bkg_end, year_trans_end):
+def plot_box_yearly_stat(df_data, year_bkg_end, year_trans_end, show_plots):
     """ Box plot of yearly statistics of the timeseries, together with mean for the background and transient periods
     
     Parameters
@@ -63,6 +63,8 @@ def plot_box_yearly_stat(df_data, year_bkg_end, year_trans_end):
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
         Same for transient period
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -95,14 +97,15 @@ def plot_box_yearly_stat(df_data, year_bkg_end, year_trans_end):
     plt.ylabel(name_series+' ['+units[name_series]+']')
     ax.ticklabel_format(axis='y', style='sci', useMathText=True, scilimits=(-3,3))
 
-    # Show the graph
     plt.legend()
-    plt.show()
+    # Show the graph
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_box_yearly_stat_from_inputs(name_series, time_file, file_to_plot, year_bkg_end, year_trans_end):
+def plot_box_yearly_stat_from_inputs(name_series, time_file, file_to_plot, year_bkg_end, year_trans_end, show_plots):
     """ Box plot of yearly statistics of the timeseries, together with mean for the background and transient periods
     
     Parameters
@@ -118,6 +121,8 @@ def plot_box_yearly_stat_from_inputs(name_series, time_file, file_to_plot, year_
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
         Same for transient period
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
 
     Returns
@@ -127,7 +132,7 @@ def plot_box_yearly_stat_from_inputs(name_series, time_file, file_to_plot, year_
     """
 
     df_data = data_box_yearly_stat(name_series, time_file, file_to_plot, year_bkg_end, year_trans_end)
-    fig = plot_box_yearly_stat(df_data, year_bkg_end, year_trans_end)
+    fig = plot_box_yearly_stat(df_data, year_bkg_end, year_trans_end, show_plots)
 
     return fig
 
@@ -239,7 +244,7 @@ def panda_data_to_yearly_stats(panda_test, year_trans_end):
 
     return yearly_quantiles, yearly_mean, excep_years
 
-def plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_trans_end, plot_quantiles=True):
+def plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_trans_end, show_plots, plot_quantiles=True):
     """ Function plots yearly statistics for 'air' timeseries, averaged over all reanalyses and altitudes
     
     Parameters
@@ -255,6 +260,8 @@ def plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_tran
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int, optional
         Same for transient period
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     plot_quantiles : bool, optional
         Gives the option to plot the 1-sigma and 2-sigma spread. True by default but the range is largely dominated by the 2-sigma envelope,
         which hinders a good representation of the mean's trend (better if False).
@@ -321,14 +328,15 @@ def plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_tran
     locs = np.arange(list_years[0], list_years[-1]+1, np.floor((list_years[-1]+1-list_years[0])/8), dtype=int)
     plt.xticks(locs, locs)
 
-    # Show the graph
     plt.legend(loc='upper right')
-    plt.show()
+    # Show the graph
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig 
 
-def plot_yearly_quantiles_atmospheric_from_inputs(list_time_file, list_time_series, label_plot, year_bkg_end, year_trans_end, plot_quantiles=True):
+def plot_yearly_quantiles_atmospheric_from_inputs(list_time_file, list_time_series, label_plot, year_bkg_end, year_trans_end, show_plots, plot_quantiles=True):
     """ Function returns panda data frame for atmospheric timeseries, concatenated over all reanalyses
         and averaged over all altitudes
         from intended atmospheric input
@@ -345,6 +353,8 @@ def plot_yearly_quantiles_atmospheric_from_inputs(list_time_file, list_time_seri
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int, optional
         Same for transient period
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     plot_quantiles : bool, optional
         Gives the option to plot the 1-sigma and 2-sigma spread. True by default but the range is largely dominated by the 2-sigma envelope,
         which hinders a good representation of the mean's trend (better if False).
@@ -357,11 +367,11 @@ def plot_yearly_quantiles_atmospheric_from_inputs(list_time_file, list_time_seri
 
     panda_test = atmospheric_data_to_panda(list_time_file, list_time_series, label_plot)
     yearly_quantiles, yearly_mean, _ = panda_data_to_yearly_stats(panda_test, year_trans_end)
-    fig = plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_trans_end, plot_quantiles)
+    fig = plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_trans_end, show_plots, plot_quantiles)
 
     return fig
 
-def plot_yearly_quantiles_sim_from_inputs(time_file, time_series, list_valid_sim, label_plot, year_bkg_end, year_trans_end, plot_quantiles=True, idx_depth=0):
+def plot_yearly_quantiles_sim_from_inputs(time_file, time_series, list_valid_sim, label_plot, year_bkg_end, year_trans_end, show_plots, plot_quantiles=True, idx_depth=0):
     """ Function returns panda data frame for atmospheric timeseries, concatenated over all reanalyses
         and averaged over all altitudes
         from intended simulated input
@@ -383,6 +393,8 @@ def plot_yearly_quantiles_sim_from_inputs(time_file, time_series, list_valid_sim
     plot_quantiles : bool, optional
         Gives the option to plot the 1-sigma and 2-sigma spread. True by default but the range is largely dominated by the 2-sigma envelope,
         which hinders a good representation of the mean's trend (better if False).
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     idx_depth : int, optional
         For ground temperatures, selects the depth index
     
@@ -394,7 +406,7 @@ def plot_yearly_quantiles_sim_from_inputs(time_file, time_series, list_valid_sim
 
     panda_test = sim_data_to_panda(time_file, time_series, list_valid_sim, label_plot, idx_depth)
     yearly_quantiles, yearly_mean, _ = panda_data_to_yearly_stats(panda_test, year_trans_end)
-    fig = plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_trans_end, plot_quantiles)
+    fig = plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_trans_end, show_plots, plot_quantiles)
 
     return fig
 
@@ -486,7 +498,7 @@ def plot_yearly_quantiles_sim_from_inputs(time_file, time_series, list_valid_sim
 #     plt.show()
 #     plt.close()
 
-def plot_yearly_quantiles_side_by_side(list_yearly_quantiles, list_yearly_mean, list_site, year_bkg_end, year_trans_end, plot_quantiles=True):
+def plot_yearly_quantiles_side_by_side(list_yearly_quantiles, list_yearly_mean, list_site, year_bkg_end, year_trans_end, show_plots, plot_quantiles=True):
     """ Function plots yearly statistics for 'air' timeseries, averaged over all reanalyses and altitudes
     
     Parameters
@@ -504,6 +516,8 @@ def plot_yearly_quantiles_side_by_side(list_yearly_quantiles, list_yearly_mean, 
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int, optional
         Same for transient period
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     plot_quantiles : bool, optional
         Gives the option to plot the 1-sigma and 2-sigma spread. True by default but the range is largely dominated by the 2-sigma envelope,
         which hinders a good representation of the mean's trend (better if False).
@@ -576,12 +590,13 @@ def plot_yearly_quantiles_side_by_side(list_yearly_quantiles, list_yearly_mean, 
     plt.tight_layout()  # otherwise the right y-label is slightly clipped
 
     # Show the graph
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_yearly_quantiles_side_by_side_atmospheric_from_inputs(list_time_file, list_list_time_series, label_plot, list_site, year_bkg_end, year_trans_end, plot_quantiles=True):
+def plot_yearly_quantiles_side_by_side_atmospheric_from_inputs(list_time_file, list_list_time_series, label_plot, list_site, year_bkg_end, year_trans_end, show_plots, plot_quantiles=True):
     """ Function returns panda data frame for atmospheric timeseries, concatenated over all reanalyses
         and averaged over all altitudes
         from intended atmospheric input
@@ -600,6 +615,8 @@ def plot_yearly_quantiles_side_by_side_atmospheric_from_inputs(list_time_file, l
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int, optional
         Same for transient period
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     plot_quantiles : bool, optional
         Gives the option to plot the 1-sigma and 2-sigma spread. True by default but the range is largely dominated by the 2-sigma envelope,
         which hinders a good representation of the mean's trend (better if False).
@@ -619,11 +636,11 @@ def plot_yearly_quantiles_side_by_side_atmospheric_from_inputs(list_time_file, l
         panda_test[i] = atmospheric_data_to_panda(list_time_file, list_list_time_series[i], label_plot[i])
         yearly_quantiles[i], yearly_mean[i], _ = panda_data_to_yearly_stats(panda_test[i], year_trans_end)
     
-    fig = plot_yearly_quantiles_side_by_side(yearly_quantiles, yearly_mean, list_site, year_bkg_end, year_trans_end, plot_quantiles)
+    fig = plot_yearly_quantiles_side_by_side(yearly_quantiles, yearly_mean, list_site, year_bkg_end, year_trans_end, show_plots, plot_quantiles)
 
     return fig
 
-def plot_yearly_quantiles_side_by_side_sim_from_inputs(time_file, list_time_series, list_list_valid_sim, label_plot, list_site, year_bkg_end, year_trans_end, plot_quantiles=True, idx_depth=0):
+def plot_yearly_quantiles_side_by_side_sim_from_inputs(time_file, list_time_series, list_list_valid_sim, label_plot, list_site, year_bkg_end, year_trans_end, show_plots, plot_quantiles=True, idx_depth=0):
     """ Function returns panda data frame for simulated timeseries, concatenated over all reanalyses
         and averaged over all altitudes
         from intended simulated input
@@ -644,6 +661,8 @@ def plot_yearly_quantiles_side_by_side_sim_from_inputs(time_file, list_time_seri
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int, optional
         Same for transient period
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     plot_quantiles : bool, optional
         Gives the option to plot the 1-sigma and 2-sigma spread. True by default but the range is largely dominated by the 2-sigma envelope,
         which hinders a good representation of the mean's trend (better if False).
@@ -664,7 +683,7 @@ def plot_yearly_quantiles_side_by_side_sim_from_inputs(time_file, list_time_seri
         panda_test[i] = sim_data_to_panda(time_file, list_time_series[i], list_list_valid_sim[i], label_plot, idx_depth)
         yearly_quantiles[i], yearly_mean[i], _ = panda_data_to_yearly_stats(panda_test[i], year_trans_end)
     
-    fig = plot_yearly_quantiles_side_by_side(yearly_quantiles, yearly_mean, list_site, year_bkg_end, year_trans_end, plot_quantiles)
+    fig = plot_yearly_quantiles_side_by_side(yearly_quantiles, yearly_mean, list_site, year_bkg_end, year_trans_end, show_plots, plot_quantiles)
 
     return fig
 
@@ -770,7 +789,7 @@ def plot_yearly_quantiles_side_by_side_sim_from_inputs(time_file, list_time_seri
 #     plt.show()
 #     plt.close()
 
-def plot_sanity_two_variables_one_year_quantiles_side_by_side(time_file, time_series_list, list_valid_sim_list, list_label, list_site):
+def plot_sanity_two_variables_one_year_quantiles_side_by_side(time_file, time_series_list, list_valid_sim_list, list_label, list_site, show_plots):
     """ Function returns 2 plots side by side of 2 timeseries each reduced to a 1-year window with mean and 1 and 2-sigma spread.
         Each plot is a plot of two timeseries of the same variable at two different sites
     
@@ -786,6 +805,8 @@ def plot_sanity_two_variables_one_year_quantiles_side_by_side(time_file, time_se
         List of the labels associated to each plot
     list_site : list
         List of labels for the site of each entry
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -828,7 +849,8 @@ def plot_sanity_two_variables_one_year_quantiles_side_by_side(time_file, time_se
     plt.tight_layout()  # otherwise the right y-label is slightly clipped
 
     # Show the graph
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
 def yearly_max_thaw_depth(time_file, thaw_depth, list_depths, df):
@@ -879,7 +901,7 @@ def yearly_max_thaw_depth(time_file, thaw_depth, list_depths, df):
 
     return list_data
 
-def plot_yearly_max_thaw_depth(list_data):
+def plot_yearly_max_thaw_depth(list_data, show_plots):
     """ Function plots the maximum annual thaw depth for each simulations
     and binned by altitude and slope
     
@@ -889,6 +911,8 @@ def plot_yearly_max_thaw_depth(list_data):
         A list of dictionary. One dictionary per (altitude,slope) bin that supports permafrost
         Each dictionary has the following keys:
         'alt': altitude, 'slo': slope, 'years': list of years, 'td_mean': mean thaw depth, 'td_std': std thaw depth}
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -909,12 +933,13 @@ def plot_yearly_max_thaw_depth(list_data):
     ax.legend(bbox_to_anchor=(1,1), loc='upper left')
     ax.set_ylabel('Maximum annual thaw depth [m]')
 
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_yearly_max_thaw_depth_from_inputs(time_file, thaw_depth, list_depths, df):
+def plot_yearly_max_thaw_depth_from_inputs(time_file, thaw_depth, list_depths, df, show_plots):
     """ Function plots the maximum annual thaw depth for each simulations
     and binned by altitude and slope
     
@@ -928,6 +953,8 @@ def plot_yearly_max_thaw_depth_from_inputs(time_file, thaw_depth, list_depths, d
         List of all the plotted simulated depths
     df : pandas.core.frame.DataFrame
         Panda dataframe with columns ['altitude', 'slope']
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -937,6 +964,6 @@ def plot_yearly_max_thaw_depth_from_inputs(time_file, thaw_depth, list_depths, d
     """
 
     list_data = yearly_max_thaw_depth(time_file, thaw_depth, list_depths, df)
-    fig = plot_yearly_max_thaw_depth(list_data)
+    fig = plot_yearly_max_thaw_depth(list_data, show_plots)
 
     return fig

@@ -367,7 +367,7 @@ def aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_pickle
 
     return dict_distances, rockfall_time_index
 
-def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year_bkg_end, year_trans_end, year, show_landslide_time):
+def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year_bkg_end, year_trans_end, year, show_landslide_time, show_plots):
     """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
         Vertical subplots for different variables
         Plots from user-given dictionaries
@@ -388,6 +388,8 @@ def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year
         One can choose to display a specific year or the whole set by choosing an integer not in the study sample, e.g. 0.
     show_landslide_time : bool
         Choose to show or not the vertical dashed line indicating the time of the landslide. For a slow landslide, choose False.
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -449,11 +451,13 @@ def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year
             ax.set_xlim(xmin, xmax)
             ax.set_ylabel(yaxes[idx])
             # ax.grid(axis = 'y')
+            ax.set_ylim(-np.max(np.abs(ax.get_ylim())), np.max(np.abs(ax.get_ylim())))
         else: 
             for i in range(num_cols):
                 ax[i].set_xticks(locs, labels_end)
                 ax[i].set_xlim(xmin, xmax)
                 # ax[i].grid(axis = 'y')
+                ax[i].set_ylim(-np.max(np.abs(ax[i].get_ylim())), np.max(np.abs(ax[i].get_ylim())))
                 if idx == 0:
                     ax[i].set_title(window[i].capitalize())
             ax[0].set_ylabel(yaxes[idx])
@@ -462,12 +466,13 @@ def plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year
     fig.supylabel(r'Normalized deviation $d_{norm}$ [$\sigma$]')
     plt.legend(loc='lower right')
     plt.tight_layout()
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_aggregating_distance_temp_all_from_input(yaxes, xdata, ydata, window, site, path_pickle, year_bkg_end, year_trans_end, year, fill_before=False, show_landslide_time=True):
+def plot_aggregating_distance_temp_all_from_input(yaxes, xdata, ydata, window, site, path_pickle, year_bkg_end, year_trans_end, year, show_plots, fill_before=False, show_landslide_time=True):
     """ Plots the distance to the mean in units of standard deviation for a specific year or for the whole length
         Vertical subplots for different variables
         Plots directly from intended inputs
@@ -499,6 +504,8 @@ def plot_aggregating_distance_temp_all_from_input(yaxes, xdata, ydata, window, s
         Same for transient period
     year : int
         One can choose to display a specific year or the whole set by choosing an integer not in the study sample, e.g. 0.
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     fill_before : bool, optional
         Option to fill the first empty values of the smoothed data with the first running average value if True
     show_landslide_time : bool
@@ -511,6 +518,6 @@ def plot_aggregating_distance_temp_all_from_input(yaxes, xdata, ydata, window, s
     """
 
     dict_distances, rockfall_time_index = aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_pickle, year_bkg_end, year_trans_end, year, fill_before)
-    fig = plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year_bkg_end, year_trans_end, year, show_landslide_time)
+    fig = plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year_bkg_end, year_trans_end, year, show_landslide_time, show_plots)
 
     return fig

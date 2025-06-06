@@ -30,7 +30,7 @@ def read_horizon_to_polar(path_horizon):
 
     return theta, zenith_angle
 
-def plot_visible_skymap(theta, zenith_angle):
+def plot_visible_skymap(theta, zenith_angle, show_plots):
     """ Function returns a fisheye view of the sky with the visible portion in blue and the blocked one in black.
     
     Parameters
@@ -41,6 +41,8 @@ def plot_visible_skymap(theta, zenith_angle):
         horizon angle in degrees (from the zenith) at corresponding theta (azimuth) direction
         from 0 to 90
         0 corresponds to zenith (vertical wall), 90 corresponds to flat horizon
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -60,12 +62,13 @@ def plot_visible_skymap(theta, zenith_angle):
     ax.scatter(theta, zenith_angle, color='blue', s=10, alpha=0.75)
     # plt.title('Scatter Plot on Polar Axis', fontsize=15)
 
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_visible_skymap_from_horizon_file(path_horizon):
+def plot_visible_skymap_from_horizon_file(path_horizon, show_plots):
     """ Function returns a fisheye view of the sky with the visible portion in blue and the blocked one in black
         from a .csv horizon file
     
@@ -73,6 +76,8 @@ def plot_visible_skymap_from_horizon_file(path_horizon):
     ----------
     path_horizon : str
         Path to the .csv horizon file
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -81,6 +86,6 @@ def plot_visible_skymap_from_horizon_file(path_horizon):
     """
 
     theta, zenith_angle = read_horizon_to_polar(path_horizon)
-    fig = plot_visible_skymap(theta, zenith_angle)
+    fig = plot_visible_skymap(theta, zenith_angle, show_plots)
 
     return fig

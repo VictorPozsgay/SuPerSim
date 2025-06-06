@@ -44,7 +44,7 @@ def sorted_bkg_GST_data(site, path_pickle):
 
     return list_xy
 
-def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(list_xy):
+def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(list_xy, show_plots):
     """ Function return scatter plot of background GST vs GST evolution for a single site.
     The site is binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
     A linear regression is produced too.
@@ -56,6 +56,8 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(list_xy):
         The nth element of each list corresponds to the same simulation
         The background GST is in increasing order
         in the shape [list_x, list_y]
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     
     Returns
     -------
@@ -102,12 +104,13 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(list_xy):
 
     # Show the graph
     # plt.legend()
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs(site, path_pickle):
+def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs(site, path_pickle, show_plots):
     """ Function return scatter plot of background GST vs GST evolution for a single site.
     The site is binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
     A linear regression is produced too.
@@ -118,6 +121,8 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs(site, path_pi
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
     path_pickle : str
         String path to the location of the folder where the pickles are saved
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     
     Returns
     -------
@@ -128,7 +133,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs(site, path_pi
     """
 
     list_xy = sorted_bkg_GST_data(site, path_pickle)
-    fig =plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(list_xy)
+    fig =plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(list_xy, show_plots)
 
     return fig
 
@@ -160,7 +165,7 @@ def sorted_bkg_GST_data_two_sites(list_site, list_path_pickle):
 
     return list_xy
 
-def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites(list_xy, list_label_site):
+def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites(list_xy, list_label_site, show_plots):
     """ Function return scatter plot of background GST vs GST evolution for 2 sites.
         Both sites are binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
         A linear regression is produced for each site.
@@ -173,6 +178,8 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites(list_xy, list_label_site):
         in the shape [[list_x_site0, list_y_site0], [list_x_site1, list_y_site1]]
     list_label_site : list of str
         List of label for each site
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     
     Returns
     -------
@@ -216,6 +223,8 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites(list_xy, list_label_site):
     slope = []
     intercept = []
     r = []
+
+    first_legend = []
 
     for j in range(num):
 
@@ -267,12 +276,13 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites(list_xy, list_label_site):
     # first_legend = plt.legend(handles=[line[0]], loc='upper left')
     plt.gca().add_artist(first_legend)
     plt.legend(handles=[line_j], loc='lower right')
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input(list_site, list_path_pickle, list_label_site):
+def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input(list_site, list_path_pickle, list_label_site, show_plots):
     """ Function return scatter plot of background GST vs GST evolution for 2 sites.
     Both sites are binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
     A linear regression is produced for each site.
@@ -285,6 +295,8 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input(list_site, list_
         List of string path to the location of the folder where the pickles are saved
     list_label_site : list of str
         List of label for each site
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     
     Returns
     -------
@@ -296,7 +308,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input(list_site, list_
     """
 
     list_xy = sorted_bkg_GST_data_two_sites(list_site, list_path_pickle)
-    fig = plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites(list_xy, list_label_site)
+    fig = plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites(list_xy, list_label_site, show_plots)
 
     return fig
 
@@ -325,7 +337,7 @@ def data_bkg_GST_evol_altitudes(site, path_pickle):
     
     return dic_data
     
-def plot_mean_bkg_GST_vs_evolution(dic_data):
+def plot_mean_bkg_GST_vs_evolution(dic_data, show_plots):
     """ Function returns a scatter plot of mean background GST (ground-surface temperature)
         vs evolution of mean GST between the background and transient period.
         Note that each point is computed from an average over all reanalyses to avoid bias.
@@ -336,6 +348,8 @@ def plot_mean_bkg_GST_vs_evolution(dic_data):
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
     path_pickle : str
         String path to the location of the folder where the pickles are saved
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
 
     Returns
@@ -363,12 +377,13 @@ def plot_mean_bkg_GST_vs_evolution(dic_data):
     plt.ylabel('Mean GST evolution [°C]')
 
     # displaying the scatter plot
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_mean_bkg_GST_vs_evolution_from_inputs(site, path_pickle):
+def plot_mean_bkg_GST_vs_evolution_from_inputs(site, path_pickle, show_plots):
     """ Function returns a scatter plot of mean background GST (ground-surface temperature)
         vs evolution of mean GST between the background and transient period.
         Note that each point is computed from an average over all reanalyses to avoid bias.
@@ -379,6 +394,8 @@ def plot_mean_bkg_GST_vs_evolution_from_inputs(site, path_pickle):
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
     path_pickle : str
         String path to the location of the folder where the pickles are saved
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
 
     Returns
@@ -388,7 +405,7 @@ def plot_mean_bkg_GST_vs_evolution_from_inputs(site, path_pickle):
     """
 
     dic_data = data_bkg_GST_evol_altitudes(site, path_pickle)
-    fig = plot_mean_bkg_GST_vs_evolution(dic_data)
+    fig = plot_mean_bkg_GST_vs_evolution(dic_data, show_plots)
 
     return fig
 
@@ -434,7 +451,7 @@ def data_evolution_snow_cover_melt_out(site, path_pickle, variable=None, value=N
 
     return evol_melt_out, evol_snow_cover
 
-def plot_evolution_snow_cover_melt_out(evol_melt_out, evol_snow_cover):
+def plot_evolution_snow_cover_melt_out(evol_melt_out, evol_snow_cover, show_plots):
     """ Function returns a histogram of the evolution of snow cover (in days) and melt out date
         between background and transient periods
         For all simulations or for a given subset, for instance the ones with 'slope'=55
@@ -447,6 +464,8 @@ def plot_evolution_snow_cover_melt_out(evol_melt_out, evol_snow_cover):
         List of the evolution of melt out date
     evol_snow_cover : list
         List of the evolution of snow cover
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -478,12 +497,13 @@ def plot_evolution_snow_cover_melt_out(evol_melt_out, evol_snow_cover):
 
     # Show the graph
     plt.legend(loc='upper left')
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_evolution_snow_cover_melt_out_from_inputs(site, path_pickle, variable=None, value=None):
+def plot_evolution_snow_cover_melt_out_from_inputs(site, path_pickle, show_plots, variable=None, value=None):
     """ Function returns a histogram of the evolution of snow cover (in days) and melt out date
         between background and transient periods
         For all simulations or for a given subset, for instance the ones with 'slope'=55
@@ -492,10 +512,16 @@ def plot_evolution_snow_cover_melt_out_from_inputs(site, path_pickle, variable=N
 
     Parameters
     ----------
-    evol_melt_out : list
-        List of the evolution of melt out date
-    evol_snow_cover : list
-        List of the evolution of snow cover
+    site : str
+        Location of the event, e.g. 'Joffre' or 'Fingerpost'
+    path_pickle : str
+        String path to the location of the folder where the pickles are saved
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
+    variable : str
+        A parameter in df_stats such as slope, aspect, altitude, etc.
+    value : float
+        A value for the parameter, e.g. 50 for a slope
 
     Returns
     -------
@@ -504,6 +530,6 @@ def plot_evolution_snow_cover_melt_out_from_inputs(site, path_pickle, variable=N
     """
 
     evol_melt_out, evol_snow_cover = data_evolution_snow_cover_melt_out(site, path_pickle, variable, value)
-    fig = plot_evolution_snow_cover_melt_out(evol_melt_out, evol_snow_cover)
+    fig = plot_evolution_snow_cover_melt_out(evol_melt_out, evol_snow_cover, show_plots)
 
     return fig

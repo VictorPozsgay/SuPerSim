@@ -74,7 +74,7 @@ def data_cdf_GST(site, path_pickle):
     
     return data
 
-def plot_cdf_GST(data):
+def plot_cdf_GST(data, show_plots):
     """ Function plots the Cumulated Distribution Dunction (CDF) of background, transient, and evolution of mean GST and SO
     
     Parameters
@@ -82,6 +82,8 @@ def plot_cdf_GST(data):
     data : dict
         List of sorted background, transient and evolution of GST (gound surface temperature)
         and SO (surface offset)
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -165,12 +167,13 @@ def plot_cdf_GST(data):
     ax2.set_xlabel('Mean SO [°C]')
 
     # Show the graph
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_cdf_GST_from_inputs(site, path_pickle):
+def plot_cdf_GST_from_inputs(site, path_pickle, show_plots):
     """ Function plots the Cumulated Distribution Dunction (CDF) of background, transient, and evolution of mean GST and SO
     
     Parameters
@@ -179,6 +182,8 @@ def plot_cdf_GST_from_inputs(site, path_pickle):
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
     path_pickle : str
         String path to the location of the folder where the pickles are saved
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -187,7 +192,7 @@ def plot_cdf_GST_from_inputs(site, path_pickle):
     """
 
     data = data_cdf_GST(site, path_pickle)
-    fig = plot_cdf_GST(data)
+    fig = plot_cdf_GST(data, show_plots)
 
     return fig
 
@@ -234,13 +239,15 @@ def panda_percentile_GST(site, path_pickle):
 
     return pd_data
 
-def plot_heatmap_percentile_GST(pd_data):
+def plot_heatmap_percentile_GST(pd_data, show_plots):
     """ Function returns a heatmap of 10th, 25th, 50th, 75th, and 90th percentile in background and transient GST, and the difference
     
     Parameters
     ----------
     pd_data : pandas.core.frame.DataFrame
         Panda dataframe of 10th, 25th, 50th, 75th, and 90th percentile in background and transient GST, and the difference
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
     Returns
     -------
@@ -256,18 +263,21 @@ def plot_heatmap_percentile_GST(pd_data):
     plt.ylabel('Percentile')
 
     # Show the graph
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     return fig
 
-def plot_heatmap_percentile_GST_from_inputs(site, path_pickle):
+def plot_heatmap_percentile_GST_from_inputs(site, path_pickle, show_plots):
     """ Function returns a heatmap of 10th, 25th, 50th, 75th, and 90th percentile in background and transient GST, and the difference
     
     Parameters
     ----------
     pd_data : pandas.core.frame.DataFrame
         Panda dataframe of 10th, 25th, 50th, 75th, and 90th percentile in background and transient GST, and the difference
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
         
     Returns
     -------
@@ -276,6 +286,6 @@ def plot_heatmap_percentile_GST_from_inputs(site, path_pickle):
     """
 
     pd_data = panda_percentile_GST(site, path_pickle)
-    fig = plot_heatmap_percentile_GST(pd_data)
+    fig = plot_heatmap_percentile_GST(pd_data, show_plots)
 
     return fig

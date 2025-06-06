@@ -78,7 +78,7 @@ def data_evol_GST(site, path_pickle, all_data=True, diff_forcings=True):
 
     return data_set
 
-def fit_stat_model_GST(data_set, all_data=True):
+def fit_stat_model_GST(data_set, show_plots, all_data=True):
     """ Function returns the value of the statistical model 
     
     Parameters
@@ -86,6 +86,8 @@ def fit_stat_model_GST(data_set, all_data=True):
     data_set : list of pandas.core.frame.DataFrame
         list of dataframes with columns: ['bkg_grd_temp', 'aspect', 'slope', 'altitude', 'forcing']
         one dataframe for all if all_data=True plus one dataframe per forcing if diff_forcings=True
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     all_data : bool, optional
         If True, considers all data at once
 
@@ -165,7 +167,8 @@ def fit_stat_model_GST(data_set, all_data=True):
 
     # Show the graph
     plt.legend()
-    plt.show()
+    if show_plots:
+        plt.show()
     plt.close()
 
     list_coef = ['offset', 'c_alt', 'd_alt', 'c_asp', 'c_slope']
@@ -178,7 +181,7 @@ def fit_stat_model_GST(data_set, all_data=True):
 
     return fig, xdata, ydata, optimizedParameters, pcov, corr_matrix, R_sq
 
-def fit_stat_model_GST_from_inputs(site, path_pickle, all_data=True, diff_forcings=True):
+def fit_stat_model_GST_from_inputs(site, path_pickle, show_plots, all_data=True, diff_forcings=True):
     """ Function returns the value of the statistical model 
     
     Parameters
@@ -211,6 +214,6 @@ def fit_stat_model_GST_from_inputs(site, path_pickle, all_data=True, diff_forcin
     """
 
     data_set = data_evol_GST(site, path_pickle, all_data, diff_forcings)
-    fig, xdata, ydata, optimizedParameters, pcov, corr_matrix, R_sq = fit_stat_model_GST(data_set, all_data)
+    fig, xdata, ydata, optimizedParameters, pcov, corr_matrix, R_sq = fit_stat_model_GST(data_set, show_plots, all_data)
 
     return fig, xdata, ydata, optimizedParameters, pcov, corr_matrix, R_sq
