@@ -194,7 +194,7 @@ def plot_sanity_one_year_quantiles_two_periods(quantiles, mean_end, axis_label, 
         Both series have their own y axis if they have different units.
     """
 
-    fig = plt.subplots()
+    fig, _ = plt.subplots()
 
     for idx,qt in enumerate(quantiles):
         xdata = range(len(mean_end[idx]))

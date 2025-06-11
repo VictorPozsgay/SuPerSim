@@ -291,7 +291,7 @@ def plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_tran
                 3: {'alpha': 0.4, 'width': 1.0},
                 4: {'alpha': 0.2, 'width': 0.5}}
 
-    fig = plt.subplots()
+    fig, _ = plt.subplots()
 
     plt.scatter(list_years, yearly_mean, color=colorcycle[0], linestyle='None', label='Yearly mean')
     # plt.plot(list_years, yearly_mean, color=colorcycle[0], label='Mean')

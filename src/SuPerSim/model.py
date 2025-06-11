@@ -128,7 +128,7 @@ def fit_stat_model_GST(data_set, show_plots, all_data=True):
     bounds=((-50, -np.inf, -10000, -np.inf, -np.inf), (50, np.inf, 10000, np.inf, np.inf))
     p0 = (0,0,1000,0,0)
 
-    fig = plt.figure(figsize=(6,6))
+    fig, _ = plt.subplots(figsize=(6,6))
 
     for i,in_var in enumerate(input_var):
         optimizedParameters.append(opt.curve_fit(stat_model_aspect_slope_alt, in_var, xdata[i], bounds=bounds, p0=p0)[0])

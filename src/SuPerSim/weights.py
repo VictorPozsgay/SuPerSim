@@ -7,10 +7,12 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import pickle
 
 from SuPerSim.open import open_thaw_depth_nc
 from SuPerSim.constants import colorcycle
 from SuPerSim.pickling import load_all_pickles
+from SuPerSim.legends import get_all_legends_ax, get_all_legends_fig
 
 def assign_weight_sim(site, path_pickle, no_weight):
     """ Function returns a statistical weight for each simulation according to the importance in rockfall starting zone 
@@ -290,20 +292,37 @@ def plot_hist_valid_sim_all_variables(dict_bins, dict_counts, show_plots):
             p = ax.bar([str(i) for i in dict_bins[variables[idx]]], data, label=name, bottom=bottom, color=colorbar[name])
             bottom += data
             data_no_zero = [i if i>0 else "" for i in data]
-            ax.bar_label(p, labels=data_no_zero, label_type='center')
+            # !!!!! FOR SOME REASON, USING label_type='center' messes up the pickling !!!!!!!!!!
+            ax.bar_label(p, data_no_zero)
 
         ax.set_xlabel(xaxes[idx])
         ax.set_ylim(0, tot_per_bin[variables[idx]])
         ax.set_ylabel(yaxes[idx])
 
     fig.align_ylabels(axs[:,0])
-    plt.legend(loc='lower right', reverse=True)
+
+    # fig_no_legend = pickle.dumps(fig)
+
+    legend = get_all_legends_ax(axs[1,1])
+    handles, labels = legend
+    fig.legend(handles, labels, loc="lower right", bbox_to_anchor=(1,0), bbox_transform=axs[1,1].transAxes)
+
+    # plt.legend(loc='lower right', reverse=True)
     plt.tight_layout()
 
     if show_plots:
         plt.show()
     plt.close()
 
+    # fig_no_legend = pickle.loads(fig_no_legend)
+    # fig_no_legend.tight_layout()
+
+    # fig_legend = plt.figure(figsize=(4, 2))
+    # fig_legend.legend(handles, labels, loc='center')
+
+    # plt.close()
+
+    # return fig, fig_no_legend, fig_legend, legend
     return fig
 
 def plot_hist_valid_sim_all_variables_from_input(site, path_thaw_depth, path_pickle, show_plots): 

@@ -141,7 +141,7 @@ def plot_cdf_GST(data, show_plots):
 
     ax1.set_xlabel('Mean GST [°C]')
     ax1.set_ylabel('Probability')
-    ax1.legend()
+    # ax1.legend()
 
     ax2.plot(data_bkg_SO_sorted, p, label='Background SO', color=colorcycle[0], linewidth=2)
     ax2.plot(data_trans_SO_sorted, p, label='Transient SO', color=colorcycle[1], linewidth=2)
@@ -165,6 +165,7 @@ def plot_cdf_GST(data, show_plots):
     ax2.set_ylim(ylim_ax2)
 
     ax2.set_xlabel('Mean SO [°C]')
+    ax2.legend()
 
     # Show the graph
     if show_plots:

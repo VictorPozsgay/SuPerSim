@@ -373,7 +373,8 @@ def plot_all(site,
             print('\n---------------------------------------------------------------------------------------------\n')
             print('Parity plot (statistically-modeled vs numerically-simulated) of background mean GST:')
         list_fig_names.append('parity_plot_stat_model_bkg_mean_GST')
-        list_figs.append(fit_stat_model_GST_from_inputs(site, path_pickle, show_plots, all_data=False, diff_forcings=True))
+        fig_model, _, _, _, _, _, _ = fit_stat_model_GST_from_inputs(site, path_pickle, show_plots, all_data=False, diff_forcings=True)
+        list_figs.append(fig_model)
 
     
     print('\n---------------------------------------------------------------------------------------------')
