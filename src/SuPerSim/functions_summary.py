@@ -18,6 +18,7 @@ from SuPerSim.yearlystats import plot_box_yearly_stat_from_inputs, plot_yearly_q
 from SuPerSim.seasonal import plot_sanity_one_year_quantiles_two_periods_from_inputs, plot_sanity_two_variables_one_year_quantiles_from_inputs, plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side_from_inputs
 from SuPerSim.evolution import plot_evolution_snow_cover_melt_out_from_inputs, plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs, plot_mean_bkg_GST_vs_evolution_from_inputs, plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input
 from SuPerSim.horizon import plot_visible_skymap_from_horizon_file
+from SuPerSim.captions import captions
 
 def plot_all(site,
              path_forcing_list, path_ground, path_snow, path_swe, path_thaw_depth, path_pickle,
@@ -382,7 +383,12 @@ def plot_all(site,
     print('---------------------------------------------------------------------------------------------\n')
 
     dic_figs = dict(zip(list_fig_names, list_figs))
+
+    #############################################
+    # also return a dict of captions
+    #############################################
     return dic_figs
+
 
 
 
