@@ -67,7 +67,9 @@ def plot_all(site,
     Returns
     -------
     dic_figs: dict
-        Dictionary {k: v} where the keys 'k' are the figure names and the values 'v' the figures
+        Dictionary {k: v} where the keys 'k' are the figure names and the values 'v' the figure objects
+    dic_captions : dict
+        Dictionary {k: v} where the keys 'k' are the figure names and the values 'v' the figure captions
     """  
 
     #####################################################################################
@@ -243,17 +245,17 @@ def plot_all(site,
         #                                                                         f'{k}m ground temperature', ['Background', 'Transient']+[f'Decade {k}-{k+9}' for k in list_decs], [time_bkg_ground, time_trans_ground]+[list_tokens_year(time_ground, k, k+10)[2] for k in list_decs], show_plots, idx_depth=v))
 
 
-    list_fig_names.append('snow_1year_bkg_v_transient')
+    list_fig_names.append('Snow_1year_bkg_v_transient')
     list_figs.append(plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [snow_height, snow_height], [list_valid_sim, list_valid_sim], 'Snow depth', ['Background', 'Transient'], [time_bkg_ground, time_trans_ground], show_plots))
     panda_test = sim_data_to_panda(time_ground, snow_height, list_valid_sim, 'Snow depth')
     _, _, excep_years = panda_data_to_yearly_stats(panda_test, year_trans_end)
-    list_fig_names.append('snow_1year_bkg_v_transient_excep_years')
+    list_fig_names.append('Snow_1year_bkg_v_transient_excep_years')
     list_figs.append(plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [snow_height]*(len(excep_years)+1), [list_valid_sim]*(len(excep_years)+1),
                                                                             'Snow depth', ['Background']+[f'Year {k}' for k in excep_years], [time_bkg_ground]+[list_tokens_year(time_ground, k, k+1)[2] for k in excep_years], show_plots))
     list_decs = []
     for k in range(int((year_trans_end-year_bkg_end-1)/10)):
         list_decs.append(year_bkg_end+1+k*10)
-    list_fig_names.append('snow_1year_bkg_v_transient_decades')
+    list_fig_names.append('Snow_1year_bkg_v_transient_decades')
     list_figs.append(plot_sanity_one_year_quantiles_two_periods_from_inputs(time_ground, [snow_height]*(len(list_decs)+2), [list_valid_sim]*(len(list_decs)+2),
                                                                             'Snow depth', ['Background', 'Transient']+[f'Decade {k}-{k+9}' for k in list_decs], [time_bkg_ground, time_trans_ground]+[list_tokens_year(time_ground, k, k+10)[2] for k in list_decs], show_plots))
     
@@ -383,11 +385,9 @@ def plot_all(site,
     print('---------------------------------------------------------------------------------------------\n')
 
     dic_figs = dict(zip(list_fig_names, list_figs))
+    dic_captions = {k:v for (k,v) in captions.items() if k in dic_figs.keys()}
 
-    #############################################
-    # also return a dict of captions
-    #############################################
-    return dic_figs
+    return dic_figs, dic_captions
 
 
 

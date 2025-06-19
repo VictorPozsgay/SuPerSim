@@ -389,10 +389,12 @@ def plot_table_mean_GST_aspect_slope_all_altitudes(table_all, rockfall_values, s
         vmin[2] = 0
         vmax[2] = 100
 
+    hm = [[[] for _ in range(ncols)] for _ in range(nrows)]
+
     # plotting the heatmap 
     for j in range(nrows):
         if ncols == 1:
-            sn.heatmap(data=list_mean[nrows-1-j][alt_list[0]], annot=annot, center=center[nrows-1-j], cmap=cmap[nrows-1-j], ax=axs[j], vmin=vmin[nrows-1-j], vmax=vmax[nrows-1-j],
+            hm[j][0] = sn.heatmap(data=list_mean[nrows-1-j][alt_list[0]], annot=annot, center=center[nrows-1-j], cmap=cmap[nrows-1-j], ax=axs[j], vmin=vmin[nrows-1-j], vmax=vmax[nrows-1-j],
                     cbar=True, yticklabels=True, xticklabels=(j==nrows-1), cbar_kws={'label': labels_plot[nrows-1-j]})
             axs[0].figure.axes[-1].yaxis.label.set_size(13)
             if box and rockfall_values['exact_topo']:
@@ -400,7 +402,7 @@ def plot_table_mean_GST_aspect_slope_all_altitudes(table_all, rockfall_values, s
                                         edgecolor = 'black', transform=axs[j].transAxes, fill=False, lw=4))
         if ncols > 1:
             for i in range(ncols):
-                sn.heatmap(data=list_mean[nrows-1-j][alt_list[i]], annot=annot, center=center[nrows-1-j], cmap=cmap[nrows-1-j], ax=axs[j,i], vmin=vmin[nrows-1-j], vmax=vmax[nrows-1-j],
+                hm[j][i] = sn.heatmap(data=list_mean[nrows-1-j][alt_list[i]], annot=annot, center=center[nrows-1-j], cmap=cmap[nrows-1-j], ax=axs[j,i], vmin=vmin[nrows-1-j], vmax=vmax[nrows-1-j],
                             cbar=(i==ncols-1), yticklabels=(i==0), xticklabels=(j==nrows-1), cbar_kws={'label': labels_plot[nrows-1-j]})
             axs[0,0].figure.axes[-1].yaxis.label.set_size(13)
             if box and rockfall_values['exact_topo']:
@@ -414,6 +416,22 @@ def plot_table_mean_GST_aspect_slope_all_altitudes(table_all, rockfall_values, s
             axs[0,i].set_title(f'{alt_list[i]} m')
     fig.supxlabel('Aspect [°]')
     fig.supylabel('Slope [°]')
+
+    # Get colorbar axes
+    cbars_ax = [h[-1].collections[0].colorbar.ax for h in hm]
+
+    # Remove the default y-axis labels
+    for a in cbars_ax:
+        a.set_ylabel('')
+
+    # Get positions of colorbar axes in figure coordinates
+    inv = fig.transFigure.inverted()
+    cbars_pos = [inv.transform(a.transAxes.transform((0.5, 0.5))) for a in cbars_ax]
+
+    # Use the same x position (choose one or average)
+    x = max([c[0] for c in cbars_pos]) + 0.07  # shift slightly right of cbar
+    for c,l in zip(cbars_pos, labels_plot):
+        fig.text(x, c[1], l, va='center', ha='center', rotation=90)
 
     # displaying the plotted heatmap 
     if show_plots:
@@ -561,11 +579,13 @@ def plot_table_mean_GST_aspect_slope_all_altitudes_polar(table_all, rockfall_val
                                                         width=np.pi/4, height=10, edgecolor = 'black', fill=False, lw=2))
         
 
+    cbars = [[] for _ in range(nrows)]
+    labels_cbar = ['Mean background GST [°C]', 'Mean GST evolution [°C]']
     for j in range(nrows):
         #pylint: disable=no-member
-        fig.colorbar(plt.cm.ScalarMappable(cmap=cmap[j]), shrink=.7,
-                        ax=axs[j,:].ravel().tolist(), orientation='vertical',
-                        label=('Mean background GST [°C]' if j==0 else 'Mean GST evolution [°C]'))
+        cbars[j] = fig.colorbar(plt.cm.ScalarMappable(cmap=cmap[j]), shrink=.7,
+                                ax=axs[j,:].ravel().tolist(), orientation='vertical')
+        cbars[j].set_label(labels_cbar[j], rotation=90, labelpad=20)
 
     for idx,i in enumerate(range(-nrows,0)):
         axs[0,0].figure.axes[i].yaxis.set_ticks(tick_pos[idx])
@@ -573,6 +593,10 @@ def plot_table_mean_GST_aspect_slope_all_altitudes_polar(table_all, rockfall_val
 
     for i in [6,7]:
         axs[0,0].figure.axes[i].yaxis.label.set_size(13)
+
+    aligned_x = 4.0  # works well with constrained_layout (adjust as needed)
+    for c in cbars:
+        c.ax.yaxis.set_label_coords(aligned_x, 0.5)
 
     if show_plots:
         plt.show()
@@ -689,11 +713,13 @@ def plot_table_mean_GST_aspect_altitude_all_slopes_polar(table_all, rockfall_val
                                                         width=np.pi/4, height=10, edgecolor = 'black', fill=False, lw=2))
         
 
+    cbars = [[] for _ in range(nrows)]
+    labels_cbar = ['Mean background GST [°C]', 'Mean GST evolution [°C]']
     for j in range(nrows):
         #pylint: disable=no-member
-        fig.colorbar(plt.cm.ScalarMappable(cmap=cmap[j]), shrink=.7,
-                        ax=axs[j,:].ravel().tolist(), orientation='vertical',
-                        label=('Mean background GST [°C]' if j==0 else 'Mean GST evolution [°C]'))
+        cbars[j] = fig.colorbar(plt.cm.ScalarMappable(cmap=cmap[j]), shrink=.7,
+                                ax=axs[j,:].ravel().tolist(), orientation='vertical')
+        cbars[j].set_label(labels_cbar[j], rotation=90, labelpad=20)
 
     for idx,i in enumerate(range(-nrows,0)):
         axs[0,0].figure.axes[i].yaxis.set_ticks(tick_pos[idx])
@@ -701,6 +727,10 @@ def plot_table_mean_GST_aspect_altitude_all_slopes_polar(table_all, rockfall_val
 
     for i in [6,7]:
         axs[0,0].figure.axes[i].yaxis.label.set_size(13)
+
+    aligned_x = 4.0  # works well with constrained_layout (adjust as needed)
+    for c in cbars:
+        c.ax.yaxis.set_label_coords(aligned_x, 0.5)
 
     if show_plots:
         plt.show()
