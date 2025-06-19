@@ -7,14 +7,13 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import pickle
 
 from SuPerSim.open import open_thaw_depth_nc
 from SuPerSim.constants import colorcycle
 from SuPerSim.pickling import load_all_pickles
-from SuPerSim.legends import get_all_legends_ax, get_all_legends_fig
+from SuPerSim.legends import get_all_legends_ax
 
-def assign_weight_sim(site, path_pickle, no_weight):
+def assign_weight_sim(site, path_pickle, no_weight, query):
     """ Function returns a statistical weight for each simulation according to the importance in rockfall starting zone 
     
     Parameters
@@ -25,6 +24,13 @@ def assign_weight_sim(site, path_pickle, no_weight):
         String path to the location of the folder where the pickles are saved
     no_weight : bool, optional
         If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
+    query : dict, optional
+        If query is None then we consider ALL simulations
+        However, this is the place where we can select a subset of simulations
+        This is done in the following way
+        query = {'param_1': 'value_1', ..., 'param_n': 'value_n'}
+        and the keys should be taken from a valid column of 'df', 
+        e.g. 'altitude', 'slope', 'aspect', 'material', 'maxswe', 'snow'
 
     Returns
     -------
@@ -36,7 +42,7 @@ def assign_weight_sim(site, path_pickle, no_weight):
         and an overall weight, and has information about the topography of each simulations
     """
 
-    pkl = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle, query)
     df_stats = pkl['df_stats']
     rockfall_values = pkl['rockfall_values']
 
@@ -66,7 +72,7 @@ def assign_weight_sim(site, path_pickle, no_weight):
 
     return pd_weight, pd_weight_long
 
-def count_stat_weights(site, path_pickle, no_weight): 
+def count_stat_weights(site, path_pickle, no_weight, query): 
     """ Function returns a binned count of the weight distribution over all (valid) simulations 
     
     Parameters
@@ -77,6 +83,13 @@ def count_stat_weights(site, path_pickle, no_weight):
         String path to the location of the folder where the pickles are saved
     no_weight : bool, optional
         If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
+    query : dict, optional
+        If query is None then we consider ALL simulations
+        However, this is the place where we can select a subset of simulations
+        This is done in the following way
+        query = {'param_1': 'value_1', ..., 'param_n': 'value_n'}
+        and the keys should be taken from a valid column of 'df', 
+        e.g. 'altitude', 'slope', 'aspect', 'material', 'maxswe', 'snow'
 
     Returns
     -------
@@ -88,7 +101,7 @@ def count_stat_weights(site, path_pickle, no_weight):
         number of simulations yielding a 'glacier'
     """
 
-    pd_weight, _ = assign_weight_sim(site, path_pickle, no_weight)
+    pd_weight, _ = assign_weight_sim(site, path_pickle, no_weight, query)
 
     pkl = load_all_pickles(site, path_pickle)
     df = pkl['df']
@@ -151,7 +164,7 @@ def plot_hist_stat_weights(bins, counts, number_glaciers, show_glaciers, show_pl
 
     return fig
 
-def plot_hist_stat_weights_from_input(site, path_pickle, no_weight, show_glaciers, show_plots): 
+def plot_hist_stat_weights_from_input(site, path_pickle, no_weight, show_glaciers, show_plots, query): 
     """ Function returns a histogram of the weight distribution over all (valid) simulations 
     
     Parameters
@@ -166,6 +179,13 @@ def plot_hist_stat_weights_from_input(site, path_pickle, no_weight, show_glacier
         If True, shows the glacier simulations with a 0 weight, if False, those are ignored.
     show_plots : bool
         Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
+    query : dict, optional
+        If query is None then we consider ALL simulations
+        However, this is the place where we can select a subset of simulations
+        This is done in the following way
+        query = {'param_1': 'value_1', ..., 'param_n': 'value_n'}
+        and the keys should be taken from a valid column of 'df', 
+        e.g. 'altitude', 'slope', 'aspect', 'material', 'maxswe', 'snow'
 
     Returns
     -------
@@ -173,12 +193,12 @@ def plot_hist_stat_weights_from_input(site, path_pickle, no_weight, show_glacier
         Histogram
     """
 
-    bins, counts, number_glaciers = count_stat_weights(site, path_pickle, no_weight)
+    bins, counts, number_glaciers = count_stat_weights(site, path_pickle, no_weight, query)
     fig = plot_hist_stat_weights(bins, counts, number_glaciers, show_glaciers, show_plots)
 
     return fig
 
-def count_perma_sim_per_variable(site, path_thaw_depth, path_pickle): 
+def count_perma_sim_per_variable(site, path_thaw_depth, path_pickle, query): 
     """ Function returns a binned count over all simulations
         of the number of valid/glacier simulations for each of the following variable
         ('altitude', 'aspect', 'slope', 'forcing') 
@@ -192,6 +212,13 @@ def count_perma_sim_per_variable(site, path_thaw_depth, path_pickle):
         Path to the .nc file where the aggregated thaw depth simulations are stored
     path_pickle : str
         String path to the location of the folder where the pickles are saved
+    query : dict, optional
+        If query is None then we consider ALL simulations
+        However, this is the place where we can select a subset of simulations
+        This is done in the following way
+        query = {'param_1': 'value_1', ..., 'param_n': 'value_n'}
+        and the keys should be taken from a valid column of 'df', 
+        e.g. 'altitude', 'slope', 'aspect', 'material', 'maxswe', 'snow'
 
     Returns
     -------
@@ -205,7 +232,7 @@ def count_perma_sim_per_variable(site, path_thaw_depth, path_pickle):
 
     _, thaw_depth = open_thaw_depth_nc(path_thaw_depth)
 
-    pkl = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle, query)
     df = pkl['df']
     df_stats = pkl['df_stats']
 
@@ -325,7 +352,7 @@ def plot_hist_valid_sim_all_variables(dict_bins, dict_counts, show_plots):
     # return fig, fig_no_legend, fig_legend, legend
     return fig
 
-def plot_hist_valid_sim_all_variables_from_input(site, path_thaw_depth, path_pickle, show_plots): 
+def plot_hist_valid_sim_all_variables_from_input(site, path_thaw_depth, path_pickle, show_plots, query): 
     """ Function returns a binned count over all simulations
         of the number of valid/glacier simulations for each of the following variable
         ('altitude', 'aspect', 'slope', 'forcing') 
@@ -341,6 +368,13 @@ def plot_hist_valid_sim_all_variables_from_input(site, path_thaw_depth, path_pic
         String path to the location of the folder where the pickles are saved 
     show_plots : bool
         Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
+    query : dict, optional
+        If query is None then we consider ALL simulations
+        However, this is the place where we can select a subset of simulations
+        This is done in the following way
+        query = {'param_1': 'value_1', ..., 'param_n': 'value_n'}
+        and the keys should be taken from a valid column of 'df', 
+        e.g. 'altitude', 'slope', 'aspect', 'material', 'maxswe', 'snow'
 
     Returns
     -------
@@ -348,7 +382,7 @@ def plot_hist_valid_sim_all_variables_from_input(site, path_thaw_depth, path_pic
         Histogram (subplot(2,2))
     """
 
-    dict_bins, dict_counts = count_perma_sim_per_variable(site, path_thaw_depth, path_pickle)
+    dict_bins, dict_counts = count_perma_sim_per_variable(site, path_thaw_depth, path_pickle, query)
     fig = plot_hist_valid_sim_all_variables(dict_bins, dict_counts, show_plots)
 
     return fig

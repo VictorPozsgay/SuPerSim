@@ -198,12 +198,12 @@ def plot_sanity_one_year_quantiles_two_periods(quantiles, mean_end, axis_label, 
 
     for idx,qt in enumerate(quantiles):
         xdata = range(len(mean_end[idx]))
-        plt.plot(xdata, mean_end[idx], color=colorcycle[idx], linewidth=2, label=list_label[idx])
+        plt.plot(xdata, mean_end[idx], color=colorcycle[idx%len(colorcycle)], linewidth=2, label=list_label[idx])
         if ('Decade' in list_label[idx]) or ('Year' in list_label[idx]):
             pass
         else:
-            plt.fill_between(xdata, qt.iloc[1], qt.iloc[3], alpha = 0.4, color=colorcycle[idx], linewidth=1)
-            plt.fill_between(xdata, qt.iloc[0], qt.iloc[4], alpha = 0.2, color=colorcycle[idx], linewidth=0.5)
+            plt.fill_between(xdata, qt.iloc[1], qt.iloc[3], alpha = 0.4, color=colorcycle[idx%len(colorcycle)], linewidth=1)
+            plt.fill_between(xdata, qt.iloc[0], qt.iloc[4], alpha = 0.2, color=colorcycle[idx%len(colorcycle)], linewidth=0.5)
         plt.ylabel(axis_label+' ['+units[axis_label]+']')
 
     if axis_label in ['GST', 'Air temperature']:
@@ -289,23 +289,23 @@ def plot_sanity_two_variables_one_year_quantiles(quantiles, mean_end, list_label
     fig, ax1 = plt.subplots()
 
     idx=0
-    ax1.plot(xdata, mean_end[idx], color=colorcycle[idx], linewidth=2, label=list_site[0] if len(list_label) == 1 else list_label[0])
-    ax1.fill_between(xdata, quantiles[idx].iloc[1], quantiles[idx].iloc[3], alpha = 0.4, color=colorcycle[idx], linewidth=1)
-    ax1.fill_between(xdata, quantiles[idx].iloc[0], quantiles[idx].iloc[4], alpha = 0.2, color=colorcycle[idx], linewidth=0.5)
+    ax1.plot(xdata, mean_end[idx], color=colorcycle[idx%len(colorcycle)], linewidth=2, label=list_site[0] if len(list_label) == 1 else list_label[0])
+    ax1.fill_between(xdata, quantiles[idx].iloc[1], quantiles[idx].iloc[3], alpha = 0.4, color=colorcycle[idx%len(colorcycle)], linewidth=1)
+    ax1.fill_between(xdata, quantiles[idx].iloc[0], quantiles[idx].iloc[4], alpha = 0.2, color=colorcycle[idx%len(colorcycle)], linewidth=0.5)
     ax1.set_ylabel(list_label[0]+' ['+units[list_label[0]]+']')
 
     idx=1
 
     if len(list_label) == 1:
-        ax1.plot(xdata, mean_end[idx], color=colorcycle[idx], linewidth=2, label=list_site[1])
-        ax1.fill_between(xdata, quantiles[idx].iloc[1], quantiles[idx].iloc[3], alpha = 0.4, color=colorcycle[idx], linewidth=1)
-        ax1.fill_between(xdata, quantiles[idx].iloc[0], quantiles[idx].iloc[4], alpha = 0.2, color=colorcycle[idx], linewidth=0.5)
+        ax1.plot(xdata, mean_end[idx], color=colorcycle[idx%len(colorcycle)], linewidth=2, label=list_site[1])
+        ax1.fill_between(xdata, quantiles[idx].iloc[1], quantiles[idx].iloc[3], alpha = 0.4, color=colorcycle[idx%len(colorcycle)], linewidth=1)
+        ax1.fill_between(xdata, quantiles[idx].iloc[0], quantiles[idx].iloc[4], alpha = 0.2, color=colorcycle[idx%len(colorcycle)], linewidth=0.5)
 
     else:
         ax2 = ax1.twinx()
-        ax2.plot(xdata, mean_end[idx], color=colorcycle[idx], linewidth=2, label=list_label[1])
-        ax2.fill_between(xdata, quantiles[idx].iloc[1], quantiles[idx].iloc[3], alpha = 0.4, color=colorcycle[idx], linewidth=1)
-        ax2.fill_between(xdata, quantiles[idx].iloc[0], quantiles[idx].iloc[4], alpha = 0.2, color=colorcycle[idx], linewidth=0.5)
+        ax2.plot(xdata, mean_end[idx], color=colorcycle[idx%len(colorcycle)], linewidth=2, label=list_label[1])
+        ax2.fill_between(xdata, quantiles[idx].iloc[1], quantiles[idx].iloc[3], alpha = 0.4, color=colorcycle[idx%len(colorcycle)], linewidth=1)
+        ax2.fill_between(xdata, quantiles[idx].iloc[0], quantiles[idx].iloc[4], alpha = 0.2, color=colorcycle[idx%len(colorcycle)], linewidth=0.5)
         ax2.set_ylabel(list_label[1]+' ['+units[list_label[1]]+']')
 
         mpl_axes_aligner.align.yaxes(ax1, 0, ax2, 0, 0.5)

@@ -122,7 +122,7 @@ def plot_cdf_GST(data, show_plots):
 
     for i in range(2):
         for j in range(3):
-            ax1.scatter(point[i][j][0], point[i][j][1], color=colorcycle[i])
+            ax1.scatter(point[i][j][0], point[i][j][1], color=colorcycle[i%len(colorcycle)])
 
     ylim_ax1 = ax1.get_ylim()
     xlim_ax1 = ax1.get_xlim()
@@ -134,7 +134,7 @@ def plot_cdf_GST(data, show_plots):
                color='black', linestyle="dashed", linewidth=0.5)
     for i in range(2):
         ax1.vlines([j[0] for j in point[i]], ylim_ax1[0],
-                   [j/100 for j in list_quant], color=colorcycle[i], linestyle="dashed", linewidth=0.5)
+                   [j/100 for j in list_quant], color=colorcycle[i%len(colorcycle)], linestyle="dashed", linewidth=0.5)
 
     ax1.set_xlim(xlim_ax1)
     ax1.set_ylim(ylim_ax1)
@@ -152,14 +152,14 @@ def plot_cdf_GST(data, show_plots):
 
     for i in range(2,4):
         for j in range(3):
-            ax2.scatter(point[i][j][0], point[i][j][1], color=colorcycle[i-2])
+            ax2.scatter(point[i][j][0], point[i][j][1], color=colorcycle[(i-2)%len(colorcycle)])
 
     ax2.hlines([i/100 for i in list_quant], xlim_ax1[0],
                [np.max(i) for i in np.array(point).transpose()[0].transpose()[2:].transpose()],
                color='black', linestyle="dashed", linewidth=0.5)
     for i in range(2,4):
         ax2.vlines([j[0] for j in point[i]], ylim_ax1[0],
-                   [j/100 for j in list_quant], color=colorcycle[i-2], linestyle="dashed", linewidth=0.5)
+                   [j/100 for j in list_quant], color=colorcycle[(i-2)%len(colorcycle)], linestyle="dashed", linewidth=0.5)
 
     ax2.set_xlim(xlim_ax2)
     ax2.set_ylim(ylim_ax2)

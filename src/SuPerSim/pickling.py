@@ -246,7 +246,7 @@ def assign_value_reanalysis_stat(forcing_list, path_forcing_list, path_pickle, y
 
         for i in range(len(forcing_list)):
             time_air, var1, var2, var3, var4, var5, var6, var7 = [[] for _ in range(8)]
-            time_air, var1, var2, var3, var4, _ = open_air_nc(path_forcing_list[i])
+            time_air, var1, var2, var3, var4, _, _ = open_air_nc(path_forcing_list[i])
             temp_air.append(var1)
             SW_flux.append(var2)
             SW_direct_flux.append(var3)
@@ -707,7 +707,7 @@ def assign_rockfall_values(site, path_pickle, path_ground, path_forcing_list, da
 
     return rockfall_values
 
-def load_all_pickles(site, path_pickle):
+def load_all_pickles(site, path_pickle, query=None):
     """ Loads all pickles corresponding to the site name
     
     Parameters
@@ -716,6 +716,13 @@ def load_all_pickles(site, path_pickle):
         Location of the event, e.g. 'Aksaut_Ridge'
     path_pickle : str
         String path to the location of the folder where the pickles are saved
+    query : dict, optional
+        If query is None then we consider ALL simulations
+        However, this is the place where we can select a subset of simulations
+        This is done in the following way
+        query = {'param_1': 'value_1', ..., 'param_n': 'value_n'}
+        and the keys should be taken from a valid column of 'df', 
+        e.g. 'altitude', 'slope', 'aspect', 'material', 'maxswe', 'snow'
 
     Returns
     -------
@@ -768,6 +775,22 @@ def load_all_pickles(site, path_pickle):
            'stats_melt_out_dic': stats_melt_out_dic,
            'df_stats': df_stats,
            'rockfall_values': rockfall_values}
+
+    pkl_keys = list(pkl.keys())
+
+    if query is not None:
+        for k,v in query.items():
+            df = df[df[k]==v]
+        list_sims_queried = list(df.index.values)
+
+        pkl['df'] = pkl['df'].loc[list_sims_queried]
+        pkl['df_stats'] = pkl['df_stats'].loc[list_sims_queried]
+        pkl['list_valid_sim'] = list_sims_queried
+
+        pkl['dict_melt_out'] = {k: v for k,v in pkl['dict_melt_out'].items() if k in list_sims_queried}
+        pkl['stats_melt_out_dic'] = {k: v for k,v in pkl['stats_melt_out_dic'].items() if k in list_sims_queried}
+
+        pkl = {k: v for k,v in pkl.items() if k in pkl_keys}
 
     return pkl
 

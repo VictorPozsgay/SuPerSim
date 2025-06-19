@@ -15,7 +15,7 @@ from SuPerSim.mytime import list_tokens_year
 from SuPerSim.weights import assign_weight_sim
 from SuPerSim.pickling import load_all_pickles
 
-def mean_all_altitudes(file_to_smooth, site, path_pickle, no_weight=True):
+def mean_all_altitudes(file_to_smooth, site, path_pickle, no_weight, query, alt_query_idx):
     """ Function returns the mean time series over all altitudes
     
     Parameters
@@ -29,6 +29,13 @@ def mean_all_altitudes(file_to_smooth, site, path_pickle, no_weight=True):
         String path to the location of the folder where the pickles are saved
     no_weight : bool, optional
         If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
+    query : dict, optional
+        If query is None then we consider ALL simulations
+        However, this is the place where we can select a subset of simulations
+        This is done in the following way
+        query = {'param_1': 'value_1', ..., 'param_n': 'value_n'}
+        and the keys should be taken from a valid column of 'df', 
+        e.g. 'altitude', 'slope', 'aspect', 'material', 'maxswe', 'snow'
 
     Returns
     -------
@@ -36,17 +43,20 @@ def mean_all_altitudes(file_to_smooth, site, path_pickle, no_weight=True):
         average time series over all altitudes
     """
 
-    pkl = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle, query)
     df_stats = pkl['df_stats']
 
-    _, pd_weight_long = assign_weight_sim(site, path_pickle, no_weight)
+    _, pd_weight_long = assign_weight_sim(site, path_pickle, no_weight, query)
 
     # list of (altitude, altitude_weight) for all entries of df_stats
     # set -> list of unique entries, then sorted by altitude
     # the result is the weight for each altitude index of the timeseries
     weights = [i[1] for i in sorted(set([(pd_weight_long['altitude'].loc[i], pd_weight_long['altitude_weight'].loc[i]) for i in list(df_stats.index.values)]))]
-    
-    mean_alt = np.average(file_to_smooth, axis=1, weights=weights)
+
+    if query is None:    
+        mean_alt = np.average(file_to_smooth, axis=1, weights=weights)
+    else:
+        mean_alt = file_to_smooth[:,alt_query_idx]
 
     return mean_alt
 
@@ -93,7 +103,7 @@ def mean_all_reanalyses(time_files, files_to_smooth, year_bkg_end, year_trans_en
 
     return mean
 
-def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle, year_bkg_end, year_trans_end, site, no_weight=True):
+def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle, year_bkg_end, year_trans_end, site, no_weight, query, alt_query_idx):
     """ Function returns the total water production at daily intervals in [mm s-1] 
     
     Parameters
@@ -114,6 +124,13 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle,
         Location of the event, e.g. 'Aksaut_North', will be used to label all the pickles
     no_weight : bool, optional
         If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
+    query : dict, optional
+        If query is None then we consider ALL simulations
+        However, this is the place where we can select a subset of simulations
+        This is done in the following way
+        query = {'param_1': 'value_1', ..., 'param_n': 'value_n'}
+        and the keys should be taken from a valid column of 'df', 
+        e.g. 'altitude', 'slope', 'aspect', 'material', 'maxswe', 'snow'
 
     Returns
     -------
@@ -129,15 +146,15 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle,
     _, time_ground, _ = open_ground_nc(path_ground)
     _, _, _, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end)    
 
-    pd_weight, _ = assign_weight_sim(site, path_pickle, no_weight)
+    pd_weight, _ = assign_weight_sim(site, path_pickle, no_weight, query)
 
     time_air_all = [open_air_nc(i)[0] for i in path_forcing_list]
-    precipitation_all = [open_air_nc(i)[-1] for i in path_forcing_list]
+    precipitation_all = [open_air_nc(i)[5] for i in path_forcing_list]
 
     # here we get the mean precipitation and then water from snow melting 
     mean_swe = list(np.average([swe[i,:] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight.loc[:, 'weight']))
     mean_prec = mean_all_reanalyses(time_air_all,
-                                    [mean_all_altitudes(i, site, path_pickle, no_weight) for i in precipitation_all],
+                                    [mean_all_altitudes(i, site, path_pickle, no_weight, query, alt_query_idx) for i in precipitation_all],
                                     year_bkg_end, year_trans_end)
 
     # convert mean precipitation into a panda dataframe to facilitate grouping by 24.

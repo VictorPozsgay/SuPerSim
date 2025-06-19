@@ -13,7 +13,7 @@ from SuPerSim.pickling import load_all_pickles
 from SuPerSim.topoheatmap import table_background_evolution_mean_GST_aspect_slope
 from SuPerSim.constants import colorcycle
 
-def sorted_bkg_GST_data(site, path_pickle):
+def sorted_bkg_GST_data(site, path_pickle, query):
     """ Function returns background GST and GST evolution for a single site.
     The two lists have the same order and are ordered in background GST increasing order
     
@@ -23,6 +23,13 @@ def sorted_bkg_GST_data(site, path_pickle):
         Location of the event, e.g. 'Joffre' or 'Fingerpost'
     path_pickle : str
         String path to the location of the folder where the pickles are saved
+    query : dict, optional
+        If query is None then we consider ALL simulations
+        However, this is the place where we can select a subset of simulations
+        This is done in the following way
+        query = {'param_1': 'value_1', ..., 'param_n': 'value_n'}
+        and the keys should be taken from a valid column of 'df', 
+        e.g. 'altitude', 'slope', 'aspect', 'material', 'maxswe', 'snow'
     
     Returns
     -------
@@ -33,7 +40,7 @@ def sorted_bkg_GST_data(site, path_pickle):
         in the shape [list_x, list_y]
     """
     
-    pkl = load_all_pickles(site, path_pickle)
+    pkl = load_all_pickles(site, path_pickle, query=query)
     df_stats = pkl['df_stats']
 
     df_stats_bis = pd.DataFrame(data=df_stats, columns=['bkg_grd_temp', 'evol_grd_temp'])
@@ -81,7 +88,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(list_xy, show_plots):
         low = int(np.ceil(len(list_x)*quantiles[i]/100))
         up = int(np.ceil(len(list_x)*quantiles[i+1]/100))
         list_x_mean.append(np.mean(list_x[low:up]))
-        # plt.hlines(np.mean(list_y[low:up]),list_x[low],list_x[up-1], color=colorcycle[i], linewidth=2)
+        # plt.hlines(np.mean(list_y[low:up]),list_x[low],list_x[up-1], color=colorcycle[i%len(colorcycle)], linewidth=2)
 
     vmax = np.max(np.abs(list_x_mean))
 
@@ -92,7 +99,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(list_xy, show_plots):
         plt.scatter(list_x[low:up], list_y[low:up], color=color,s=0.8)
         plt.errorbar(np.mean(list_x[low:up]), np.mean(list_y[low:up]), np.std(list_y[low:up]), np.std(list_x[low:up]), color=color)
         plt.scatter(np.mean(list_x[low:up]), np.mean(list_y[low:up]), color=color, s=50)
-        # plt.hlines(np.mean(list_y[low:up]),list_x[low],list_x[up-1], color=colorcycle[i], linewidth=2)
+        # plt.hlines(np.mean(list_y[low:up]),list_x[low],list_x[up-1], color=colorcycle[i%len(colorcycle)], linewidth=2)
 
     slope, intercept, r, _, _ = linregress(list_x, list_y)
     u = np.arange(np.min(list_x)-0.1, np.max(list_x)+0.1, 0.01)
@@ -110,7 +117,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(list_xy, show_plots):
 
     return fig
 
-def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs(site, path_pickle, show_plots):
+def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs(site, path_pickle, show_plots, query):
     """ Function return scatter plot of background GST vs GST evolution for a single site.
     The site is binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
     A linear regression is produced too.
@@ -132,12 +139,12 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs(site, path_pi
         A linear regression is produced too.
     """
 
-    list_xy = sorted_bkg_GST_data(site, path_pickle)
-    fig =plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(list_xy, show_plots)
+    list_xy = sorted_bkg_GST_data(site, path_pickle, query)
+    fig = plot_GST_bkg_vs_evol_quantile_bins_fit_single_site(list_xy, show_plots)
 
     return fig
 
-def sorted_bkg_GST_data_two_sites(list_site, list_path_pickle):
+def sorted_bkg_GST_data_two_sites(list_site, list_path_pickle, query):
     """ Function returns background GST and GST evolution for two sites.
         For each site, the two lists have the same order and are ordered in background GST increasing order
     
@@ -147,6 +154,13 @@ def sorted_bkg_GST_data_two_sites(list_site, list_path_pickle):
         List of labels for the site of each entry
     list_path_pickle : list of str
         List of string path to the location of the folder where the pickles are saved
+    query : dict, optional
+        If query is None then we consider ALL simulations
+        However, this is the place where we can select a subset of simulations
+        This is done in the following way
+        query = {'param_1': 'value_1', ..., 'param_n': 'value_n'}
+        and the keys should be taken from a valid column of 'df', 
+        e.g. 'altitude', 'slope', 'aspect', 'material', 'maxswe', 'snow'
     
     Returns
     -------
@@ -161,7 +175,7 @@ def sorted_bkg_GST_data_two_sites(list_site, list_path_pickle):
     num = len(list_site)
 
     for i in range(num):
-        list_xy[i] = sorted_bkg_GST_data(list_site[i], list_path_pickle[i])
+        list_xy[i] = sorted_bkg_GST_data(list_site[i], list_path_pickle[i], query)
 
     return list_xy
 
@@ -235,7 +249,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites(list_xy, list_label_site, s
             plt.scatter(list_x[j][low:up], list_y[j][low:up], color=color,s=0.8)
             plt.errorbar(np.mean(list_x[j][low:up]), np.mean(list_y[j][low:up]), np.std(list_y[j][low:up]), np.std(list_x[j][low:up]), color=color)
             plt.scatter(np.mean(list_x[j][low:up]), np.mean(list_y[j][low:up]), color=color, s=50)
-            # plt.hlines(np.mean(list_y[low:up]),list_x[low],list_x[up-1], color=colorcycle[i], linewidth=2)
+            # plt.hlines(np.mean(list_y[low:up]),list_x[low],list_x[up-1], color=colorcycle[i%len(colorcycle)], linewidth=2)
 
         slope_i, intercept_i, r_i, _, _ = linregress(list_x[j], list_y[j])
         slope.append(slope_i)
@@ -243,7 +257,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites(list_xy, list_label_site, s
         r.append(r_i)
         u = np.arange(np.min(list_x[j])-0.05, np.max(list_x[j])+0.05, 0.01)
         print('R-square:', r_i**2, ', regression slope:', slope_i , ', regression intercept:', intercept_i)
-        line_j, = plt.plot(u, slope_i*u+intercept_i, c=colorcycle[j], label=list_label_site[j])
+        line_j, = plt.plot(u, slope_i*u+intercept_i, c=colorcycle[j%len(colorcycle)], label=list_label_site[j])
         if j==0:
             first_legend = plt.legend(handles=[line_j], loc='upper left')
 
@@ -282,7 +296,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites(list_xy, list_label_site, s
 
     return fig
 
-def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input(list_site, list_path_pickle, list_label_site, show_plots):
+def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input(list_site, list_path_pickle, list_label_site, show_plots, query):
     """ Function return scatter plot of background GST vs GST evolution for 2 sites.
     Both sites are binned in 10 bins of equal sizes and each bin is represented by a dot with x and y error bars.
     A linear regression is produced for each site.
@@ -297,6 +311,13 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input(list_site, list_
         List of label for each site
     show_plots : bool
         Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
+    query : dict, optional
+        If query is None then we consider ALL simulations
+        However, this is the place where we can select a subset of simulations
+        This is done in the following way
+        query = {'param_1': 'value_1', ..., 'param_n': 'value_n'}
+        and the keys should be taken from a valid column of 'df', 
+        e.g. 'altitude', 'slope', 'aspect', 'material', 'maxswe', 'snow'
     
     Returns
     -------
@@ -307,7 +328,7 @@ def plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input(list_site, list_
         A linear regression is produced for each site.
     """
 
-    list_xy = sorted_bkg_GST_data_two_sites(list_site, list_path_pickle)
+    list_xy = sorted_bkg_GST_data_two_sites(list_site, list_path_pickle, query)
     fig = plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites(list_xy, list_label_site, show_plots)
 
     return fig
@@ -369,8 +390,8 @@ def plot_mean_bkg_GST_vs_evolution(dic_data, show_plots):
         slope, intercept, r, _, _ = linregress(x,yy[i])
         print('altitude:', alt_list[i], ', R-square:', f"{r**2:.4f}", ', regression slope:', f"{slope:.4f}", ', regression intercept:', f"{intercept:.4f}")
         u = np.arange(np.min(x)-0.1, np.max(x)+0.1, 0.01)
-        plt.scatter(x,yy[i], c=colorcycle[i], label=f'{alt_list[i]} m')
-        plt.plot(u, slope*u+intercept, c=colorcycle[i], label=f'slope: {round(slope,3)}')
+        plt.scatter(x,yy[i], c=colorcycle[i%len(colorcycle)], label=f'{alt_list[i]} m')
+        plt.plot(u, slope*u+intercept, c=colorcycle[i%len(colorcycle)], label=f'slope: {round(slope,3)}')
 
     plt.legend(loc='lower left')
     plt.xlabel('Mean background GST [°C]')

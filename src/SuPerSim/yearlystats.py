@@ -559,18 +559,18 @@ def plot_yearly_quantiles_side_by_side(list_yearly_quantiles, list_yearly_mean, 
 
     fig, a = plt.subplots(1, 2, figsize=(8, 4), sharey='row')
     for idx,ax in enumerate(a):
-        ax.scatter(list_years, list_yearly_mean[idx], color=colorcycle[idx], linestyle='None', label='Yearly mean')
-        # ax.plot(xdata, mean_end, color=colorcycle[idx], label='Mean')
+        ax.scatter(list_years, list_yearly_mean[idx], color=colorcycle[idx%len(colorcycle)], linestyle='None', label='Yearly mean')
+        # ax.plot(xdata, mean_end, color=colorcycle[idx%len(colorcycle)], label='Mean')
         # plt.plot(xdata, quantiles.iloc[dict_indices_quantiles[list_quantiles[2]]]['timeseries'], color=colorcycle[0])
         if plot_quantiles:
             for i in [0,1,3,4]:
-                ax.scatter(list_years, list_yearly_quantiles[idx].loc[[list_quantiles[i]]][label_plot[idx]], color=colorcycle[idx], alpha=dict_points[i]['alpha'], linewidth=dict_points[i]['width'])
+                ax.scatter(list_years, list_yearly_quantiles[idx].loc[[list_quantiles[i]]][label_plot[idx]], color=colorcycle[idx%len(colorcycle)], alpha=dict_points[i]['alpha'], linewidth=dict_points[i]['width'])
             ax.fill_between(list_years, list_yearly_quantiles[idx].loc[[list_quantiles[1]]][label_plot[idx]], list_yearly_quantiles[idx].loc[[list_quantiles[3]]][label_plot[idx]],
-                                alpha = 0.4, color=colorcycle[idx], linewidth=1,
+                                alpha = 0.4, color=colorcycle[idx%len(colorcycle)], linewidth=1,
                                 # label='Quantiles 16-84'
                                 )
             ax.fill_between(list_years, list_yearly_quantiles[idx].loc[[list_quantiles[0]]][label_plot[idx]], list_yearly_quantiles[idx].loc[[list_quantiles[4]]][label_plot[idx]],
-                                alpha = 0.2, color=colorcycle[idx], linewidth=0.5,
+                                alpha = 0.2, color=colorcycle[idx%len(colorcycle)], linewidth=0.5,
                                 # label='Quantiles 2.3-97.7'
                                 )
 
@@ -756,17 +756,17 @@ def plot_yearly_quantiles_side_by_side_sim_from_inputs(time_file, list_time_seri
 #         mean_trans = np.mean(mean_end.loc[year_bkg_end:year_trans_end-1])
 #         formatted_mean = [f"{i:.2f}" for i in [mean_bkg, mean_trans]]
         
-#         ax.scatter(xdata, mean_end, color=colorcycle[idx], linestyle='None', label='Yearly mean')
-#         # ax.plot(xdata, mean_end, color=colorcycle[idx], label='Mean')
+#         ax.scatter(xdata, mean_end, color=colorcycle[idx%len(colorcycle)], linestyle='None', label='Yearly mean')
+#         # ax.plot(xdata, mean_end, color=colorcycle[idx%len(colorcycle)], label='Mean')
 #         # plt.plot(xdata, quantiles.iloc[dict_indices_quantiles[list_quantiles[2]]]['timeseries'], color=colorcycle[0])
 #         for i in [0,1,3,4]:
-#             ax.scatter(xdata, quantiles.iloc[dict_indices_quantiles[list_quantiles[i]]]['timeseries'], color=colorcycle[idx], alpha=dict_points[i]['alpha'], linewidth=dict_points[i]['width'])
+#             ax.scatter(xdata, quantiles.iloc[dict_indices_quantiles[list_quantiles[i]]]['timeseries'], color=colorcycle[idx%len(colorcycle)], alpha=dict_points[i]['alpha'], linewidth=dict_points[i]['width'])
 #         ax.fill_between(xdata, quantiles.iloc[dict_indices_quantiles[list_quantiles[1]]]['timeseries'], quantiles.iloc[dict_indices_quantiles[list_quantiles[3]]]['timeseries'],
-#                             alpha = 0.4, color=colorcycle[idx], linewidth=1,
+#                             alpha = 0.4, color=colorcycle[idx%len(colorcycle)], linewidth=1,
 #                             # label='Quantiles 16-84'
 #                             )
 #         ax.fill_between(xdata, quantiles.iloc[dict_indices_quantiles[list_quantiles[0]]]['timeseries'], quantiles.iloc[dict_indices_quantiles[list_quantiles[4]]]['timeseries'],
-#                             alpha = 0.2, color=colorcycle[idx], linewidth=0.5,
+#                             alpha = 0.2, color=colorcycle[idx%len(colorcycle)], linewidth=0.5,
 #                             # label='Quantiles 2.3-97.7'
 #                             )
 

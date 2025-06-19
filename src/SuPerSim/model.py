@@ -152,7 +152,7 @@ def fit_stat_model_GST(data_set, show_plots, all_data=True):
     lim_up = float(f"{max(np.max([np.max(i) for i in xdata]), np.max([np.max(i) for i in ydata])):.2g}")
     lim_down = float(f"{min(np.min([np.min(i) for i in xdata]), np.min([np.min(i) for i in ydata])):.2g}")
     x = np.arange(lim_down, lim_up, 0.01)
-    plt.plot(x, x, color=colorcycle[len(data_set)], linestyle='dashed', label = 'y=x', linewidth=2)
+    plt.plot(x, x, color=colorcycle[len(data_set)%len(colorcycle)], linestyle='dashed', label = 'y=x', linewidth=2)
     plt.legend(loc='upper right')
 
     margin = 0.1
@@ -163,7 +163,7 @@ def fit_stat_model_GST(data_set, show_plots, all_data=True):
     plt.ylabel(r'Statistically-modelled background GST $\overline{T_{\rm GST}^{\rm bkg}}_{(SM)}$ [°C]')
     for i,r in enumerate(R_sq):
         plt.figtext(.7, .3 - i/30, f"$R^2$ = {r:.2f}",
-                    c=colorcycle[i])
+                    c=colorcycle[i%len(colorcycle)])
 
     # Show the graph
     plt.legend()

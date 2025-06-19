@@ -26,6 +26,8 @@ def open_air_nc(path_forcing):
         Diffuse shortwave (SW) in the shape (time, station)
     precipitation : netCDF4._netCDF4.Variable
         Precipitation in the shape (time, station)
+    alt_list_atmos : list
+        List of elevations
     """
 
     # Open file for air temperature
@@ -38,7 +40,9 @@ def open_air_nc(path_forcing):
     SW_diffuse_flux = ncfile_air['SW_topo_diffuse']
     precipitation = ncfile_air['PREC_sur']
 
-    return time_air, temp_air, SW_flux, SW_direct_flux, SW_diffuse_flux, precipitation
+    alt_list_atmos = list(ncfile_air['height'][:])
+
+    return time_air, temp_air, SW_flux, SW_direct_flux, SW_diffuse_flux, precipitation, alt_list_atmos
 
 def open_ground_nc(path_ground):
     """ Function returns data from the .nc file for the ground simulations
