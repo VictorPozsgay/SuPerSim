@@ -65,9 +65,14 @@ For a single site, we recommend the user to start any script with the following 
 
       # Plotting options
       no_weight = <bool> # optional and set to 'True' by default
+      show_glaciers = <bool> # optional and set to 'True' by default
       individual_heatmap = <bool> # optional and set to 'False' by default
       polar_plots = <bool> # optional and set to 'False' by default
       parity_plot = <bool> # optional and set to 'False' by default
+      show_landslide_time = <bool> # optional and set to 'True' by default
+      show_plots = <bool> # optional and set to 'True' by default
+      split_legend = <bool> # optional and set to 'True' by default
+      save_plots_pdf = <bool> # optional and set to 'False' by default
 
 
 Glaciers
@@ -131,9 +136,33 @@ indeed, we have the function\  *load_all_pickles*\  ::
 
 Finally, the plotting function\  *plot_all*\  can be called ::
 
-      plot_all(site, path_forcing_list, path_ground, path_snow, path_swe, path_thaw_depth, path_pickle,
-         year_bkg_end, year_trans_end, path_horizon, no_weight, show_glaciers,
-         individual_heatmap, polar_plots, parity_plot)
+      dict_final = plot_all(site, path_forcing_list, path_ground, path_snow, path_swe, path_thaw_depth, path_pickle,
+                            year_bkg_end, year_trans_end, path_horizon, no_weight, show_glaciers,
+                            individual_heatmap, polar_plots, parity_plot,
+                            show_landslide_time, show_plots, split_legend, save_plots_pdf)
+
+Outputs
+^^^^^^^
+
+The script shows all plots on the Python notebook but it also pickles them to ba able to re-use them later.
+The script returns the dictionary 'dict_final' with all figure objects, their legends, and captions ::
+
+      dict_final = {
+            'name_fig1': {
+                  'fig_legend_on': 'fig1_legend_on' # first figure object, with its legend,
+                  'fig_legend_off': 'fig1_legend_off' # first figure object, without its legend !!! ONLY if\  *split_legend*\=True !!!,
+                  'fig_legend_only': 'fig1_legend_only' # first figure legend object only !!! ONLY if\  *split_legend*\=True !!!,
+                  'caption': 'fig1_caption' # generic and standardized string description of the figure
+            },
+            'name_fig2': {...},
+            ...,
+            'name_fign': {...},
+      }
+
+On top of this, the full list of captions is saved to a human readable text under path_pickle/'{site}_captions_readable.txt'.
+
+Finally, the parameter\  *save_plots_pdf*\ controls whether or not to save all produced plots (3 times as much if\  *split_legend*\=True)
+to a PDF format.
 
 
 Comparison

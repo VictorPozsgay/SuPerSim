@@ -9,6 +9,7 @@ from netCDF4 import num2date #pylint: disable=no-name-in-module
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sn
+from scipy import stats
 
 from SuPerSim.mytime import list_tokens_year
 from SuPerSim.constants import colorcycle, units
@@ -297,6 +298,11 @@ def plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_tran
     # plt.plot(list_years, yearly_mean, color=colorcycle[0], label='Mean')
     # plt.plot(list_years, yearly_quantiles.iloc[dict_indices_quantiles[list_quantiles[2]]][label_plot], color=colorcycle[0])
     
+    plt.hlines(mean_bkg, list_years[0], year_bkg_end, color=colorcycle[1],
+               label=f'Background mean: {formatted_mean[0]}{units[label_plot]}')
+    plt.hlines(mean_trans, year_bkg_end, list_years[-1], color=colorcycle[2],
+               label=f'Transient mean: {formatted_mean[1]}{units[label_plot]}')
+    
     if plot_quantiles:
         for i in [0,1,3,4]:
             plt.scatter(list_years, yearly_quantiles.loc[[list_quantiles[i]]][label_plot], color=colorcycle[0], alpha=dict_points[i]['alpha'], linewidth=dict_points[i]['width'])
@@ -308,11 +314,14 @@ def plot_yearly_quantiles(yearly_quantiles, yearly_mean, year_bkg_end, year_tran
                             alpha = 0.2, color=colorcycle[0], linewidth=0.5,
                             # label='Quantiles 2.3-97.7'
                             )
-    
-    plt.hlines(mean_bkg, list_years[0], year_bkg_end, color=colorcycle[1],
-               label=f'Background mean: {formatted_mean[0]}{units[label_plot]}')
-    plt.hlines(mean_trans,  year_bkg_end, list_years[-1], color=colorcycle[2],
-               label=f'Transient mean: {formatted_mean[1]}{units[label_plot]}')
+    else:
+        x = list(range(year_bkg_end,year_trans_end))
+        col_name = list(yearly_mean.columns.values)[0]
+        y = list(yearly_mean.loc[year_bkg_end:year_trans_end-1, col_name])
+        slope, intercept, _, _, _ = stats.linregress(x, y)
+        formatted_trend = f"{slope*100:.2f}"
+        plt.plot(x, [intercept+slope*xx for xx in x], color=colorcycle[2],
+                 label=f'Transient trend: {formatted_trend}{units[label_plot]}/century', ls='--')
 
     ylim = plt.gca().get_ylim()
 
@@ -924,10 +933,10 @@ def plot_yearly_max_thaw_depth(list_data, show_plots):
     fig, ax = plt.subplots()
 
     for c,i in enumerate(list_data):
-        ax.plot(i['td_mean'], label=f'{int(i['alt'])}m with {int(i['slo'])}° slope', color=colorcycle[c])
+        ax.plot(i['td_mean'], label=f'{int(i['alt'])}m with {int(i['slo'])}° slope', color=colorcycle[c%len(colorcycle)])
         ax.fill_between(i['years'], (i['td_mean']+i['td_std']).clip(upper=0),
                         (i['td_mean']-i['td_std']).clip(lower=-20),
-                        alpha=0.2, color=colorcycle[c])
+                        alpha=0.2, color=colorcycle[c%len(colorcycle)])
 
     ax.axhline(y=0, color='gray', ls='--')
     ax.legend(bbox_to_anchor=(1,1), loc='upper left')
