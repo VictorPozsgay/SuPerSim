@@ -64,6 +64,11 @@ capt_1year_bkg_v_transient_excep_years = {
     for (k,v) in dict_vars.items()
 }
 
+capt_1year_bkg_v_transient_custom_years = {
+    f'{k}_1year_bkg_v_transient_custom_years': f'Plot of the mean daily values of {v} over all simulations and the full background period in blue. The 1- and 2-sigma envelopes are also shown. On top of this, the user-defined years in the list "custom_years" are plotted.'
+    for (k,v) in dict_vars.items()
+}
+
 capt_1year_bkg_v_transient_decades = {
     f'{k}_1year_bkg_v_transient_decades': f'Plot of the mean daily values of {v} over all simulations and the full background (blue) and transient (orange) periods. The 1- and 2-sigma envelopes are also shown. On top of this, the mean value for every transient decade is plotted.'
     for (k,v) in dict_vars.items()
@@ -95,7 +100,7 @@ capt_extra = {
 
 list_all_capt_dicts = [capt_hor, capt_hist, capt_yearly_stats_box, capt_yearly_quantiles, capt_yearly_mean,
                        capt_thaw, capt_yearly_comp, capt_1year_bkg_v_transient, capt_1year_bkg_v_transient_excep_years,
-                       capt_1year_bkg_v_transient_decades, capt_norm_dev, capt_heatmap, capt_extra]
+                       capt_1year_bkg_v_transient_custom_years, capt_1year_bkg_v_transient_decades, capt_norm_dev, capt_heatmap, capt_extra]
 
 
 captions = {}

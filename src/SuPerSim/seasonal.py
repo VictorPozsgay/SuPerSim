@@ -21,7 +21,7 @@ def stats_all_years_simulations_to_single_year(time_file, time_series, list_vali
     time_file : netCDF4._netCDF4.Variable
         File where the time index of each datapoint is stored (time_ground, not time_air)
     time_series : netCDF4._netCDF4.Variable
-        Time series (could be temperature, precipitation, snow depth, etc.)
+        Time series (could be ground temperature, snow depth, etc.)
     list_valid_sim : list
         List of the indices of all valid simulations
     mask_period : numpy.ma.core.MaskedArray, opt
@@ -46,29 +46,23 @@ def stats_all_years_simulations_to_single_year(time_file, time_series, list_vali
     panda_test['month'] = [i.month for i in panda_test['date']]
     panda_test['day'] = [i.day for i in panda_test['date']]
     panda_test['hour'] = [i.hour for i in panda_test['date']]
-    panda_test = panda_test.drop(columns=['date'])
+    panda_test = panda_test.drop(columns=['date']).astype({'month': int, 'day': int, 'hour': int})
 
     if mask_period is not None:
         panda_test = panda_test.drop(index=np.arange(0,len(mask_period),1)[[not i for i in mask_period]])
  
-
-    mean_test = []
     # for all simulations
-    for sim in list_valid_sim:
-        if mask_period is None:
-            panda_test['timeseries'] = time_series[sim,:,idx_depth] if len(time_series.shape) == 3 else time_series[sim,:]
-        else:
-            panda_test['timeseries'] = time_series[sim,mask_period[:],idx_depth] if len(time_series.shape) == 3 else time_series[sim,mask_period[:]]
-        # here we group the values of the multi-year timeseries by month, day, and hour and take the mean
-        # this produces a single year average timeseries
-        mean_test.append([i for i in panda_test.groupby(['month', 'day', 'hour']).mean().reset_index()['timeseries']])
-        panda_test = panda_test.drop(columns=['timeseries'])
+    if mask_period is None:
+        panda_test_bis = pd.concat([pd.DataFrame(time_series[sim,:,idx_depth] if len(time_series.shape) == 3 else time_series[sim,:], columns=[sim]) for sim in list_valid_sim], axis=1)
+    else:
+        panda_test_bis = pd.concat([pd.DataFrame(time_series[sim,mask_period[:],idx_depth] if len(time_series.shape) == 3 else time_series[sim,mask_period[:]], columns=[sim]) for sim in list_valid_sim], axis=1)
 
-    mean_test_df = pd.DataFrame(np.array(mean_test))
-    # 1-year timeseries of 5 quantiles corresponding to the median plus minus 1 and 2 sigmas
-    quantiles = mean_test_df.quantile([0.023, 0.16, 0.5, 0.84, 0.977])
-    # 1-year timeseries of the mean
-    mean_end = mean_test_df.mean()
+    panda_test = pd.concat([panda_test.reset_index(drop=True), panda_test_bis.reset_index(drop=True)], axis=1).dropna().astype({'month': int, 'day': int, 'hour': int}).reset_index(drop=True)
+        
+    panda_test['month_day_hour'] = panda_test[['month', 'day', 'hour']].apply(lambda x: f"{x['month']:02d}-{x['day']:02d}-{x['hour']:02d}", axis=1)
+    list_datetime = np.unique(panda_test['month_day_hour'])
+    quantiles = pd.concat([pd.DataFrame([j for k in panda_test[panda_test['month_day_hour']==d][list_valid_sim].values for j in k], columns=[i]).quantile([0.023, 0.16, 0.5, 0.84, 0.977]) for i,d in enumerate(list_datetime)], axis=1)
+    mean_end = pd.Series(np.array([pd.DataFrame([j for k in panda_test[panda_test['month_day_hour']==d][list_valid_sim].values for j in k], columns=[i]).mean()[i] for i,d in enumerate(list_datetime)]))
 
     return quantiles, mean_end
 
@@ -80,7 +74,7 @@ def stats_air_all_years_simulations_to_single_year(time_file, time_series, mask_
     Parameters
     ----------
     time_file : netCDF4._netCDF4.Variable
-        File where the time index of each datapoint is stored (time_ground, not time_air)
+        File where the time index of each datapoint is stored (time_air, not time_ground)
     time_series : netCDF4._netCDF4.Variable
         Time series (could be temperature, precipitation, snow depth, etc.)
     mask_period : numpy.ma.core.MaskedArray, opt

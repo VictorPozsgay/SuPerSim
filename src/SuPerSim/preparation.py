@@ -60,11 +60,19 @@ def prep_sim_data_plot(site,
 
     _, time_bkg_ground, time_trans_ground, _ = list_tokens_year(time_ground, year_bkg_end, year_trans_end)
 
-    # weighted mean GST
-    temp_ground_mean = list(np.average([temp_ground[i,:,0] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight.loc[:, 'weight']))
-    temp_ground_mean_deep = {k: list(np.average([temp_ground[i,:,v] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight.loc[:, 'weight'])) for k,v in idxs_depths.items()}
+    list_sims = list(pd_weight.index.values)
 
-    return time_ground, time_bkg_ground, time_trans_ground, temp_ground, temp_ground_mean, temp_ground_mean_deep, snow_height, swe, thaw_depth
+    # weighted mean GST
+    temp_ground_mean = list(np.average([temp_ground[i,:,0] for i in list_sims], axis=0, weights=pd_weight.loc[:, 'weight']))
+    temp_ground_mean_deep = {k: list(np.average([temp_ground[i,:,v] for i in list_sims], axis=0, weights=pd_weight.loc[:, 'weight'])) for k,v in idxs_depths.items()}
+
+    if query is not None:
+        temp_ground = temp_ground[list_sims,:,0]
+        snow_height = snow_height[list_sims,:]
+        swe = swe[list_sims,:]
+        thaw_depth = thaw_depth[list_sims,:]
+
+    return time_ground, time_bkg_ground, time_trans_ground, temp_ground, temp_ground_mean, temp_ground_mean_deep, snow_height, swe, thaw_depth, list_sims
 
 
 def prep_atmos_data_plot(site,
