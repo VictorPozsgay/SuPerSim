@@ -36,11 +36,10 @@ AirTemp_yearly_quantiles:
     between the background and transient periods. The mean background value is
     indicated in orange.
 
-GST_yearly_quantiles:
-    Mean annual ground surface temperature (GST), and 1- and 2-sigma envelopes
-    for the full simulation period. The gray horizontal dashed line indicates
-    the separation between the background and transient periods. The mean
-    background value is indicated in orange.
+AirTemp_yearly_mean:
+    Mean annual air temperature for the full simulation period. The gray
+    horizontal dashed line indicates the separation between the background and
+    transient periods. The mean background value is indicated in orange.
 
 Precip_yearly_quantiles:
     Mean annual precipitation, and 1- and 2-sigma envelopes for the full
@@ -48,40 +47,16 @@ Precip_yearly_quantiles:
     between the background and transient periods. The mean background value is
     indicated in orange.
 
-Snow_yearly_quantiles:
-    Mean annual snow depth, and 1- and 2-sigma envelopes for the full simulation
-    period. The gray horizontal dashed line indicates the separation between the
-    background and transient periods. The mean background value is indicated in
-    orange.
-
-SWE_yearly_quantiles:
-    Mean annual snow water equivalent (SWE), and 1- and 2-sigma envelopes for
-    the full simulation period. The gray horizontal dashed line indicates the
-    separation between the background and transient periods. The mean background
-    value is indicated in orange.
-
-1m_grdtemp_yearly_quantiles:
-    Mean annual 1 meter ground temperature, and 1- and 2-sigma envelopes for the
-    full simulation period. The gray horizontal dashed line indicates the
-    separation between the background and transient periods. The mean background
-    value is indicated in orange.
-
-5m_grdtemp_yearly_quantiles:
-    Mean annual 5 meter ground temperature, and 1- and 2-sigma envelopes for the
-    full simulation period. The gray horizontal dashed line indicates the
-    separation between the background and transient periods. The mean background
-    value is indicated in orange.
-
-10m_grdtemp_yearly_quantiles:
-    Mean annual 10 meter ground temperature, and 1- and 2-sigma envelopes for
-    the full simulation period. The gray horizontal dashed line indicates the
-    separation between the background and transient periods. The mean background
-    value is indicated in orange.
-
-AirTemp_yearly_mean:
-    Mean annual air temperature for the full simulation period. The gray
+Precip_yearly_mean:
+    Mean annual precipitation for the full simulation period. The gray
     horizontal dashed line indicates the separation between the background and
     transient periods. The mean background value is indicated in orange.
+
+GST_yearly_quantiles:
+    Mean annual ground surface temperature (GST), and 1- and 2-sigma envelopes
+    for the full simulation period. The gray horizontal dashed line indicates
+    the separation between the background and transient periods. The mean
+    background value is indicated in orange.
 
 GST_yearly_mean:
     Mean annual ground surface temperature (GST) for the full simulation period.
@@ -89,33 +64,58 @@ GST_yearly_mean:
     background and transient periods. The mean background value is indicated in
     orange.
 
-Precip_yearly_mean:
-    Mean annual precipitation for the full simulation period. The gray
-    horizontal dashed line indicates the separation between the background and
-    transient periods. The mean background value is indicated in orange.
-
-Snow_yearly_mean:
-    Mean annual snow depth for the full simulation period. The gray horizontal
-    dashed line indicates the separation between the background and transient
-    periods. The mean background value is indicated in orange.
-
-SWE_yearly_mean:
-    Mean annual snow water equivalent (SWE) for the full simulation period. The
-    gray horizontal dashed line indicates the separation between the background
-    and transient periods. The mean background value is indicated in orange.
+1m_grdtemp_yearly_quantiles:
+    Mean annual 1 meter ground temperature, and 1- and 2-sigma envelopes for the
+    full simulation period. The gray horizontal dashed line indicates the
+    separation between the background and transient periods. The mean background
+    value is indicated in orange.
 
 1m_grdtemp_yearly_mean:
     Mean annual 1 meter ground temperature for the full simulation period. The
     gray horizontal dashed line indicates the separation between the background
     and transient periods. The mean background value is indicated in orange.
 
+5m_grdtemp_yearly_quantiles:
+    Mean annual 5 meter ground temperature, and 1- and 2-sigma envelopes for the
+    full simulation period. The gray horizontal dashed line indicates the
+    separation between the background and transient periods. The mean background
+    value is indicated in orange.
+
 5m_grdtemp_yearly_mean:
     Mean annual 5 meter ground temperature for the full simulation period. The
     gray horizontal dashed line indicates the separation between the background
     and transient periods. The mean background value is indicated in orange.
 
+10m_grdtemp_yearly_quantiles:
+    Mean annual 10 meter ground temperature, and 1- and 2-sigma envelopes for
+    the full simulation period. The gray horizontal dashed line indicates the
+    separation between the background and transient periods. The mean background
+    value is indicated in orange.
+
 10m_grdtemp_yearly_mean:
     Mean annual 10 meter ground temperature for the full simulation period. The
+    gray horizontal dashed line indicates the separation between the background
+    and transient periods. The mean background value is indicated in orange.
+
+Snow_yearly_quantiles:
+    Mean annual snow depth, and 1- and 2-sigma envelopes for the full simulation
+    period. The gray horizontal dashed line indicates the separation between the
+    background and transient periods. The mean background value is indicated in
+    orange.
+
+Snow_yearly_mean:
+    Mean annual snow depth for the full simulation period. The gray horizontal
+    dashed line indicates the separation between the background and transient
+    periods. The mean background value is indicated in orange.
+
+SWE_yearly_quantiles:
+    Mean annual snow water equivalent (SWE), and 1- and 2-sigma envelopes for
+    the full simulation period. The gray horizontal dashed line indicates the
+    separation between the background and transient periods. The mean background
+    value is indicated in orange.
+
+SWE_yearly_mean:
+    Mean annual snow water equivalent (SWE) for the full simulation period. The
     gray horizontal dashed line indicates the separation between the background
     and transient periods. The mean background value is indicated in orange.
 
@@ -139,37 +139,22 @@ GST_1year_bkg_v_transient:
     simulations and the full background (blue) and transient (orange) periods.
     The 1- and 2-sigma envelopes are also shown.
 
-Snow_1year_bkg_v_transient:
-    Plot of the mean daily values of snow depth over all simulations and the
-    full background (blue) and transient (orange) periods. The 1- and 2-sigma
-    envelopes are also shown.
-
-1m_grdtemp_1year_bkg_v_transient:
-    Plot of the mean daily values of 1 meter ground temperature over all
-    simulations and the full background (blue) and transient (orange) periods.
-    The 1- and 2-sigma envelopes are also shown.
-
-5m_grdtemp_1year_bkg_v_transient:
-    Plot of the mean daily values of 5 meter ground temperature over all
-    simulations and the full background (blue) and transient (orange) periods.
-    The 1- and 2-sigma envelopes are also shown.
-
-10m_grdtemp_1year_bkg_v_transient:
-    Plot of the mean daily values of 10 meter ground temperature over all
-    simulations and the full background (blue) and transient (orange) periods.
-    The 1- and 2-sigma envelopes are also shown.
-
 GST_1year_bkg_v_transient_excep_years:
     Plot of the mean daily values of ground surface temperature (GST) over all
     simulations and the full background period in blue. The 1- and 2-sigma
     envelopes are also shown. On top of this, the 3 most exceptional years are
     plotted in order (orange, green, red).
 
-Snow_1year_bkg_v_transient_excep_years:
-    Plot of the mean daily values of snow depth over all simulations and the
-    full background period in blue. The 1- and 2-sigma envelopes are also shown.
-    On top of this, the 3 most exceptional years are plotted in order (orange,
-    green, red).
+GST_1year_bkg_v_transient_decades:
+    Plot of the mean daily values of ground surface temperature (GST) over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown. On top of this, the mean value
+    for every transient decade is plotted.
+
+1m_grdtemp_1year_bkg_v_transient:
+    Plot of the mean daily values of 1 meter ground temperature over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown.
 
 1m_grdtemp_1year_bkg_v_transient_excep_years:
     Plot of the mean daily values of 1 meter ground temperature over all
@@ -177,17 +162,56 @@ Snow_1year_bkg_v_transient_excep_years:
     envelopes are also shown. On top of this, the 3 most exceptional years are
     plotted in order (orange, green, red).
 
+1m_grdtemp_1year_bkg_v_transient_decades:
+    Plot of the mean daily values of 1 meter ground temperature over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown. On top of this, the mean value
+    for every transient decade is plotted.
+
+5m_grdtemp_1year_bkg_v_transient:
+    Plot of the mean daily values of 5 meter ground temperature over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown.
+
 5m_grdtemp_1year_bkg_v_transient_excep_years:
     Plot of the mean daily values of 5 meter ground temperature over all
     simulations and the full background period in blue. The 1- and 2-sigma
     envelopes are also shown. On top of this, the 3 most exceptional years are
     plotted in order (orange, green, red).
 
+5m_grdtemp_1year_bkg_v_transient_decades:
+    Plot of the mean daily values of 5 meter ground temperature over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown. On top of this, the mean value
+    for every transient decade is plotted.
+
+10m_grdtemp_1year_bkg_v_transient:
+    Plot of the mean daily values of 10 meter ground temperature over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown.
+
 10m_grdtemp_1year_bkg_v_transient_excep_years:
     Plot of the mean daily values of 10 meter ground temperature over all
     simulations and the full background period in blue. The 1- and 2-sigma
     envelopes are also shown. On top of this, the 3 most exceptional years are
     plotted in order (orange, green, red).
+
+10m_grdtemp_1year_bkg_v_transient_decades:
+    Plot of the mean daily values of 10 meter ground temperature over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown. On top of this, the mean value
+    for every transient decade is plotted.
+
+Snow_1year_bkg_v_transient:
+    Plot of the mean daily values of snow depth over all simulations and the
+    full background (blue) and transient (orange) periods. The 1- and 2-sigma
+    envelopes are also shown.
+
+Snow_1year_bkg_v_transient_excep_years:
+    Plot of the mean daily values of snow depth over all simulations and the
+    full background period in blue. The 1- and 2-sigma envelopes are also shown.
+    On top of this, the 3 most exceptional years are plotted in order (orange,
+    green, red).
 
 Snow_1year_bkg_v_transient_decades:
     Plot of the mean daily values of snow depth over all simulations and the

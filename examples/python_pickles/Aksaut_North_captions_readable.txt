@@ -13,9 +13,23 @@ hist_stat_weight:
     orange. A weight is assigned to each simulation according to how close its
     configuration is to the one of the rockfall starting zone.
 
+hist_stat_weight_altitude3100_slope60:
+    Histogram of the distribution of the statistical weights of all simulations.
+    Simulations yielding glaciers are represented in blue, the others are
+    orange. A weight is assigned to each simulation according to how close its
+    configuration is to the one of the rockfall starting zone. The ensemble
+    analyzed here is a subset of the full ensemble, corresponding to simulations
+    with altitude=3100m, slope=60°.
+
 hist_distrib_glaciers_perma:
     Histogram of the distribution of simulations yielding glaciers, permafrost,
     or none of the above, with respect to altitude, aspect, slope, and forcing.
+
+hist_distrib_glaciers_perma_altitude3100_slope60:
+    Histogram of the distribution of simulations yielding glaciers, permafrost,
+    or none of the above, with respect to altitude, aspect, slope, and forcing.
+    The ensemble analyzed here is a subset of the full ensemble, corresponding
+    to simulations with altitude=3100m, slope=60°.
 
 AirTemp_yearly_stats_box:
     Boxplot of yearly statistics for air temperature for the full simulation
@@ -39,17 +53,38 @@ WaterProd_yearly_stats_box:
     period. The data is displayed as minimum, first quartile (Q1), median, third
     quartile (Q3), and maximum. The mean background value is indicated in blue.
 
+AirTemp_yearly_stats_box_altitude3100_slope60:
+    Boxplot of yearly statistics for air temperature for the full simulation
+    period. The data is displayed as minimum, first quartile (Q1), median, third
+    quartile (Q3), and maximum. The mean background value is indicated in blue.
+    The ensemble analyzed here is a subset of the full ensemble, corresponding
+    to simulations with altitude=3100m, slope=60°.
+
+GST_yearly_stats_box_altitude3100_slope60:
+    Boxplot of yearly statistics for ground surface temperature (GST) for the
+    full simulation period. The data is displayed as minimum, first quartile
+    (Q1), median, third quartile (Q3), and maximum. The mean background value is
+    indicated in blue. The ensemble analyzed here is a subset of the full
+    ensemble, corresponding to simulations with altitude=3100m, slope=60°.
+
+WaterProd_yearly_stats_box_altitude3100_slope60:
+    Boxplot of yearly statistics for total water production (defined to be the
+    combined effect of precipitation and snow melt) for the full simulation
+    period. The data is displayed as minimum, first quartile (Q1), median, third
+    quartile (Q3), and maximum. The mean background value is indicated in blue.
+    The ensemble analyzed here is a subset of the full ensemble, corresponding
+    to simulations with altitude=3100m, slope=60°.
+
 AirTemp_yearly_quantiles:
     Mean annual air temperature, and 1- and 2-sigma envelopes for the full
     simulation period. The gray horizontal dashed line indicates the separation
     between the background and transient periods. The mean background value is
     indicated in orange.
 
-GST_yearly_quantiles:
-    Mean annual ground surface temperature (GST), and 1- and 2-sigma envelopes
-    for the full simulation period. The gray horizontal dashed line indicates
-    the separation between the background and transient periods. The mean
-    background value is indicated in orange.
+AirTemp_yearly_mean:
+    Mean annual air temperature for the full simulation period. The gray
+    horizontal dashed line indicates the separation between the background and
+    transient periods. The mean background value is indicated in orange.
 
 Precip_yearly_quantiles:
     Mean annual precipitation, and 1- and 2-sigma envelopes for the full
@@ -57,40 +92,44 @@ Precip_yearly_quantiles:
     between the background and transient periods. The mean background value is
     indicated in orange.
 
-Snow_yearly_quantiles:
-    Mean annual snow depth, and 1- and 2-sigma envelopes for the full simulation
-    period. The gray horizontal dashed line indicates the separation between the
-    background and transient periods. The mean background value is indicated in
-    orange.
-
-SWE_yearly_quantiles:
-    Mean annual snow water equivalent (SWE), and 1- and 2-sigma envelopes for
-    the full simulation period. The gray horizontal dashed line indicates the
-    separation between the background and transient periods. The mean background
-    value is indicated in orange.
-
-1m_grdtemp_yearly_quantiles:
-    Mean annual 1 meter ground temperature, and 1- and 2-sigma envelopes for the
-    full simulation period. The gray horizontal dashed line indicates the
-    separation between the background and transient periods. The mean background
-    value is indicated in orange.
-
-5m_grdtemp_yearly_quantiles:
-    Mean annual 5 meter ground temperature, and 1- and 2-sigma envelopes for the
-    full simulation period. The gray horizontal dashed line indicates the
-    separation between the background and transient periods. The mean background
-    value is indicated in orange.
-
-10m_grdtemp_yearly_quantiles:
-    Mean annual 10 meter ground temperature, and 1- and 2-sigma envelopes for
-    the full simulation period. The gray horizontal dashed line indicates the
-    separation between the background and transient periods. The mean background
-    value is indicated in orange.
-
-AirTemp_yearly_mean:
-    Mean annual air temperature for the full simulation period. The gray
+Precip_yearly_mean:
+    Mean annual precipitation for the full simulation period. The gray
     horizontal dashed line indicates the separation between the background and
     transient periods. The mean background value is indicated in orange.
+
+AirTemp_yearly_quantiles_altitude3100_slope60:
+    Mean annual air temperature, and 1- and 2-sigma envelopes for the full
+    simulation period. The gray horizontal dashed line indicates the separation
+    between the background and transient periods. The mean background value is
+    indicated in orange. The ensemble analyzed here is a subset of the full
+    ensemble, corresponding to simulations with altitude=3100m, slope=60°.
+
+AirTemp_yearly_mean_altitude3100_slope60:
+    Mean annual air temperature for the full simulation period. The gray
+    horizontal dashed line indicates the separation between the background and
+    transient periods. The mean background value is indicated in orange. The
+    ensemble analyzed here is a subset of the full ensemble, corresponding to
+    simulations with altitude=3100m, slope=60°.
+
+Precip_yearly_quantiles_altitude3100_slope60:
+    Mean annual precipitation, and 1- and 2-sigma envelopes for the full
+    simulation period. The gray horizontal dashed line indicates the separation
+    between the background and transient periods. The mean background value is
+    indicated in orange. The ensemble analyzed here is a subset of the full
+    ensemble, corresponding to simulations with altitude=3100m, slope=60°.
+
+Precip_yearly_mean_altitude3100_slope60:
+    Mean annual precipitation for the full simulation period. The gray
+    horizontal dashed line indicates the separation between the background and
+    transient periods. The mean background value is indicated in orange. The
+    ensemble analyzed here is a subset of the full ensemble, corresponding to
+    simulations with altitude=3100m, slope=60°.
+
+GST_yearly_quantiles:
+    Mean annual ground surface temperature (GST), and 1- and 2-sigma envelopes
+    for the full simulation period. The gray horizontal dashed line indicates
+    the separation between the background and transient periods. The mean
+    background value is indicated in orange.
 
 GST_yearly_mean:
     Mean annual ground surface temperature (GST) for the full simulation period.
@@ -98,35 +137,145 @@ GST_yearly_mean:
     background and transient periods. The mean background value is indicated in
     orange.
 
-Precip_yearly_mean:
-    Mean annual precipitation for the full simulation period. The gray
-    horizontal dashed line indicates the separation between the background and
-    transient periods. The mean background value is indicated in orange.
-
-Snow_yearly_mean:
-    Mean annual snow depth for the full simulation period. The gray horizontal
-    dashed line indicates the separation between the background and transient
-    periods. The mean background value is indicated in orange.
-
-SWE_yearly_mean:
-    Mean annual snow water equivalent (SWE) for the full simulation period. The
-    gray horizontal dashed line indicates the separation between the background
-    and transient periods. The mean background value is indicated in orange.
+1m_grdtemp_yearly_quantiles:
+    Mean annual 1 meter ground temperature, and 1- and 2-sigma envelopes for the
+    full simulation period. The gray horizontal dashed line indicates the
+    separation between the background and transient periods. The mean background
+    value is indicated in orange.
 
 1m_grdtemp_yearly_mean:
     Mean annual 1 meter ground temperature for the full simulation period. The
     gray horizontal dashed line indicates the separation between the background
     and transient periods. The mean background value is indicated in orange.
 
+5m_grdtemp_yearly_quantiles:
+    Mean annual 5 meter ground temperature, and 1- and 2-sigma envelopes for the
+    full simulation period. The gray horizontal dashed line indicates the
+    separation between the background and transient periods. The mean background
+    value is indicated in orange.
+
 5m_grdtemp_yearly_mean:
     Mean annual 5 meter ground temperature for the full simulation period. The
     gray horizontal dashed line indicates the separation between the background
     and transient periods. The mean background value is indicated in orange.
 
+10m_grdtemp_yearly_quantiles:
+    Mean annual 10 meter ground temperature, and 1- and 2-sigma envelopes for
+    the full simulation period. The gray horizontal dashed line indicates the
+    separation between the background and transient periods. The mean background
+    value is indicated in orange.
+
 10m_grdtemp_yearly_mean:
     Mean annual 10 meter ground temperature for the full simulation period. The
     gray horizontal dashed line indicates the separation between the background
     and transient periods. The mean background value is indicated in orange.
+
+Snow_yearly_quantiles:
+    Mean annual snow depth, and 1- and 2-sigma envelopes for the full simulation
+    period. The gray horizontal dashed line indicates the separation between the
+    background and transient periods. The mean background value is indicated in
+    orange.
+
+Snow_yearly_mean:
+    Mean annual snow depth for the full simulation period. The gray horizontal
+    dashed line indicates the separation between the background and transient
+    periods. The mean background value is indicated in orange.
+
+SWE_yearly_quantiles:
+    Mean annual snow water equivalent (SWE), and 1- and 2-sigma envelopes for
+    the full simulation period. The gray horizontal dashed line indicates the
+    separation between the background and transient periods. The mean background
+    value is indicated in orange.
+
+SWE_yearly_mean:
+    Mean annual snow water equivalent (SWE) for the full simulation period. The
+    gray horizontal dashed line indicates the separation between the background
+    and transient periods. The mean background value is indicated in orange.
+
+GST_yearly_quantiles_altitude3100_slope60:
+    Mean annual ground surface temperature (GST), and 1- and 2-sigma envelopes
+    for the full simulation period. The gray horizontal dashed line indicates
+    the separation between the background and transient periods. The mean
+    background value is indicated in orange. The ensemble analyzed here is a
+    subset of the full ensemble, corresponding to simulations with
+    altitude=3100m, slope=60°.
+
+GST_yearly_mean_altitude3100_slope60:
+    Mean annual ground surface temperature (GST) for the full simulation period.
+    The gray horizontal dashed line indicates the separation between the
+    background and transient periods. The mean background value is indicated in
+    orange. The ensemble analyzed here is a subset of the full ensemble,
+    corresponding to simulations with altitude=3100m, slope=60°.
+
+1m_grdtemp_yearly_quantiles_altitude3100_slope60:
+    Mean annual 1 meter ground temperature, and 1- and 2-sigma envelopes for the
+    full simulation period. The gray horizontal dashed line indicates the
+    separation between the background and transient periods. The mean background
+    value is indicated in orange. The ensemble analyzed here is a subset of the
+    full ensemble, corresponding to simulations with altitude=3100m, slope=60°.
+
+1m_grdtemp_yearly_mean_altitude3100_slope60:
+    Mean annual 1 meter ground temperature for the full simulation period. The
+    gray horizontal dashed line indicates the separation between the background
+    and transient periods. The mean background value is indicated in orange. The
+    ensemble analyzed here is a subset of the full ensemble, corresponding to
+    simulations with altitude=3100m, slope=60°.
+
+5m_grdtemp_yearly_quantiles_altitude3100_slope60:
+    Mean annual 5 meter ground temperature, and 1- and 2-sigma envelopes for the
+    full simulation period. The gray horizontal dashed line indicates the
+    separation between the background and transient periods. The mean background
+    value is indicated in orange. The ensemble analyzed here is a subset of the
+    full ensemble, corresponding to simulations with altitude=3100m, slope=60°.
+
+5m_grdtemp_yearly_mean_altitude3100_slope60:
+    Mean annual 5 meter ground temperature for the full simulation period. The
+    gray horizontal dashed line indicates the separation between the background
+    and transient periods. The mean background value is indicated in orange. The
+    ensemble analyzed here is a subset of the full ensemble, corresponding to
+    simulations with altitude=3100m, slope=60°.
+
+10m_grdtemp_yearly_quantiles_altitude3100_slope60:
+    Mean annual 10 meter ground temperature, and 1- and 2-sigma envelopes for
+    the full simulation period. The gray horizontal dashed line indicates the
+    separation between the background and transient periods. The mean background
+    value is indicated in orange. The ensemble analyzed here is a subset of the
+    full ensemble, corresponding to simulations with altitude=3100m, slope=60°.
+
+10m_grdtemp_yearly_mean_altitude3100_slope60:
+    Mean annual 10 meter ground temperature for the full simulation period. The
+    gray horizontal dashed line indicates the separation between the background
+    and transient periods. The mean background value is indicated in orange. The
+    ensemble analyzed here is a subset of the full ensemble, corresponding to
+    simulations with altitude=3100m, slope=60°.
+
+Snow_yearly_quantiles_altitude3100_slope60:
+    Mean annual snow depth, and 1- and 2-sigma envelopes for the full simulation
+    period. The gray horizontal dashed line indicates the separation between the
+    background and transient periods. The mean background value is indicated in
+    orange. The ensemble analyzed here is a subset of the full ensemble,
+    corresponding to simulations with altitude=3100m, slope=60°.
+
+Snow_yearly_mean_altitude3100_slope60:
+    Mean annual snow depth for the full simulation period. The gray horizontal
+    dashed line indicates the separation between the background and transient
+    periods. The mean background value is indicated in orange. The ensemble
+    analyzed here is a subset of the full ensemble, corresponding to simulations
+    with altitude=3100m, slope=60°.
+
+SWE_yearly_quantiles_altitude3100_slope60:
+    Mean annual snow water equivalent (SWE), and 1- and 2-sigma envelopes for
+    the full simulation period. The gray horizontal dashed line indicates the
+    separation between the background and transient periods. The mean background
+    value is indicated in orange. The ensemble analyzed here is a subset of the
+    full ensemble, corresponding to simulations with altitude=3100m, slope=60°.
+
+SWE_yearly_mean_altitude3100_slope60:
+    Mean annual snow water equivalent (SWE) for the full simulation period. The
+    gray horizontal dashed line indicates the separation between the background
+    and transient periods. The mean background value is indicated in orange. The
+    ensemble analyzed here is a subset of the full ensemble, corresponding to
+    simulations with altitude=3100m, slope=60°.
 
 max_thaw_depth:
     Plot of the evolution of maximum annual thaw depth for groups of simulations
@@ -138,33 +287,30 @@ max_thaw_depth:
     corresponding to the maximal plotted depth most likely do not have
     permafrost at all.
 
+max_thaw_depth_altitude3100_slope60:
+    Plot of the evolution of maximum annual thaw depth for groups of simulations
+    binned by (altitude,slope) couples for the shwole simulation period. For
+    each group, the solid line represents the mean thaw depth over teh
+    simulation members, and the envelope is the standard deviation. The
+    simulation column extends from the ground surface (horiwontal gray line)
+    down to the maximal plotted depth. Simulations with a maximal thaw depth
+    corresponding to the maximal plotted depth most likely do not have
+    permafrost at all. The ensemble analyzed here is a subset of the full
+    ensemble, corresponding to simulations with altitude=3100m, slope=60°.
+
 GST_v_snow:
     Plot of the mean daily values of GST (blue) and snow depth (orange) over all
     simulations and the full simulation period. The 1- and 2-sigma envelopes are
     also shown.
 
+GST_v_snow_altitude3100_slope60:
+    Plot of the mean daily values of GST (blue) and snow depth (orange) over all
+    simulations and the full simulation period. The 1- and 2-sigma envelopes are
+    also shown. The ensemble analyzed here is a subset of the full ensemble,
+    corresponding to simulations with altitude=3100m, slope=60°.
+
 GST_1year_bkg_v_transient:
     Plot of the mean daily values of ground surface temperature (GST) over all
-    simulations and the full background (blue) and transient (orange) periods.
-    The 1- and 2-sigma envelopes are also shown.
-
-Snow_1year_bkg_v_transient:
-    Plot of the mean daily values of snow depth over all simulations and the
-    full background (blue) and transient (orange) periods. The 1- and 2-sigma
-    envelopes are also shown.
-
-1m_grdtemp_1year_bkg_v_transient:
-    Plot of the mean daily values of 1 meter ground temperature over all
-    simulations and the full background (blue) and transient (orange) periods.
-    The 1- and 2-sigma envelopes are also shown.
-
-5m_grdtemp_1year_bkg_v_transient:
-    Plot of the mean daily values of 5 meter ground temperature over all
-    simulations and the full background (blue) and transient (orange) periods.
-    The 1- and 2-sigma envelopes are also shown.
-
-10m_grdtemp_1year_bkg_v_transient:
-    Plot of the mean daily values of 10 meter ground temperature over all
     simulations and the full background (blue) and transient (orange) periods.
     The 1- and 2-sigma envelopes are also shown.
 
@@ -174,11 +320,44 @@ GST_1year_bkg_v_transient_excep_years:
     envelopes are also shown. On top of this, the 3 most exceptional years are
     plotted in order (orange, green, red).
 
-Snow_1year_bkg_v_transient_excep_years:
-    Plot of the mean daily values of snow depth over all simulations and the
-    full background period in blue. The 1- and 2-sigma envelopes are also shown.
-    On top of this, the 3 most exceptional years are plotted in order (orange,
-    green, red).
+GST_1year_bkg_v_transient_custom_years:
+    Plot of the mean daily values of ground surface temperature (GST) over all
+    simulations and the full background period in blue. The 1- and 2-sigma
+    envelopes are also shown. On top of this, the user-defined years in the list
+    "custom_years" are plotted.
+
+GST_1year_bkg_v_transient_altitude3100_slope60:
+    Plot of the mean daily values of ground surface temperature (GST) over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown. The ensemble analyzed here is a
+    subset of the full ensemble, corresponding to simulations with
+    altitude=3100m, slope=60°.
+
+GST_1year_bkg_v_transient_excep_years_altitude3100_slope60:
+    Plot of the mean daily values of ground surface temperature (GST) over all
+    simulations and the full background period in blue. The 1- and 2-sigma
+    envelopes are also shown. On top of this, the 3 most exceptional years are
+    plotted in order (orange, green, red). The ensemble analyzed here is a
+    subset of the full ensemble, corresponding to simulations with
+    altitude=3100m, slope=60°.
+
+GST_1year_bkg_v_transient_custom_years_altitude3100_slope60:
+    Plot of the mean daily values of ground surface temperature (GST) over all
+    simulations and the full background period in blue. The 1- and 2-sigma
+    envelopes are also shown. On top of this, the user-defined years in the list
+    "custom_years" are plotted. The ensemble analyzed here is a subset of the
+    full ensemble, corresponding to simulations with altitude=3100m, slope=60°.
+
+GST_1year_bkg_v_transient_decades:
+    Plot of the mean daily values of ground surface temperature (GST) over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown. On top of this, the mean value
+    for every transient decade is plotted.
+
+1m_grdtemp_1year_bkg_v_transient:
+    Plot of the mean daily values of 1 meter ground temperature over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown.
 
 1m_grdtemp_1year_bkg_v_transient_excep_years:
     Plot of the mean daily values of 1 meter ground temperature over all
@@ -186,11 +365,89 @@ Snow_1year_bkg_v_transient_excep_years:
     envelopes are also shown. On top of this, the 3 most exceptional years are
     plotted in order (orange, green, red).
 
+1m_grdtemp_1year_bkg_v_transient_custom_years:
+    Plot of the mean daily values of 1 meter ground temperature over all
+    simulations and the full background period in blue. The 1- and 2-sigma
+    envelopes are also shown. On top of this, the user-defined years in the list
+    "custom_years" are plotted.
+
+1m_grdtemp_1year_bkg_v_transient_altitude3100_slope60:
+    Plot of the mean daily values of 1 meter ground temperature over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown. The ensemble analyzed here is a
+    subset of the full ensemble, corresponding to simulations with
+    altitude=3100m, slope=60°.
+
+1m_grdtemp_1year_bkg_v_transient_excep_years_altitude3100_slope60:
+    Plot of the mean daily values of 1 meter ground temperature over all
+    simulations and the full background period in blue. The 1- and 2-sigma
+    envelopes are also shown. On top of this, the 3 most exceptional years are
+    plotted in order (orange, green, red). The ensemble analyzed here is a
+    subset of the full ensemble, corresponding to simulations with
+    altitude=3100m, slope=60°.
+
+1m_grdtemp_1year_bkg_v_transient_custom_years_altitude3100_slope60:
+    Plot of the mean daily values of 1 meter ground temperature over all
+    simulations and the full background period in blue. The 1- and 2-sigma
+    envelopes are also shown. On top of this, the user-defined years in the list
+    "custom_years" are plotted. The ensemble analyzed here is a subset of the
+    full ensemble, corresponding to simulations with altitude=3100m, slope=60°.
+
+1m_grdtemp_1year_bkg_v_transient_decades:
+    Plot of the mean daily values of 1 meter ground temperature over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown. On top of this, the mean value
+    for every transient decade is plotted.
+
+5m_grdtemp_1year_bkg_v_transient:
+    Plot of the mean daily values of 5 meter ground temperature over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown.
+
 5m_grdtemp_1year_bkg_v_transient_excep_years:
     Plot of the mean daily values of 5 meter ground temperature over all
     simulations and the full background period in blue. The 1- and 2-sigma
     envelopes are also shown. On top of this, the 3 most exceptional years are
     plotted in order (orange, green, red).
+
+5m_grdtemp_1year_bkg_v_transient_custom_years:
+    Plot of the mean daily values of 5 meter ground temperature over all
+    simulations and the full background period in blue. The 1- and 2-sigma
+    envelopes are also shown. On top of this, the user-defined years in the list
+    "custom_years" are plotted.
+
+5m_grdtemp_1year_bkg_v_transient_altitude3100_slope60:
+    Plot of the mean daily values of 5 meter ground temperature over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown. The ensemble analyzed here is a
+    subset of the full ensemble, corresponding to simulations with
+    altitude=3100m, slope=60°.
+
+5m_grdtemp_1year_bkg_v_transient_excep_years_altitude3100_slope60:
+    Plot of the mean daily values of 5 meter ground temperature over all
+    simulations and the full background period in blue. The 1- and 2-sigma
+    envelopes are also shown. On top of this, the 3 most exceptional years are
+    plotted in order (orange, green, red). The ensemble analyzed here is a
+    subset of the full ensemble, corresponding to simulations with
+    altitude=3100m, slope=60°.
+
+5m_grdtemp_1year_bkg_v_transient_custom_years_altitude3100_slope60:
+    Plot of the mean daily values of 5 meter ground temperature over all
+    simulations and the full background period in blue. The 1- and 2-sigma
+    envelopes are also shown. On top of this, the user-defined years in the list
+    "custom_years" are plotted. The ensemble analyzed here is a subset of the
+    full ensemble, corresponding to simulations with altitude=3100m, slope=60°.
+
+5m_grdtemp_1year_bkg_v_transient_decades:
+    Plot of the mean daily values of 5 meter ground temperature over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown. On top of this, the mean value
+    for every transient decade is plotted.
+
+10m_grdtemp_1year_bkg_v_transient:
+    Plot of the mean daily values of 10 meter ground temperature over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown.
 
 10m_grdtemp_1year_bkg_v_transient_excep_years:
     Plot of the mean daily values of 10 meter ground temperature over all
@@ -198,11 +455,89 @@ Snow_1year_bkg_v_transient_excep_years:
     envelopes are also shown. On top of this, the 3 most exceptional years are
     plotted in order (orange, green, red).
 
+10m_grdtemp_1year_bkg_v_transient_custom_years:
+    Plot of the mean daily values of 10 meter ground temperature over all
+    simulations and the full background period in blue. The 1- and 2-sigma
+    envelopes are also shown. On top of this, the user-defined years in the list
+    "custom_years" are plotted.
+
+10m_grdtemp_1year_bkg_v_transient_altitude3100_slope60:
+    Plot of the mean daily values of 10 meter ground temperature over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown. The ensemble analyzed here is a
+    subset of the full ensemble, corresponding to simulations with
+    altitude=3100m, slope=60°.
+
+10m_grdtemp_1year_bkg_v_transient_excep_years_altitude3100_slope60:
+    Plot of the mean daily values of 10 meter ground temperature over all
+    simulations and the full background period in blue. The 1- and 2-sigma
+    envelopes are also shown. On top of this, the 3 most exceptional years are
+    plotted in order (orange, green, red). The ensemble analyzed here is a
+    subset of the full ensemble, corresponding to simulations with
+    altitude=3100m, slope=60°.
+
+10m_grdtemp_1year_bkg_v_transient_custom_years_altitude3100_slope60:
+    Plot of the mean daily values of 10 meter ground temperature over all
+    simulations and the full background period in blue. The 1- and 2-sigma
+    envelopes are also shown. On top of this, the user-defined years in the list
+    "custom_years" are plotted. The ensemble analyzed here is a subset of the
+    full ensemble, corresponding to simulations with altitude=3100m, slope=60°.
+
+10m_grdtemp_1year_bkg_v_transient_decades:
+    Plot of the mean daily values of 10 meter ground temperature over all
+    simulations and the full background (blue) and transient (orange) periods.
+    The 1- and 2-sigma envelopes are also shown. On top of this, the mean value
+    for every transient decade is plotted.
+
+Snow_1year_bkg_v_transient:
+    Plot of the mean daily values of snow depth over all simulations and the
+    full background (blue) and transient (orange) periods. The 1- and 2-sigma
+    envelopes are also shown.
+
+Snow_1year_bkg_v_transient_excep_years:
+    Plot of the mean daily values of snow depth over all simulations and the
+    full background period in blue. The 1- and 2-sigma envelopes are also shown.
+    On top of this, the 3 most exceptional years are plotted in order (orange,
+    green, red).
+
+Snow_1year_bkg_v_transient_custom_years:
+    Plot of the mean daily values of snow depth over all simulations and the
+    full background period in blue. The 1- and 2-sigma envelopes are also shown.
+    On top of this, the user-defined years in the list "custom_years" are
+    plotted.
+
 Snow_1year_bkg_v_transient_decades:
     Plot of the mean daily values of snow depth over all simulations and the
     full background (blue) and transient (orange) periods. The 1- and 2-sigma
     envelopes are also shown. On top of this, the mean value for every transient
     decade is plotted.
+
+Snow_1year_bkg_v_transient_altitude3100_slope60:
+    Plot of the mean daily values of snow depth over all simulations and the
+    full background (blue) and transient (orange) periods. The 1- and 2-sigma
+    envelopes are also shown. The ensemble analyzed here is a subset of the full
+    ensemble, corresponding to simulations with altitude=3100m, slope=60°.
+
+Snow_1year_bkg_v_transient_excep_years_altitude3100_slope60:
+    Plot of the mean daily values of snow depth over all simulations and the
+    full background period in blue. The 1- and 2-sigma envelopes are also shown.
+    On top of this, the 3 most exceptional years are plotted in order (orange,
+    green, red). The ensemble analyzed here is a subset of the full ensemble,
+    corresponding to simulations with altitude=3100m, slope=60°.
+
+Snow_1year_bkg_v_transient_custom_years_altitude3100_slope60:
+    Plot of the mean daily values of snow depth over all simulations and the
+    full background period in blue. The 1- and 2-sigma envelopes are also shown.
+    On top of this, the user-defined years in the list "custom_years" are
+    plotted. The ensemble analyzed here is a subset of the full ensemble,
+    corresponding to simulations with altitude=3100m, slope=60°.
+
+Snow_1year_bkg_v_transient_decades_altitude3100_slope60:
+    Plot of the mean daily values of snow depth over all simulations and the
+    full background (blue) and transient (orange) periods. The 1- and 2-sigma
+    envelopes are also shown. On top of this, the mean value for every transient
+    decade is plotted. The ensemble analyzed here is a subset of the full
+    ensemble, corresponding to simulations with altitude=3100m, slope=60°.
 
 normdev_week_month:
     Plot of the normalized deviation (or standardized anomaly, defined to be the
@@ -214,6 +549,17 @@ normdev_week_month:
     of the year for all previous years, and in the week (left) or month (right)
     leading to it.
 
+normdev_week_month_altitude3100_slope60:
+    Plot of the normalized deviation (or standardized anomaly, defined to be the
+    deviation away from the mean in units of standard deviation) for the total
+    water production, air temperature, and ground temperatures (surface, 1m ,5m,
+    and 10m). The time period corresponds to the year of the landslide and the
+    precise date of the event is indicated by a dashed red vertical line. For
+    each time of the year, the value is compared to all values at the same time
+    of the year for all previous years, and in the week (left) or month (right)
+    leading to it. The ensemble analyzed here is a subset of the full ensemble,
+    corresponding to simulations with altitude=3100m, slope=60°.
+
 normdev:
     Plot of the normalized deviation (or standardized anomaly, defined to be the
     deviation away from the mean in units of standard deviation) for the total
@@ -221,6 +567,16 @@ normdev:
     and 10m). The time period corresponds to the transient period and each data
     point is compared to all previous data points. If applicable, the exact time
     of the landslide is indicated by a dashed red vertical line.
+
+normdev_altitude3100_slope60:
+    Plot of the normalized deviation (or standardized anomaly, defined to be the
+    deviation away from the mean in units of standard deviation) for the total
+    water production, air temperature, and ground temperatures (surface, 1m ,5m,
+    and 10m). The time period corresponds to the transient period and each data
+    point is compared to all previous data points. If applicable, the exact time
+    of the landslide is indicated by a dashed red vertical line. The ensemble
+    analyzed here is a subset of the full ensemble, corresponding to simulations
+    with altitude=3100m, slope=60°.
 
 heatmap_centre_GST_bkg:
     Heatmap of the background mean GST (°C) as a function of aspect and slope at

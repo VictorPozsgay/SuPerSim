@@ -20,14 +20,14 @@ from SuPerSim.plotblocks import plot_hor, plot_hist, plot_yearly_box, plot_yearl
 
 def plot_all(site,
              path_forcing_list, path_ground, path_snow, path_swe, path_thaw_depth, path_pickle,
-             year_bkg_end, year_trans_end, path_horizon=None, no_weight=True, show_glaciers=True,
-             show_individual_heatmap=False, show_heatmaps=True, show_parity=False,
-             show_landslide_time=True, show_plots=True, split_legend=True, save_plots_pdf=False,
-             query=None, show_hor=True, show_hist=True, show_yearly_box=True,
-             show_yearly_stats_atmos=True, show_yearly_stats_sims=True,
-             show_thaw_depth=True, show_2metrics_seasonal=True, show_1metrics_seasonal=True,
-             show_decades=True, show_excep_years=True, custom_years=None,
-             show_normdev=True, show_quantiles=True, show_meltout=True, show_GST_evol=True):
+             year_bkg_end, year_trans_end, path_horizon=None, no_weight=True,
+             print_plots=True, split_legend=True, save_plots_pdf=False, custom_years=None, query=None,
+             show_hor=True, show_hist=True, show_glaciers=True, show_yearly_box=True,
+             show_yearly_stats_atmos=True, show_yearly_stats_sims=True, show_thaw_depth=True,
+             show_2metrics_seasonal=True, show_1metric_seasonal=True,
+             show_decades=True, show_excep_years=True, show_normdev=True, show_landslide_time=True,
+             show_individual_heatmap=False, show_heatmaps=True, 
+             show_quantiles=True, show_meltout=True, show_GST_evol=True, show_parity=False):
     """ Function returns a series of summary plots for a given site.
     
     Parameters
@@ -54,17 +54,7 @@ def plot_all(site,
         If a path to a .csv horizon file is given, a horizon plot is produced, if None, nothing happens.
     no_weight : bool, optional
         If True, all simulations have the same weight, otherwise the weight is computed as a function of altitude, aspect, and slope
-    show_glaciers : bool, optional
-        If True, shows the glacier simulations with a 0 weight, if False, those are ignored.
-    individual_heatmap : bool, optional
-        Show or not heatmaps for unique altitude
-    polar_plots : bool, optional
-        Show or not polar plots
-    parity_plot : bool, optional
-        Show or not parity plot
-    show_landslide_time : bool, optional
-        Choose to show or not the vertical dashed line indicating the time of the landslide. For a slow landslide, choose False.
-    show_plots : bool, optional
+    print_plots : bool, optional
         Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
     split_legend : bool, optional
         Whether or not to strip the legend off of all figures. If True, every figure will be returned in 3 objects: original figure with legend,
@@ -74,6 +64,8 @@ def plot_all(site,
         If True, figure will be saved to PDF with the name
         f'{site}_{suffix}.pdf' with suffix in
         ['legend_only', 'legend_on', legend_off']
+    custom_years : list, optional
+        If None, nothing happens, but if a list of integer years is given, the tiemeseries for these years will be printed too for the seasonal plots.
     query : dict, optional
         If query is None then we consider ALL simulations
         However, this is the place where we can select a subset of simulations
@@ -81,6 +73,44 @@ def plot_all(site,
         query = {'param_1': 'value_1', ..., 'param_n': 'value_n'}
         and the keys should be taken from a valid column of 'df', 
         e.g. 'altitude', 'slope', 'aspect', 'material', 'maxswe', 'snow'
+    show_hor : bool, optional
+        Whether or not to produce the horizon plot
+    show_hist : bool, optional
+        Whether or not to plot the histograms (glacier and permafrost disctibution)
+    show_glaciers : bool, optional
+        If True, shows the glacier simulations with a 0 weight, if False, those are ignored. t only applies if either 'show_hist' or 'show_heatmaps' is True.
+    show_yearly_box : bool, optional
+        Whether or not to plot the yearly boxplots
+    show_yearly_stats_atmos : bool, optional
+        Whether or not to plot the yearly stats for atmospheric data
+    show_yearly_stats_sims : bool, optional
+        Whether or not to plot the yearly stats for simulated data
+    show_thaw_depth : bool, optional
+        Whether or not to plot the thaw depth evolution
+    show_2metrics_seasonal : bool, optional
+        Whether or not to plot a seasonal comparison of 2 metrics 
+    show_1metric_seasonal : bool, optional
+        Whether or not to plot the seasonal mean and deviation of a single metric at a time
+    show_decades : bool, optional   
+        Whether or not to plot decadal data, if 'show_1metric_seasonal'=True
+    show_excep_years : bool, optional
+        Whether or not to plot data for the 3 most exceptional years, if 'show_1metric_seasonal'=True
+    show_normdev : bool, optional
+        Whether or not to plot the normalized deviation
+    show_landslide_time : bool, optional
+        Whether or not to show the landslide time on the ormalized deviation plot, if 'show_normdev'=True
+    show_individual_heatmap : bool, optional
+        Whether or not to plot heatmaps for a unique altitude
+    show_heatmaps : bool, optional
+        Whether or not to plot all heatmaps
+    show_quantiles : bool, optional
+        Whether or not to plot quntile plots (CDF and evolution of percentiles)
+    show_meltout : bool, optional
+        Whether or not to plot snow meltout evolution (histogram)
+    show_GST_evol : bool, optional
+        Whether or not to plot the GST evolution vs background
+    show_parity : bool, optional
+        Whether or not to plot the parity plot (model results)
 
     Returns
     -------
@@ -147,12 +177,12 @@ def plot_all(site,
                 query_suffix += f'_{k}{v}'
 
         if show_hor:
-            plot_hor(path_horizon, list_fig_names, list_figs, show_plots)
+            plot_hor(path_horizon, list_fig_names, list_figs, print_plots)
 
         if show_hist:
-            plot_hist(site, path_pickle,path_thaw_depth, no_weight, show_glaciers, list_fig_names, list_figs, show_plots, query, query_suffix)
+            plot_hist(site, path_pickle, path_thaw_depth, no_weight, show_glaciers, list_fig_names, list_figs, print_plots, query, query_suffix)
 
-        if show_plots:
+        if print_plots:
             print('\n---------------------------------------------------------------------------------------------')
             print('------------------------------------- TEMPORAL ANALYSIS -------------------------------------')
             print('---------------------------------------------------------------------------------------------\n')
@@ -161,47 +191,47 @@ def plot_all(site,
             plot_yearly_box(query, query_suffix, time_air_all, time_ground,
                             mean_air_temp, temp_ground_mean, mean_prec, tot_water_prod,
                             mean_air_temp_query, temp_ground_mean_query, tot_water_prod_query,
-                            year_bkg_end, year_trans_end, show_plots, list_fig_names, list_figs)
+                            year_bkg_end, year_trans_end, print_plots, list_fig_names, list_figs)
 
         if show_yearly_stats_atmos:
             plot_yearly_stats_atmos(query, query_suffix, time_air_all, temp_air_all,
                                     precipitation_all, temp_air_all_query, precipitation_all_query,
-                                    year_bkg_end, year_trans_end, show_plots, list_fig_names, list_figs)
+                                    year_bkg_end, year_trans_end, print_plots, list_fig_names, list_figs)
         
         if show_yearly_stats_sims:
             plot_yearly_stats_sims(query, query_suffix, time_ground, temp_ground, snow_height, swe,
                                    idxs_depths, list_valid_sim, list_valid_sim_query,
-                                   year_bkg_end, year_trans_end, show_plots, list_fig_names, list_figs)
+                                   year_bkg_end, year_trans_end, print_plots, list_fig_names, list_figs)
 
         if show_thaw_depth:
             plot_thaw_depth(query, query_suffix, time_ground, thaw_depth, thaw_depth_query,
-                            list_depths, df, df_query, show_plots, list_fig_names, list_figs)
+                            list_depths, df, df_query, print_plots, list_fig_names, list_figs)
 
         if show_2metrics_seasonal:
             plot_2metrics_seasonal(query, query_suffix, time_ground, temp_ground, snow_height,
-                                   list_valid_sim, list_valid_sim_query, show_plots, list_fig_names, list_figs)
+                                   list_valid_sim, list_valid_sim_query, print_plots, list_fig_names, list_figs)
         
-        if show_1metrics_seasonal:
+        if show_1metric_seasonal:
             plot_1metric_seasonal(query, query_suffix, time_ground, time_bkg_ground, time_trans_ground,
                                   year_bkg_end, year_trans_end, idxs_depths,
                                   temp_ground, snow_height,
-                                  list_valid_sim, list_valid_sim_query, show_plots, show_decades,
+                                  list_valid_sim, list_valid_sim_query, print_plots, show_decades,
                                   show_excep_years, custom_years, list_fig_names, list_figs)
         
         # # # # print('')
         # # # This works well but it would be better to smooth the data
         # # # ALSO CAREFUL WHEN USING THIS FUNCTION WITH TIME_AIR, NEED TO CHANGE stats_air_all_years_simulations_to_single_year()
         # # # TO DO THAT, DRAW INSPIRATION FROM stats_all_years_simulations_to_single_year()
-        # # # plot_sanity_one_year_quantiles_two_periods_from_inputs(time_air_all[0], [temp_air_all[0], temp_air_all[0]], [None, None], 'Air temperature', ['Background', 'Transient'], [time_bkg_air, time_trans_air], show_plots)
+        # # # plot_sanity_one_year_quantiles_two_periods_from_inputs(time_air_all[0], [temp_air_all[0], temp_air_all[0]], [None, None], 'Air temperature', ['Background', 'Transient'], [time_bkg_air, time_trans_air], print_plots)
 
         if show_normdev:
             plot_normdev(query, query_suffix, time_ground, time_air_all,
                          tot_water_prod, mean_air_temp, temp_ground_mean, temp_ground_mean_deep,
                          tot_water_prod_query, mean_air_temp_query, temp_ground_mean_query, temp_ground_mean_deep_query,
                          site, path_pickle, year_bkg_end, year_trans_end,
-                         rockfall_values, show_plots, show_landslide_time, list_fig_names, list_figs)
+                         rockfall_values, print_plots, show_landslide_time, list_fig_names, list_figs)
 
-        if show_plots:
+        if print_plots:
             print('\n---------------------------------------------------------------------------------------------')
             print('------------------------------------- SPATIAL ANALYSIS --------------------------------------')
             print('---------------------------------------------------------------------------------------------\n')
@@ -209,28 +239,28 @@ def plot_all(site,
 
         if show_individual_heatmap:
             plot_individual_heatmap(site, path_pickle, rockfall_values, alt_list, alt_index_abs,
-                                    show_plots, list_fig_names, list_figs)
+                                    print_plots, list_fig_names, list_figs)
 
         if show_heatmaps:
             plot_heatmaps(site, path_pickle, show_glaciers, path_thaw_depth,
-                          show_plots, list_fig_names, list_figs)
+                          print_plots, list_fig_names, list_figs)
 
-        if show_plots:
+        if print_plots:
             print('\n---------------------------------------------------------------------------------------------')
             print('-------------------------------------- FURTHER  PLOTS ---------------------------------------')
             print('---------------------------------------------------------------------------------------------\n')
 
         if show_quantiles:
-            plot_quantiles(site, path_pickle, show_plots, list_fig_names, list_figs)
+            plot_quantiles(site, path_pickle, print_plots, list_fig_names, list_figs)
 
         if show_meltout:
-            plot_meltout(site, path_pickle, show_plots, list_fig_names, list_figs)
+            plot_meltout(site, path_pickle, print_plots, list_fig_names, list_figs)
         
         if show_GST_evol:
-            plot_GST_evol(site, path_pickle, show_plots, list_fig_names, list_figs)
+            plot_GST_evol(site, path_pickle, print_plots, list_fig_names, list_figs)
 
         if show_parity:
-            plot_parity(site, path_pickle, show_plots, list_fig_names, list_figs, all_data=False, diff_forcings=True)
+            plot_parity(site, path_pickle, print_plots, list_fig_names, list_figs, all_data=False, diff_forcings=True)
         
         print('\n---------------------------------------------------------------------------------------------')
         print('---------------------------------- SUCCESSFULLY COMPLETED -----------------------------------')
@@ -291,7 +321,7 @@ def plot_camparison_two_sites(list_site, list_label_site,
              list_path_forcing_list, list_path_ground, list_path_snow, list_path_swe,
              list_path_SW_direct, list_path_SW_diffuse, list_path_SW_up,
              list_path_SW_down, list_path_SW_net, list_path_LW_net,
-             list_path_pickle, year_bkg_end, year_trans_end, show_plots=True):
+             list_path_pickle, year_bkg_end, year_trans_end, print_plots=True):
     """ Function returns a series of comparison of summary plots for two sites.
     
     Parameters
@@ -327,7 +357,7 @@ def plot_camparison_two_sites(list_site, list_label_site,
         Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
     year_trans_end : int
         Same for transient period
-    show_plots : bool, optional
+    print_plots : bool, optional
         Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
 
 
@@ -371,7 +401,7 @@ def plot_camparison_two_sites(list_site, list_label_site,
         _, SW_net[i] = open_SW_net_nc(list_path_SW_net[i])
         _, LW_net[i] = open_LW_net_nc(list_path_LW_net[i])
 
-    if show_plots:
+    if print_plots:
         print('\n---------------------------------------------------------------------------------------------\n')
 
         print('Series of plots comparing both sites.')
@@ -379,32 +409,32 @@ def plot_camparison_two_sites(list_site, list_label_site,
         print('\n---------------------------------------------------------------------------------------------\n')
 
         print('Plot of a single timeseries reduced to a 1-year window with mean and 1 and 2-sigma spread, for both sites:')
-    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [temp_ground[0], temp_ground[1]], [list_valid_sim[0], list_valid_sim[1]], ['GST'], show_plots, list_label_site)
-    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [SW_direct[0], SW_direct[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW direct'], show_plots, list_label_site)
-    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [SW_diffuse[0], SW_diffuse[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW diffuse'], show_plots, list_label_site)
-    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [SW_down[0], SW_down[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW up'], show_plots, list_label_site)
-    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [SW_up[0], SW_up[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW down'], show_plots, list_label_site)
-    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [SW_net[0], SW_net[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW net'], show_plots, list_label_site)
-    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [LW_net[0], LW_net[1]], [list_valid_sim[0], list_valid_sim[1]], ['LW net'], show_plots, list_label_site)
+    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [temp_ground[0], temp_ground[1]], [list_valid_sim[0], list_valid_sim[1]], ['GST'], print_plots, list_label_site)
+    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [SW_direct[0], SW_direct[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW direct'], print_plots, list_label_site)
+    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [SW_diffuse[0], SW_diffuse[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW diffuse'], print_plots, list_label_site)
+    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [SW_down[0], SW_down[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW up'], print_plots, list_label_site)
+    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [SW_up[0], SW_up[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW down'], print_plots, list_label_site)
+    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [SW_net[0], SW_net[1]], [list_valid_sim[0], list_valid_sim[1]], ['SW net'], print_plots, list_label_site)
+    plot_sanity_two_variables_one_year_quantiles_from_inputs(time_ground[0], [LW_net[0], LW_net[1]], [list_valid_sim[0], list_valid_sim[1]], ['LW net'], print_plots, list_label_site)
 
-    if show_plots:
+    if print_plots:
         print('\n---------------------------------------------------------------------------------------------\n')
 
         print('Plot of seasonal statistics for GST and SW net for both sites side by side:')
-    plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side_from_inputs(time_ground[0], [[temp_ground[0], temp_ground[1]], [SW_net[0], SW_net[1]]], [list_valid_sim[0], list_valid_sim[1]], ['GST', 'SW net'], list_label_site, show_plots)
+    plot_sanity_two_variables_two_sites_one_year_quantiles_side_by_side_from_inputs(time_ground[0], [[temp_ground[0], temp_ground[1]], [SW_net[0], SW_net[1]]], [list_valid_sim[0], list_valid_sim[1]], ['GST', 'SW net'], list_label_site, print_plots)
     
-    if show_plots:
+    if print_plots:
         print('\n---------------------------------------------------------------------------------------------\n')
 
         print('Plot of yearly, background, and transient statistics for GST for both sites side by side:')
-    plot_yearly_quantiles_side_by_side_sim_from_inputs(time_ground[0], [temp_ground[0], temp_ground[1]], [list_valid_sim[0], list_valid_sim[1]], 'GST', list_label_site, year_bkg_end, year_trans_end, show_plots)
-    plot_yearly_quantiles_side_by_side_sim_from_inputs(time_ground[0], [temp_ground[0], temp_ground[1]], [list_valid_sim[0], list_valid_sim[1]], 'GST', list_label_site, year_bkg_end, year_trans_end, show_plots, False)
+    plot_yearly_quantiles_side_by_side_sim_from_inputs(time_ground[0], [temp_ground[0], temp_ground[1]], [list_valid_sim[0], list_valid_sim[1]], 'GST', list_label_site, year_bkg_end, year_trans_end, print_plots)
+    plot_yearly_quantiles_side_by_side_sim_from_inputs(time_ground[0], [temp_ground[0], temp_ground[1]], [list_valid_sim[0], list_valid_sim[1]], 'GST', list_label_site, year_bkg_end, year_trans_end, print_plots, False)
     
-    if show_plots:
+    if print_plots:
         print('\n---------------------------------------------------------------------------------------------\n')
 
         print('Plot of mean GST evolution vs background GST, fit, and binning per 10% quantiles for both sites:')
-    plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input(list_site, list_path_pickle, list_label_site, show_plots, query=None)
+    plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_from_input(list_site, list_path_pickle, list_label_site, print_plots, query=None)
 
     
     print('\n---------------------------------------------------------------------------------------------')

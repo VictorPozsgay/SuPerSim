@@ -35,44 +35,62 @@ For a single site, we recommend the user to start any script with the following 
       path_forcing_reanalysis_1 = '<path>' # placeholder path
       ...
       path_forcing_reanalysis_n = '<path>'
-      path_ground = '<path>'
-      path_snow = '<path>'
-      path_swe = '<path>'
-      path_thaw_depth = '<path>'
-      path_repository = '<path>'
-      path_pickle = '<path>'
+      path_ground               = '<path>'
+      path_snow                 = '<path>'
+      path_swe                  = '<path>'
+      path_thaw_depth           = '<path>'
+      path_repository           = '<path>'
+      path_pickle               = '<path>'
 
-      path_horizon = path_data+'/horizon.csv' # optional and set to 'None' by default
-
-      forcing_list = ['reanalysis_1', ..., 'reanalysis_n'] # list of forcing names
-      path_forcing_list = [path_forcing_reanalysis_1, ..., path_forcing_reanalysis_n]
+      path_horizon              = path_data+'/horizon.csv' # optional and set to 'None' by default
 
       ###############################################################
       # Enter the parameters of your site and of the rockfall event #
       ###############################################################
 
-      site = '<name_site>'
-      year_bkg_end = <year>
-      year_trans_end = <year>
-      date_event = [<year>, <month>, <day>]
-      topo_event = [<altitude>, <aspect>, <slope>]
+      site              = '<name_site:str>'
 
-      # Glaciers
-      consecutive = <number>
-      glacier = <bool> # optional and set to 'False' by default
-      min_glacier_depth = <min> # optional and set to '100' by default
-      max_glacier_depth = <max> # optional and set to '20000' by default
+      # CREATE THE PICKLES
+      year_bkg_end      = <year:int>
+      year_trans_end    = <year:int>
+      forcing_list      = ['<reanalysis_1:str>', ..., '<reanalysis_n:str>'] # list of forcing names
+      path_forcing_list = ['<path_forcing_reanalysis_1:str>', ..., '<path_forcing_reanalysis_n:str>']
+      consecutive       = <number_days:int>
+      date_event        = [<year:int>, <month:int>, <day:int>]              # empty list '[]' if none available
+      topo_event        = [<altitude:int>, <aspect:int>, <slope:int>]       # empty list '[]' if none available
+      glacier           = <bool> # optional and set to 'False' by default
+      min_glacier_depth = <min:int> # optional and set to '100' by default
+      max_glacier_depth = <max:int> # optional and set to '20000' by default
 
-      # Plotting options
-      no_weight = <bool> # optional and set to 'True' by default
-      show_glaciers = <bool> # optional and set to 'True' by default
-      individual_heatmap = <bool> # optional and set to 'False' by default
-      polar_plots = <bool> # optional and set to 'False' by default
-      parity_plot = <bool> # optional and set to 'False' by default
-      show_landslide_time = <bool> # optional and set to 'True' by default
-      show_plots = <bool> # optional and set to 'True' by default
-      split_legend = <bool> # optional and set to 'True' by default
-      save_plots_pdf = <bool> # optional and set to 'False' by default
+      # CREATE THE PLOTS
+      no_weight               = <bool> # optional
+
+      print_plots             = <bool> # optional
+      split_legend            = <bool> # optional
+      save_plots_pdf          = <bool> # optional
+
+      custom_years            = [<year_1:int>, ..., <year_n:int>] # optional and set to 'None' by default
+      query                   = {'<var_1:str>': <value_1:int>, ..., '<var_n:str>': <value_n:int>} # optional and set to 'None' by default
+
+      show_hor                = <bool> # optional
+      show_hist               = <bool> # optional
+      show_glaciers           = <bool> # optional
+      show_yearly_box         = <bool> # optional
+      show_yearly_stats_atmos = <bool> # optional
+      show_yearly_stats_sims  = <bool> # optional
+      show_thaw_depth         = <bool> # optional
+      show_2metrics_seasonal  = <bool> # optional
+      show_1metric_seasonal   = <bool> # optional
+      show_decades            = <bool> # optional
+      show_excep_years        = <bool> # optional
+      show_normdev            = <bool> # optional
+      show_landslide_time     = <bool> # optional
+      show_individual_heatmap = <bool> # optional
+      show_heatmaps           = <bool> # optional
+      show_quantiles          = <bool> # optionalue
+      show_meltout            = <bool> # optional
+      show_GST_evol           = <bool> # optional
+      show_parity             = <bool> # optional
 
 
 Glaciers
@@ -137,9 +155,16 @@ indeed, we have the function\  *load_all_pickles*\  ::
 Finally, the plotting function\  *plot_all*\  can be called ::
 
       dict_final = plot_all(site, path_forcing_list, path_ground, path_snow, path_swe, path_thaw_depth, path_pickle,
-                            year_bkg_end, year_trans_end, path_horizon, no_weight, show_glaciers,
-                            individual_heatmap, polar_plots, parity_plot,
-                            show_landslide_time, show_plots, split_legend, save_plots_pdf)
+         year_bkg_end, year_trans_end, path_horizon=path_horizon, no_weight=no_weight,
+         print_plots=print_plots, split_legend=split_legend, save_plots_pdf=save_plots_pdf,
+         custom_years=custom_years, query=query,
+         show_hor=show_hor, show_hist=show_hist, show_glaciers=show_glaciers, show_yearly_box=show_yearly_box,
+         show_yearly_stats_atmos=show_yearly_stats_atmos, show_yearly_stats_sims=show_yearly_stats_sims,
+         show_thaw_depth=show_thaw_depth, show_2metrics_seasonal=show_2metrics_seasonal,
+         show_1metric_seasonal=show_1metric_seasonal, show_decades=show_decades,
+         show_excep_years=show_excep_years, show_normdev=show_normdev, show_landslide_time=show_landslide_time,
+         show_individual_heatmap=show_individual_heatmap, show_heatmaps=show_heatmaps, show_quantiles=show_quantiles,
+         show_meltout=show_meltout, show_GST_evol=show_GST_evol, show_parity=show_parity)
 
 Outputs
 ^^^^^^^
