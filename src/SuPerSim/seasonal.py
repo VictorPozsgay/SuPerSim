@@ -200,7 +200,7 @@ def plot_sanity_one_year_quantiles_two_periods(quantiles, mean_end, axis_label, 
             plt.fill_between(xdata, qt.iloc[0], qt.iloc[4], alpha = 0.2, color=colorcycle[idx%len(colorcycle)], linewidth=0.5)
         plt.ylabel(axis_label+' ['+units[axis_label]+']')
 
-    if axis_label in ['GST', 'Air temperature']:
+    if units[axis_label]=='°C':
         plt.axhline(y=0, color='grey', linestyle='dashed')
 
     locs, labels = plt.xticks()
@@ -305,7 +305,7 @@ def plot_sanity_two_variables_one_year_quantiles(quantiles, mean_end, list_label
         mpl_axes_aligner.align.yaxes(ax1, 0, ax2, 0, 0.5)
 
     for i in list_label:
-        if i in ['GST', 'Air temperature']:
+        if units[i]=='°C':
             plt.axhline(y=0, color='grey', linestyle='dashed')
 
     locs, labels = plt.xticks()
