@@ -9,6 +9,9 @@ import pandas as pd
 from netCDF4 import num2date #pylint: disable=no-name-in-module
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+from matplotlib.legend_handler import HandlerBase
+from matplotlib.lines import Line2D
 
 from SuPerSim.open import open_air_nc, open_ground_nc, open_swe_nc
 from SuPerSim.mytime import list_tokens_year
@@ -83,7 +86,7 @@ def mean_all_reanalyses(time_files, files_to_smooth, year_bkg_end, year_trans_en
     """
 
     list_years = [list_tokens_year(time_files[i], year_bkg_end, year_trans_end)[0] for i in range(len(time_files))]
-    len_years = {y: [len(list_years[i][y]) for i in range(len(time_files))] for y in list(list_years[0].keys()) if y<year_trans_end}
+    len_years = {y: [len(list_years[i][y]) for i in range(len(time_files))] for y in list(list_years[0].keys()) if y<=year_trans_end}
 
     mean = []
 
@@ -100,7 +103,7 @@ def mean_all_reanalyses(time_files, files_to_smooth, year_bkg_end, year_trans_en
             for j in range(len(order)):
                 mean += list(np.mean([files_to_smooth[i][list_years[i][y]][(order[j-1] if j>0 else 0):order[j]]
                                         for i in range(len(time_files)) if len(files_to_smooth[i][list_years[i][y]]) > (order[j-1] if j>0 else 0)], axis=0))
-
+    
     return mean
 
 def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle, year_bkg_end, year_trans_end, site, no_weight, query, alt_query_idx):
@@ -144,7 +147,7 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle,
 
     _, swe = open_swe_nc(path_swe)
     _, time_ground, _ = open_ground_nc(path_ground)
-    _, _, _, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end)    
+    # _, _, _, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end)    
 
     pd_weight, _ = assign_weight_sim(site, path_pickle, no_weight, query)
 
@@ -167,10 +170,11 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle,
     # Finally, swe is in [kg m-2] which is equivalent to [mm] so we're good.
 
     # Number of days between the start of the ground and air timeseries
-    num_day = int((num2date(time_ground[0], time_ground.units) - num2date(time_air_all[0][0], time_air_all[0].units)).total_seconds()/86400)
+    # num_day = int((num2date(time_ground[0], time_ground.units) - num2date(time_air_all[0][0], time_air_all[0].units)).total_seconds()/86400)
     # we add num_days zeros at the beginning to make sure the dfs have the same dimension and span Jan 1, 1980 to Dec 31, 2019
     # We make sure to multiply by (-1) and to divide by 86400
-    pd_diff_swe = pd.concat([pd.DataFrame([0]*num_day), (pd.DataFrame(mean_swe[:len(time_ground[time_pre_trans_ground][:])]).diff()).fillna(0)/86400*(-1)], ignore_index=True)
+    # pd_diff_swe = pd.concat([pd.DataFrame([0]*num_day), (pd.DataFrame(mean_swe[:len(time_ground[:])]).diff()).fillna(0)/86400*(-1)], ignore_index=True)
+    pd_diff_swe = (pd.DataFrame(mean_swe[:len(time_ground[:])]).diff()).fillna(0)/86400*(-1)
 
     if len(pd_prec_day)!=len(pd_diff_swe):
         raise ValueError('VictorCustomError: The lengths of the precipitation and swe time series are different!')
@@ -537,4 +541,207 @@ def plot_aggregating_distance_temp_all_from_input(yaxes, xdata, ydata, window, s
     dict_distances, rockfall_time_index = aggregating_distance_temp_all(yaxes, xdata, ydata, window, site, path_pickle, year_bkg_end, year_trans_end, year, fill_before)
     fig = plot_aggregating_distance_temp_all(dict_distances, rockfall_time_index, year_bkg_end, year_trans_end, year, show_landslide_time, show_plots)
 
+    return fig
+
+def produce_running_percentile(time_file, file_to_smooth, year_bkg_end, year_trans_end):
+    """ Function computes mean annual value of the time series and returns its normalized
+        deviation with respect to background values, together with yearly percentiles
+        relative to all previous years for transient period
+    
+    Parameters
+    ----------
+    time_file : netCDF4._netCDF4.Variable
+        File where the time index of each datapoint is stored
+    file_to_smooth : list
+        Time series (could be temperature, precipitation, snow depth, etc.) that needs to be smoothed
+        Note that it needs to be in the shape (n,) and not (n,3) for instance, hence the altitude has
+        to be pre-selected. E.g. accepts temp_air_era5[:,0] but not temp_air_era5
+    year_bkg_end : int
+        Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
+    year_trans_end : int
+        Same for transient period
+
+    Returns
+    -------
+    mean_dev : dict
+        Normalized deviation (standardized anomaly) of mean annual value with respect to background values
+    running_percentile : dict
+        Running percentile of mean annual value relative to previous years
+
+    """
+    list_dates = list_tokens_year(time_file, year_bkg_end, year_trans_end)[0]
+    mean_per_year = {y: np.mean(np.array(file_to_smooth)[l]) for y,l in list_dates.items()}
+    annual_mean = {y: np.mean(v) for y,v in mean_per_year.items()}
+    bkg_pool = [v for y,v in annual_mean.items() if y < year_bkg_end]
+    trans_pool = {y: v for y,v in annual_mean.items() if year_bkg_end <= y and y <= year_trans_end}
+    mean_dev = {y: (v-np.mean(bkg_pool))/np.std(bkg_pool) for y,v in annual_mean.items()}
+    running_percentile = {y: np.sum([v for yy,v in annual_mean.items() if yy<y] < annual_mean[y]) / len([v for yy,v in annual_mean.items() if yy<y]) * 100 for y in trans_pool.keys()}
+
+    return mean_dev, running_percentile
+
+def produce_running_percentile_all(yaxes, xdata, ydata, year_bkg_end, year_trans_end):
+    """ Function computes mean annual value of the time series and returns its normalized
+        deviation with respect to background values, together with yearly percentiles
+        relative to all previous years for transient period
+        for a list of variables
+    
+    Parameters
+    ----------
+    yaxes : list of str
+        List of names of quantities to plot, e.g. ['Air temperature', 'Water production', 'Ground temperature', 'Depth of thaw']
+        Will be used for labels
+    xdata : list of netCDF4._netCDF4.Variable
+        List of files where the time index of each datapoint is stored, e.g. [time_air_era5, time_air_era5, time_ground, time_ground]
+        len(xdata) should be equal to len(yaxes) 
+    ydata : list of list
+        List of time series (could be temperature, precipitation, snow depth, etc.) that needs to be smoothed
+        Note that each individual time series needs to be in the shape (n,) and not (n,3) for instance, hence the altitude has
+        to be pre-selected. E.g. accepts temp_air_era5[:,0] but not temp_air_era5
+        example: [mean_air_temp, mean_air_temp, temp_ground_mean, temp_ground_mean]
+        len(ydata) should be equal to len(yaxes)
+    year_bkg_end : int
+        Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
+    year_trans_end : int
+        Same for transient period
+
+    Returns
+    -------
+    dict_mean_dev : dict
+        Dictionary containing the normalized deviation (standardized anomaly) of mean annual value with respect to background values, in the form e.g.
+        {'Air temperature': {2000: x, 2001: y, ...}, 'Water production': {2000: x, 2001: y, ...}, ...}
+    dict_running_percentile : dict
+        Dictionary containing the running percentile of mean annual value relative to previous years, in the form e.g.
+        {'Air temperature': {2010: x, 2011: y, ...}, 'Water production': {2010: x, 2011: y, ...}, ...}
+    """
+    dict_mean_dev = {var: [] for var in yaxes}
+    dict_running_percentile = {var: [] for var in yaxes}
+    for i,var in enumerate(yaxes):
+        dict_mean_dev[var], dict_running_percentile[var] = produce_running_percentile(xdata[i], ydata[i], year_bkg_end, year_trans_end)
+
+    return dict_mean_dev, dict_running_percentile
+
+class TwoColorPatchHandler(HandlerBase):
+    """Custom handler class for a two-color patch"""
+    def create_artists(self, legend, orig_handle, xdescent, ydescent, width, height, fontsize, trans):
+        # Create two rectangles of half width each
+        w = width / 2
+        h = height
+        patch1 = Rectangle((xdescent, ydescent), w, h, fc=orig_handle.color1, transform=trans)
+        patch2 = Rectangle((xdescent + w, ydescent), w, h, fc=orig_handle.color2, transform=trans)
+        return [patch1, patch2]
+
+class TwoColorPatch:
+    """Dummy handle to pass colors"""
+    def __init__(self, color1, color2):
+        self.color1 = color1
+        self.color2 = color2
+
+def plot_running_percentile_all(dict_mean_dev, dict_running_percentile, show_plots):
+    """ Plots the mean annual value of the time series and returns its normalized
+        deviation with respect to background values, together with yearly percentiles
+        relative to all previous years for transient period
+        for a list of variables
+        Vertical subplots for different variables
+        Plots from user-given dictionaries
+    
+    Parameters
+    ----------
+    dict_mean_dev : dict
+        Dictionary containing the normalized deviation (standardized anomaly) of mean annual value with respect to background values, in the form e.g.
+        {'Air temperature': {2000: x, 2001: y, ...}, 'Water production': {2000: x, 2001: y, ...}, ...}
+    dict_running_percentile : dict
+        Dictionary containing the running percentile of mean annual value relative to previous years, in the form e.g.
+        {'Air temperature': {2010: x, 2011: y, ...}, 'Water production': {2010: x, 2011: y, ...}, ...}
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
+
+    Returns
+    -------
+    fig : Figure
+        normalized distance plot containing subplots sharing the x axis
+    """
+
+    yaxes = list(dict_mean_dev.keys())
+
+    num_rows = len(yaxes)
+    num_cols = 1
+
+    fig, ax = plt.subplots(num_rows, num_cols, figsize=(8, 2*num_rows), sharex=True, squeeze=False)
+
+    for i,var in enumerate(dict_mean_dev):
+        x = list(dict_mean_dev[var].keys())
+        y = list(dict_mean_dev[var].values())
+
+        ax[i,0].axvspan(xmin=np.min(x)-0.5, xmax=list(dict_running_percentile[var].keys())[0]-0.5, color='lightgrey', alpha=1)
+
+        colors = ['red' if val >= 0 else 'blue' for val in y]
+        ax[i,0].bar(x, y, color=colors)
+
+        handle = [TwoColorPatch('red', 'blue')]+[Line2D([], [], color=c, marker='D', linestyle='None') for c in ['black', 'red', 'orange']]
+        legend = ['Meann annual anomaly\n(positive/negative)', 'New maximum', r'In sliding top $15^{th}$ percentile', r'In sliding top $30^{th}$ percentile']
+
+        ax[i,0].hlines(y=0, xmin=np.min(x)-0.5, xmax=list(dict_running_percentile[var].keys())[0]-0.5, color='black', ls='--')
+
+        x2 = list(dict_running_percentile[var].keys())
+        y2 = list(dict_running_percentile[var].values())
+
+        colors = ['black' if val == 100 else ('red' if val >= 85 else 'orange' if val >= 70 else 'none') for val in y2]
+
+        ax[i,0].set_ylabel(var)
+
+        # if i<num_rows:
+        #     ax[i,0].set_xticks(locs, labels_end)
+        # ax[i,0].set_xlim(xmin, xmax)
+        dy = 0.5
+        y_bound = np.max([np.max(ax[i,0].get_ylim()), -np.min(ax[i,0].get_ylim())+dy])
+        ax[i,0].set_ylim(-y_bound, y_bound)
+        ax[i,0].scatter(x2, [-0.95*y_bound for _ in x2], color=colors, marker='D', s=10)
+        
+    fig.supylabel(r'Normalized deviation $d_{norm}$ [$\sigma$]')
+    plt.legend(handle, legend, handler_map={TwoColorPatch: TwoColorPatchHandler()},
+               loc='lower left', bbox_to_anchor=(1, 0))
+    plt.tight_layout()
+    fig.align_labels()
+    if show_plots:
+        plt.show()
+    plt.close()
+
+    return fig
+
+def plot_running_percentile_all_from_input(yaxes, xdata, ydata, year_bkg_end, year_trans_end, show_plots):
+    """ Plots the mean annual value of the time series and returns its normalized
+        deviation with respect to background values, together with yearly percentiles
+        relative to all previous years for transient period
+        for a list of variables
+        Vertical subplots for different variables
+        Plots directly from intended inputs
+    
+    Parameters
+    ----------
+    yaxes : list of str
+        List of names of quantities to plot, e.g. ['Air temperature', 'Water production', 'Ground temperature', 'Depth of thaw']
+        Will be used for labels
+    xdata : list of netCDF4._netCDF4.Variable
+        List of files where the time index of each datapoint is stored, e.g. [time_air_era5, time_air_era5, time_ground, time_ground]
+        len(xdata) should be equal to len(yaxes) 
+    ydata : list of list
+        List of time series (could be temperature, precipitation, snow depth, etc.) that needs to be smoothed
+        Note that each individual time series needs to be in the shape (n,) and not (n,3) for instance, hence the altitude has
+        to be pre-selected. E.g. accepts temp_air_era5[:,0] but not temp_air_era5
+        example: [mean_air_temp, mean_air_temp, temp_ground_mean, temp_ground_mean]
+        len(ydata) should be equal to len(yaxes)
+    year_bkg_end : int
+        Background period is BEFORE the start of the year corresponding to the variable, i.e. all time stamps before Jan 1st year_bkg_end
+    year_trans_end : int
+        Same for transient period
+    show_plots : bool
+        Whether or not to show plots. Usually True but if one simply wants to get the return dictionary of figures and no plots, choose False.
+
+    Returns
+    -------
+    fig : Figure
+        normalized distance plot containing subplots sharing the x axis
+    """
+    dict_mean_dev, dict_running_percentile = produce_running_percentile_all(yaxes, xdata, ydata, year_bkg_end, year_trans_end)
+    fig = plot_running_percentile_all(dict_mean_dev, dict_running_percentile, show_plots)
     return fig

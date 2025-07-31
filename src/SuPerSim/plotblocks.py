@@ -5,7 +5,7 @@ from SuPerSim.weights import plot_hist_stat_weights_from_input, plot_hist_valid_
 from SuPerSim.yearlystats import plot_box_yearly_stat_from_inputs, plot_yearly_quantiles_atmospheric_from_inputs, plot_yearly_quantiles_sim_from_inputs, plot_yearly_max_thaw_depth_from_inputs, sim_data_to_panda, panda_data_to_yearly_stats
 from SuPerSim.seasonal import plot_sanity_two_variables_one_year_quantiles_from_inputs, plot_sanity_one_year_quantiles_two_periods_from_inputs
 from SuPerSim.mytime import list_tokens_year
-from SuPerSim.runningstats import plot_aggregating_distance_temp_all_from_input
+from SuPerSim.runningstats import plot_aggregating_distance_temp_all_from_input, plot_running_percentile_all_from_input
 from SuPerSim.topoheatmap import plot_table_mean_GST_aspect_slope_single_altitude_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_from_inputs, plot_table_mean_GST_aspect_altitude_all_slopes_polar_from_inputs, plot_permafrost_all_altitudes_polar_from_inputs, plot_permafrost_all_slopes_polar_from_inputs, plot_table_mean_GST_aspect_slope_all_altitudes_polar_from_inputs
 from SuPerSim.percentiles import plot_cdf_GST_from_inputs, plot_heatmap_percentile_GST_from_inputs
 from SuPerSim.evolution import plot_evolution_snow_cover_melt_out_from_inputs, plot_GST_bkg_vs_evol_quantile_bins_fit_single_site_from_inputs, plot_mean_bkg_GST_vs_evolution_from_inputs
@@ -330,6 +330,28 @@ def plot_normdev(query, query_suffix, time_ground, time_air_all,
                                             [tot_water_prod_query, mean_air_temp_query, temp_ground_mean_query]+list(temp_ground_mean_deep_query.values()),
                                             ['year'], site, path_pickle, year_bkg_end, year_trans_end, 0, print_plots, False,
                                             show_landslide_time))
+
+def plot_normdev_bar(query, query_suffix, time_ground, time_air_all,
+                     tot_water_prod, mean_air_temp, temp_ground_mean, temp_ground_mean_deep,
+                     tot_water_prod_query, mean_air_temp_query, temp_ground_mean_query, temp_ground_mean_deep_query,
+                     year_bkg_end, year_trans_end, print_plots, list_fig_names, list_figs):
+    if print_plots:
+        print('Mean annual bar plots of the normalized distance of air and ground temperature, water production, and thaw_depth as a function of time')
+        print('We could also called the normalized deviation: standardized anomaly for instance, given by (x-\\mu)/\\sigma)')
+        if query is not None:
+            print(f'followed by the ensemble subset {query_suffix}:')
+
+    list_fig_names.append('normdev_bar')
+    list_figs.append(plot_running_percentile_all_from_input(['Water production', 'Air temperature', 'GST']+[f'{k}m ground temperature' for k in temp_ground_mean_deep.keys()],
+                                        [time_ground, time_air_all[0], time_ground]+[time_ground]*len(temp_ground_mean_deep),
+                                        [tot_water_prod, mean_air_temp, temp_ground_mean]+list(temp_ground_mean_deep.values()),
+                                        year_bkg_end, year_trans_end, print_plots))
+    if query is not None:
+        list_fig_names.append('normdev_bar'+query_suffix)
+        list_figs.append(plot_running_percentile_all_from_input(['Water production', 'Air temperature', 'GST']+[f'{k}m ground temperature' for k in temp_ground_mean_deep.keys()],
+                                            [time_ground, time_air_all[0], time_ground]+[time_ground]*len(temp_ground_mean_deep),
+                                            [tot_water_prod_query, mean_air_temp_query, temp_ground_mean_query]+list(temp_ground_mean_deep_query.values()),
+                                            year_bkg_end, year_trans_end, print_plots))
 
 def plot_individual_heatmap(site, path_pickle, rockfall_values, alt_list, alt_index_abs,
                             print_plots, list_fig_names, list_figs):

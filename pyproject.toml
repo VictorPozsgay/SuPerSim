@@ -20,5 +20,11 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Atmospheric Science"
 ]
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [project.urls]
 Homepage = "https://github.com/VictorPozsgay/SuPerSim"

@@ -16,7 +16,7 @@ from SuPerSim.evolution import plot_GST_bkg_vs_evol_quantile_bins_fit_two_sites_
 from SuPerSim.preparation import prep_data_plot, prep_sim_data_plot, prep_atmos_data_plot
 from SuPerSim.captions import captions
 
-from SuPerSim.plotblocks import plot_hor, plot_hist, plot_yearly_box, plot_yearly_stats_atmos, plot_yearly_stats_sims, plot_thaw_depth, plot_2metrics_seasonal, plot_1metric_seasonal, plot_normdev, plot_individual_heatmap, plot_heatmaps, plot_quantiles, plot_meltout, plot_GST_evol, plot_parity
+from SuPerSim.plotblocks import plot_hor, plot_hist, plot_yearly_box, plot_yearly_stats_atmos, plot_yearly_stats_sims, plot_thaw_depth, plot_2metrics_seasonal, plot_1metric_seasonal, plot_normdev, plot_normdev_bar, plot_individual_heatmap, plot_heatmaps, plot_quantiles, plot_meltout, plot_GST_evol, plot_parity
 
 def plot_all(site,
              path_forcing_list, path_ground, path_snow, path_swe, path_thaw_depth, path_pickle,
@@ -26,7 +26,7 @@ def plot_all(site,
              show_yearly_stats_atmos=True, show_yearly_stats_sims=True, show_thaw_depth=True,
              show_2metrics_seasonal=True, show_1metric_seasonal=True,
              show_decades=True, show_excep_years=True, show_normdev=True, show_landslide_time=True,
-             show_individual_heatmap=False, show_heatmaps=True, 
+             show_normdev_bar=True, show_individual_heatmap=False, show_heatmaps=True, 
              show_quantiles=True, show_meltout=True, show_GST_evol=True, show_parity=False):
     """ Function returns a series of summary plots for a given site.
     
@@ -99,6 +99,8 @@ def plot_all(site,
         Whether or not to plot the normalized deviation
     show_landslide_time : bool, optional
         Whether or not to show the landslide time on the ormalized deviation plot, if 'show_normdev'=True
+    show_normdev_bar : bool, optional
+        Whether or not to plot the normalized deviation bar plots (mean annual values)
     show_individual_heatmap : bool, optional
         Whether or not to plot heatmaps for a unique altitude
     show_heatmaps : bool, optional
@@ -230,6 +232,13 @@ def plot_all(site,
                          tot_water_prod_query, mean_air_temp_query, temp_ground_mean_query, temp_ground_mean_deep_query,
                          site, path_pickle, year_bkg_end, year_trans_end,
                          rockfall_values, print_plots, show_landslide_time, list_fig_names, list_figs)
+
+
+        if show_normdev_bar:
+            plot_normdev_bar(query, query_suffix, time_ground, time_air_all,
+                             tot_water_prod, mean_air_temp, temp_ground_mean, temp_ground_mean_deep,
+                             tot_water_prod_query, mean_air_temp_query, temp_ground_mean_query, temp_ground_mean_deep_query,
+                             year_bkg_end, year_trans_end, print_plots, list_fig_names, list_figs)
 
         if print_plots:
             print('\n---------------------------------------------------------------------------------------------')
