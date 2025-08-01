@@ -430,7 +430,7 @@ def plot_table_mean_GST_aspect_slope_all_altitudes(table_all, rockfall_values, s
 
     # Use the same x position (choose one or average)
     x = max([c[0] for c in cbars_pos]) + 0.07  # shift slightly right of cbar
-    for c,l in zip(cbars_pos, labels_plot):
+    for c,l in zip(cbars_pos, labels_plot[::-1]):
         fig.text(x, c[1], l, va='center', ha='center', rotation=90)
 
     # displaying the plotted heatmap 
