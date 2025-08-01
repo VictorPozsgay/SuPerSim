@@ -86,7 +86,7 @@ def mean_all_reanalyses(time_files, files_to_smooth, year_bkg_end, year_trans_en
     """
 
     list_years = [list_tokens_year(time_files[i], year_bkg_end, year_trans_end)[0] for i in range(len(time_files))]
-    len_years = {y: [len(list_years[i][y]) for i in range(len(time_files))] for y in list(list_years[0].keys()) if y<=year_trans_end}
+    len_years = {y: [len(list_years[i][y]) for i in range(len(time_files))] for y in list(list_years[0].keys()) if y<year_trans_end}
 
     mean = []
 
@@ -147,7 +147,7 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle,
 
     _, swe = open_swe_nc(path_swe)
     _, time_ground, _ = open_ground_nc(path_ground)
-    # _, _, _, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end)    
+    _, _, _, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end)    
 
     pd_weight, _ = assign_weight_sim(site, path_pickle, no_weight, query)
 
@@ -155,7 +155,7 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle,
     precipitation_all = [open_air_nc(i)[5] for i in path_forcing_list]
 
     # here we get the mean precipitation and then water from snow melting 
-    mean_swe = list(np.average([swe[i,:] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight.loc[:, 'weight']))
+    mean_swe = np.array(list(np.average([swe[i,:] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight.loc[:, 'weight'])))[np.array(time_pre_trans_ground)]
     mean_prec = mean_all_reanalyses(time_air_all,
                                     [mean_all_altitudes(i, site, path_pickle, no_weight, query, alt_query_idx) for i in precipitation_all],
                                     year_bkg_end, year_trans_end)
@@ -570,10 +570,11 @@ def produce_running_percentile(time_file, file_to_smooth, year_bkg_end, year_tra
 
     """
     list_dates = list_tokens_year(time_file, year_bkg_end, year_trans_end)[0]
+    list_dates = {y: v for y,v in list_dates.items() if y < year_trans_end}
     mean_per_year = {y: np.mean(np.array(file_to_smooth)[l]) for y,l in list_dates.items()}
     annual_mean = {y: np.mean(v) for y,v in mean_per_year.items()}
     bkg_pool = [v for y,v in annual_mean.items() if y < year_bkg_end]
-    trans_pool = {y: v for y,v in annual_mean.items() if year_bkg_end <= y and y <= year_trans_end}
+    trans_pool = {y: v for y,v in annual_mean.items() if year_bkg_end <= y and y < year_trans_end}
     mean_dev = {y: (v-np.mean(bkg_pool))/np.std(bkg_pool) for y,v in annual_mean.items()}
     running_percentile = {y: np.sum([v for yy,v in annual_mean.items() if yy<y] < annual_mean[y]) / len([v for yy,v in annual_mean.items() if yy<y]) * 100 for y in trans_pool.keys()}
 

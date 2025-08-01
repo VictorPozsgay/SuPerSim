@@ -58,13 +58,13 @@ def prep_sim_data_plot(site,
     idxs_depths = {depth: list_depths.index(depth) if depth in list_depths else -1 for depth in [1,5,10]}
     idxs_depths = {k: v for k,v in idxs_depths.items() if v!=-1}
 
-    _, time_bkg_ground, time_trans_ground, _ = list_tokens_year(time_ground, year_bkg_end, year_trans_end)
+    _, time_bkg_ground, time_trans_ground, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end)
 
     list_sims = list(pd_weight.index.values)
 
     # weighted mean GST
-    temp_ground_mean = list(np.average([temp_ground[i,:,0] for i in list_sims], axis=0, weights=pd_weight.loc[:, 'weight']))
-    temp_ground_mean_deep = {k: list(np.average([temp_ground[i,:,v] for i in list_sims], axis=0, weights=pd_weight.loc[:, 'weight'])) for k,v in idxs_depths.items()}
+    temp_ground_mean = np.array(list(np.average([temp_ground[i,:,0] for i in list_sims], axis=0, weights=pd_weight.loc[:, 'weight'])))[np.array(time_pre_trans_ground)]
+    temp_ground_mean_deep = {k: np.array(list(np.average([temp_ground[i,:,v] for i in list_sims], axis=0, weights=pd_weight.loc[:, 'weight'])))[np.array(time_pre_trans_ground)] for k,v in idxs_depths.items()}
 
     if query is not None:
         temp_ground = temp_ground[list_sims,:,0]
