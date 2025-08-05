@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from matplotlib.legend_handler import HandlerBase
 from matplotlib.lines import Line2D
+from matplotlib.transforms import blended_transform_factory
 
 from SuPerSim.open import open_air_nc, open_ground_nc, open_swe_nc
 from SuPerSim.mytime import list_tokens_year
@@ -693,10 +694,11 @@ def plot_running_percentile_all(dict_mean_dev, dict_running_percentile, show_plo
         # if i<num_rows:
         #     ax[i,0].set_xticks(locs, labels_end)
         # ax[i,0].set_xlim(xmin, xmax)
-        dy = 0.5
-        y_bound = np.max([np.max(ax[i,0].get_ylim()), -np.min(ax[i,0].get_ylim())+dy])
+        dy = 0.1
+        y_bound = np.max([np.max(ax[i,0].get_ylim()), -np.min(ax[i,0].get_ylim())/(1-dy)])
         ax[i,0].set_ylim(-y_bound, y_bound)
-        ax[i,0].scatter(x2, [-0.95*y_bound for _ in x2], color=colors, marker='D', s=10)
+        trans = blended_transform_factory(ax[i,0].transData, ax[i,0].transAxes)
+        ax[i,0].scatter(x2, [dy/2 for _ in x2], transform=trans, color=colors, marker='D', s=10)
         
     fig.supylabel(r'Normalized deviation $d_{norm}$ [$\sigma$]')
     plt.legend(handle, legend, handler_map={TwoColorPatch: TwoColorPatchHandler()},
