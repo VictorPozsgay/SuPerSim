@@ -47,15 +47,18 @@ def mean_all_altitudes(file_to_smooth, site, path_pickle, no_weight, query, alt_
         average time series over all altitudes
     """
 
-    pkl = load_all_pickles(site, path_pickle, query)
-    df_stats = pkl['df_stats']
+    if no_weight:
+        weights = [1]*file_to_smooth.shape[1]
+    else:
+        pkl = load_all_pickles(site, path_pickle, query)
+        df_stats = pkl['df_stats']
 
-    _, pd_weight_long = assign_weight_sim(site, path_pickle, no_weight, query)
+        _, pd_weight_long = assign_weight_sim(site, path_pickle, no_weight, query)
 
-    # list of (altitude, altitude_weight) for all entries of df_stats
-    # set -> list of unique entries, then sorted by altitude
-    # the result is the weight for each altitude index of the timeseries
-    weights = [i[1] for i in sorted(set([(pd_weight_long['altitude'].loc[i], pd_weight_long['altitude_weight'].loc[i]) for i in list(df_stats.index.values)]))]
+        # list of (altitude, altitude_weight) for all entries of df_stats
+        # set -> list of unique entries, then sorted by altitude
+        # the result is the weight for each altitude index of the timeseries
+        weights = [i[1] for i in sorted(set([(pd_weight_long['altitude'].loc[i], pd_weight_long['altitude_weight'].loc[i]) for i in list(df_stats.index.values)]))]
 
     if query is None:    
         mean_alt = np.average(file_to_smooth, axis=1, weights=weights)
@@ -147,10 +150,17 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle,
     """
 
     _, swe = open_swe_nc(path_swe)
-    _, time_ground, _ = open_ground_nc(path_ground)
-    _, _, _, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end)    
+    _, time_ground, temp_ground = open_ground_nc(path_ground)
+    _, _, _, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end) 
 
-    pd_weight, _ = assign_weight_sim(site, path_pickle, no_weight, query)
+    # assign a subjective weight to all simulations
+    if no_weight:
+        pd_weight = pd.DataFrame(index=range(temp_ground.shape[0]))
+        pd_weight['weight'] = 1
+    else:
+        pd_weight, _ = assign_weight_sim(site, path_pickle, no_weight, query)   
+
+    # pd_weight, _ = assign_weight_sim(site, path_pickle, no_weight, query)
 
     time_air_all = [open_air_nc(i)[0] for i in path_forcing_list]
     precipitation_all = [open_air_nc(i)[5] for i in path_forcing_list]

@@ -1,6 +1,7 @@
 """This module prepares the data for plotting the summary statistics for timeseries"""
 
 import numpy as np
+import pandas as pd
 
 from SuPerSim.open import open_air_nc, open_ground_nc, open_snow_nc, open_swe_nc, open_thaw_depth_nc
 from SuPerSim.mytime import list_tokens_year
@@ -46,9 +47,6 @@ def prep_sim_data_plot(site,
     # OPEN THE VARIOUS FILES
     #####################################################################################
 
-    # assign a subjective weight to all simulations
-    pd_weight, _ = assign_weight_sim(site, path_pickle, no_weight, query)
-
     f_ground, time_ground, temp_ground = open_ground_nc(path_ground)
     _, snow_height = open_snow_nc(path_snow)
     _, swe = open_swe_nc(path_swe)
@@ -59,6 +57,13 @@ def prep_sim_data_plot(site,
     idxs_depths = {k: v for k,v in idxs_depths.items() if v!=-1}
 
     _, time_bkg_ground, time_trans_ground, time_pre_trans_ground = list_tokens_year(time_ground, year_bkg_end, year_trans_end)
+
+    # assign a subjective weight to all simulations
+    if no_weight:
+        pd_weight = pd.DataFrame(index=range(temp_ground.shape[0]))
+        pd_weight['weight'] = 1
+    else:
+        pd_weight, _ = assign_weight_sim(site, path_pickle, no_weight, query)
 
     list_sims = list(pd_weight.index.values)
 
