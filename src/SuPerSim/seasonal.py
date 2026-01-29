@@ -386,7 +386,7 @@ def data_two_variables_two_sites_one_year_quantiles(time_file, time_series_list,
     mean_end = [[] for _ in range(len(time_series_list))]
 
     for i,ts in enumerate(time_series_list):
-        quantiles[i], mean_end[i] = data_one_year_quantiles_two_periods(time_file, ts, list_valid_sim_list, idx_depth)
+        quantiles[i], mean_end[i] = data_one_year_quantiles_two_periods(time_file, ts, list_valid_sim_list, list_mask_period=None, idx_depth=idx_depth)
 
     return quantiles, mean_end
 
