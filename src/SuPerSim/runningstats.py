@@ -164,16 +164,26 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle,
 
     time_air_all = [open_air_nc(i)[0] for i in path_forcing_list]
     precipitation_all = [open_air_nc(i)[5] for i in path_forcing_list]
+    temp_air_all = [open_air_nc(i)[1] for i in path_forcing_list]
 
     # here we get the mean precipitation and then water from snow melting 
     mean_swe = np.array(list(np.average([swe[i,:] for i in list(pd_weight.index.values)], axis=0, weights=pd_weight.loc[:, 'weight'])))[np.array(time_pre_trans_ground)]
     mean_prec = mean_all_reanalyses(time_air_all,
                                     [mean_all_altitudes(i, site, path_pickle, no_weight, query, alt_query_idx) for i in precipitation_all],
                                     year_bkg_end, year_trans_end)
+    mean_temp_air = mean_all_reanalyses(time_air_all,
+                                    [mean_all_altitudes(i, site, path_pickle, no_weight, query, alt_query_idx) for i in temp_air_all],
+                                    year_bkg_end, year_trans_end)
+
+
+    pd_prec_temp = pd.DataFrame(np.array([num2date(time_air_all[0][:len(mean_prec)],time_air_all[0].units),mean_prec,mean_temp_air]).T,
+                                columns=['date','prec','temp_air']).astype({'date':str,'prec':float,'temp_air':float})
+    pd_prec_temp['date'] = pd.to_datetime(pd_prec_temp['date'])
+    pd_prec_temp = pd_prec_temp.set_index('date')
 
     # convert mean precipitation into a panda dataframe to facilitate grouping by 24.
     # This way the data is reported daily (as it is for the swe) rather than hourly
-    pd_prec_day = ((pd.DataFrame(mean_prec).rolling(24).mean()).iloc[23::24, :]).reset_index(drop=True)
+    pd_prec_day = pd_prec_temp.resample('D').mean()
 
     # convert swe into panda df to make the diff() operation easier. Swe is a total and
     # we get the instantaneous flux by taking the difference between consecutive datapoints.
@@ -185,13 +195,28 @@ def assign_tot_water_prod(path_forcing_list, path_ground, path_swe, path_pickle,
     # we add num_days zeros at the beginning to make sure the dfs have the same dimension and span Jan 1, 1980 to Dec 31, 2019
     # We make sure to multiply by (-1) and to divide by 86400
     # pd_diff_swe = pd.concat([pd.DataFrame([0]*num_day), (pd.DataFrame(mean_swe[:len(time_ground[:])]).diff()).fillna(0)/86400*(-1)], ignore_index=True)
-    pd_diff_swe = (pd.DataFrame(mean_swe[:len(time_ground[:])]).diff()).fillna(0)/86400*(-1)
+    # pd_diff_swe = (pd.DataFrame(mean_swe[:len(time_ground[:])]).diff()).fillna(0)/86400*(-1)
+
+    pd_swe = pd.DataFrame(np.array([num2date(time_ground,time_ground.units)[:len(mean_swe)],mean_swe]).T,
+                          columns=['date','swe']).astype({'date':str,'swe':float})
+    pd_swe['date'] = pd.to_datetime(pd_swe['date'])
+    pd_swe = pd_swe.set_index('date')
+    pd_diff_swe = (pd_swe.diff().fillna(0)/86400*(-1)).rename(columns={'swe':'diff_swe'})
 
     if len(pd_prec_day)!=len(pd_diff_swe):
         raise ValueError('VictorCustomError: The lengths of the precipitation and swe time series are different!')
 
     # The total water production is returned in the list type as the sum of precipitation and swe
-    tot_water_prod = list(pd_prec_day.add(pd_diff_swe.reset_index(drop=True), fill_value=0)[0])
+    # tot_water_prod = list(pd_prec_day.add(pd_diff_swe.reset_index(drop=True), fill_value=0)[0])
+    df_concat = pd.concat([pd_diff_swe,pd_prec_day],axis=1)
+    # liquid precipitation only when air temperature is non-negative and swe is not growing
+    df_concat['prec_liquid'] = np.where((df_concat['diff_swe']>=0) & (df_concat['temp_air']>=0),df_concat['prec'],0)
+    # water production from swe (snow melting) only when it is the right sign
+    df_concat['prod_swe'] = np.where(df_concat['diff_swe']>=0,df_concat['diff_swe'],0)
+    # total water production = liquid precipation + water produced from snow melt
+    df_concat['tot_water_prod'] = df_concat['prec_liquid'] + df_concat['prod_swe']
+
+    tot_water_prod = list(df_concat['tot_water_prod'])
 
     return tot_water_prod, mean_swe, mean_prec
 
